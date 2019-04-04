@@ -1,6 +1,7 @@
 
 #include "stdlib.h"
-#include "iostream"
+#include <iostream>
+#include <string>
 #include "const.h"
 #include "Domain.h"
 #include "Parallel.h"
@@ -10,5 +11,8 @@ int main(int argc, char** argv) {
   Domain dom;
   Parallel par;
   Parser parser;
-  parser.readParamsFile("input.txt", dom, par);
+
+  std::string inFile = "input.txt";
+  if (argc > 1) inFile = argv[1];
+  parser.readParamsFile(inFile, dom, par);
 }

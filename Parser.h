@@ -37,23 +37,32 @@ public:
       line.erase (std::remove(line.begin(), line.end(), ' '), line.end());
       line.erase (std::remove(line.begin(), line.end(), '\t'), line.end());
 
-      if (!line.empty()) {
+      // If the line isn't empty and doesn't begin with a comment specifier, split it based on the colon
+      if (!line.empty() && line.find("//",0) != 0) {
+        // Find the colon
         uint splitloc = line.find(':',0);
+        // Store the key and value strings
         std::string key   = line.substr(0,splitloc);
         std::string value = line.substr(splitloc+1,line.length()-splitloc);
 
+        // Transform the value into a string stream for convenience
         std::stringstream ssVal(value);
 
-        if ( !strcmp( "nx"        , key.c_str() ) ) { ssVal >> dom.nx_glob  ; }
-        if ( !strcmp( "ny"        , key.c_str() ) ) { ssVal >> dom.ny_glob  ; }
-        if ( !strcmp( "nz"        , key.c_str() ) ) { ssVal >> dom.nz_glob  ; }
-        if ( !strcmp( "xlen"      , key.c_str() ) ) { ssVal >> dom.xlen     ; }
-        if ( !strcmp( "ylen"      , key.c_str() ) ) { ssVal >> dom.ylen     ; }
-        if ( !strcmp( "zlen"      , key.c_str() ) ) { ssVal >> dom.zlen     ; }
-        if ( !strcmp( "cfl"       , key.c_str() ) ) { ssVal >> dom.cfl      ; }
-        if ( !strcmp( "simLength" , key.c_str() ) ) { ssVal >> dom.simLength; }
-        if ( !strcmp( "parNx"     , key.c_str() ) ) { ssVal >> par.px       ; }
-        if ( !strcmp( "parNy"     , key.c_str() ) ) { ssVal >> par.py       ; }
+        // Match the key, and store the value
+        if      ( !strcmp( "nx"        , key.c_str() ) ) { ssVal >> dom.nx_glob  ; }
+        else if ( !strcmp( "ny"        , key.c_str() ) ) { ssVal >> dom.ny_glob  ; }
+        else if ( !strcmp( "nz"        , key.c_str() ) ) { ssVal >> dom.nz_glob  ; }
+        else if ( !strcmp( "xlen"      , key.c_str() ) ) { ssVal >> dom.xlen     ; }
+        else if ( !strcmp( "ylen"      , key.c_str() ) ) { ssVal >> dom.ylen     ; }
+        else if ( !strcmp( "zlen"      , key.c_str() ) ) { ssVal >> dom.zlen     ; }
+        else if ( !strcmp( "cfl"       , key.c_str() ) ) { ssVal >> dom.cfl      ; }
+        else if ( !strcmp( "simLength" , key.c_str() ) ) { ssVal >> dom.simLength; }
+        else if ( !strcmp( "parNx"     , key.c_str() ) ) { ssVal >> par.px       ; }
+        else if ( !strcmp( "parNy"     , key.c_str() ) ) { ssVal >> par.py       ; }
+        else {
+          std::cout << "Error: key " << key << " not understood in file " << fNameIn << "\n";
+          exit(-1);
+        }
       }
     }
 
