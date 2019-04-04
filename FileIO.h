@@ -61,7 +61,7 @@ public:
     // Compute x, y, and z coordinates
     for (int i=0; i<dom.nx; i++) { xCoord(i) = ( par.i_beg + i + 0.5_fp ) * dom.dx; }
     for (int j=0; j<dom.ny; j++) { yCoord(j) = ( par.j_beg + j + 0.5_fp ) * dom.dy; }
-    for (int k=0; k<dom.nz; k++) { zCoord(k) = (            k + 0.5_fp ) * dom.dz; }
+    for (int k=0; k<dom.nz; k++) { zCoord(k) = (             k + 0.5_fp ) * dom.dz; }
 
     // Write out x, y, and z coordinates
     st[0] = par.i_beg;
@@ -115,8 +115,8 @@ public:
     Array<real> data(dom.nz,dom.ny,dom.nx);
     MPI_Offset st[4], ct[4];
 
-    st[0] = numOut; st[1] = 0     ; st[2] = 0     ; st[3] = 0     ;
-    ct[0] = 1     ; ct[1] = dom.nz; ct[2] = dom.ny; ct[3] = dom.nx;
+    st[0] = numOut; st[1] = 0     ; st[2] = par.j_beg; st[3] = par.i_beg;
+    ct[0] = 1     ; ct[1] = dom.nz; ct[2] = dom.ny   ; ct[3] = dom.nx   ;
 
     // Write out density perturbation
     for (int k=0; k<dom.nz; k++) {

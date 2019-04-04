@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
   FileIO io;
 
   // Initialize MPI
-  int ierr = MPI_Init( &argc , &argv );
+  init.initialize_mpi( &argc , &argv , par );
 
   // Default input file is "input.txt" unless the user passes in another file
   std::string inFile = "input.txt";

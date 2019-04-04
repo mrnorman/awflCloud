@@ -12,6 +12,20 @@ class Initializer{
 
 public:
 
+
+  inline void initialize_mpi( int *argc , char ***argv , Parallel &par ) {
+    int ierr = MPI_Init( argc , argv );
+    ierr = MPI_Comm_size(MPI_COMM_WORLD,&par.nranks);
+    ierr = MPI_Comm_rank(MPI_COMM_WORLD,&par.myrank);
+
+    //Determine if I'm the master process
+    if (par.myrank == 0) {
+      par.masterproc = 1;
+    } else {
+      par.masterproc = 0;
+    }
+  }
+
   inline void initialize(State &state, Domain &dom, Parallel &par) {
     int ierr;
     SArray<real,ord> gllOrdPoints;
@@ -25,9 +39,6 @@ public:
     trans.get_gll_weights(gllOrdWeights);
     trans.get_gll_points(gllTordPoints);
     trans.get_gll_weights(gllTordWeights);
-
-    ierr = MPI_Comm_size(MPI_COMM_WORLD,&par.nranks);
-    ierr = MPI_Comm_rank(MPI_COMM_WORLD,&par.myrank);
     if (par.nranks != par.nproc_x*par.nproc_y) {
       std::cerr << "ERROR: nproc_x*nproc_y != nranks\n";
       std::cerr << par.nproc_x << " " << par.nproc_y << " " << par.nranks << "\n";
@@ -67,7 +78,7 @@ public:
         if (rr == par.myrank) {
           std::cout << "Hello! My Rank is what, my rank is who, my rank is: " << par.myrank << "\n";
           std::cout << "My proc grid ID is: " << par.px << " , " << par.py << "\n";
-          std::cout << "I have: " << dom.nx << " x " << dom.ny << " cells." << "\n";
+          std::cout << "I have: " << dom.nx << " x " << dom.ny << " columns." << "\n";
           std::cout << "I start at index: " << par.i_beg << " x " << par.j_beg << "\n";
           std::cout << "My neighbor matrix is:\n";
           for (int j = 2; j >= 0; j--) {
@@ -81,13 +92,6 @@ public:
         ierr = MPI_Barrier(MPI_COMM_WORLD);
       }
       ierr = MPI_Barrier(MPI_COMM_WORLD);
-    }
-
-    //Determine if I'm the master process
-    if (par.myrank == 0) {
-      par.masterproc = 1;
-    } else {
-      par.masterproc = 0;
     }
 
     // Initialize the grid
@@ -159,8 +163,8 @@ public:
           for (int kk=0; kk<ord; kk++) {
             for (int jj=0; jj<ord; jj++) {
               for (int ii=0; ii<ord; ii++) {
-                real xloc = (i + 0.5_fp)*dom.dx + gllOrdPoints(ii)*dom.dx;
-                real yloc = (j + 0.5_fp)*dom.dy + gllOrdPoints(jj)*dom.dy;
+                real xloc = (par.i_beg + i + 0.5_fp)*dom.dx + gllOrdPoints(ii)*dom.dx;
+                real yloc = (par.j_beg + j + 0.5_fp)*dom.dy + gllOrdPoints(jj)*dom.dy;
                 real zloc = (k + 0.5_fp)*dom.dz + gllOrdPoints(kk)*dom.dz;
                 real const t0 = 300._fp;
                 real r, t;
@@ -202,10 +206,16 @@ public:
       }
     }
 
-    std::cout << "dx: " << dom.dx << "\n";
-    std::cout << "dy: " << dom.dy << "\n";
-    std::cout << "dz: " << dom.dz << "\n";
-    std::cout << "dt: " << dom.dt << "\n";
+    real dtloc = dom.dt;
+    ierr = MPI_Allreduce(&dtloc, &dom.dt, 1, MPI_REAL , MPI_MIN, MPI_COMM_WORLD);
+
+
+    if (par.masterproc) {
+      std::cout << "dx: " << dom.dx << "\n";
+      std::cout << "dy: " << dom.dy << "\n";
+      std::cout << "dz: " << dom.dz << "\n";
+      std::cout << "dt: " << dom.dt << "\n";
+    }
 
   }
 

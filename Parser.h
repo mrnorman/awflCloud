@@ -79,16 +79,18 @@ public:
     if (par.nproc_y   == -999) { std::cout << "Error: key " << "parNy"     << " not set."; exit(-1); }
 
     // Print out the values
-    std::cout << "nx: "        << dom.nx_glob   << "\n";
-    std::cout << "ny: "        << dom.ny_glob   << "\n";
-    std::cout << "nz: "        << dom.nz_glob   << "\n";
-    std::cout << "xlen: "      << dom.xlen      << "\n";
-    std::cout << "ylen: "      << dom.ylen      << "\n";
-    std::cout << "zlen: "      << dom.zlen      << "\n";
-    std::cout << "cfl: "       << dom.cfl       << "\n";
-    std::cout << "simLength: " << dom.simLength << "\n";
-    std::cout << "parNx: "     << par.nproc_x   << "\n";
-    std::cout << "parNy: "     << par.nproc_y   << "\n";
+    if (par.masterproc) {
+      std::cout << "nx: "        << dom.nx_glob   << "\n";
+      std::cout << "ny: "        << dom.ny_glob   << "\n";
+      std::cout << "nz: "        << dom.nz_glob   << "\n";
+      std::cout << "xlen: "      << dom.xlen      << "\n";
+      std::cout << "ylen: "      << dom.ylen      << "\n";
+      std::cout << "zlen: "      << dom.zlen      << "\n";
+      std::cout << "cfl: "       << dom.cfl       << "\n";
+      std::cout << "simLength: " << dom.simLength << "\n";
+      std::cout << "parNx: "     << par.nproc_x   << "\n";
+      std::cout << "parNy: "     << par.nproc_y   << "\n";
+    }
 
   }
 
