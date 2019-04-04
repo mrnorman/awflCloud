@@ -7,11 +7,13 @@
 class Parallel {
 
 public:
-  
+
   ulong nTasks;
   ulong myTask;
   ulong px;
   ulong py;
+  ulong ix;
+  ulong iy;
   int masterTask;
 };
 
