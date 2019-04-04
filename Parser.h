@@ -26,8 +26,8 @@ public:
     dom.zlen      = -999;
     dom.cfl       = -999;
     dom.simLength = -999;
-    par.px        = -999;
-    par.py        = -999;
+    par.nproc_x   = -999;
+    par.nproc_y   = -999;
 
     // Read in colon-separated key: value file line by line
     std::ifstream fInStream(fNameIn);
@@ -57,8 +57,8 @@ public:
         else if ( !strcmp( "zlen"      , key.c_str() ) ) { ssVal >> dom.zlen     ; }
         else if ( !strcmp( "cfl"       , key.c_str() ) ) { ssVal >> dom.cfl      ; }
         else if ( !strcmp( "simLength" , key.c_str() ) ) { ssVal >> dom.simLength; }
-        else if ( !strcmp( "parNx"     , key.c_str() ) ) { ssVal >> par.px       ; }
-        else if ( !strcmp( "parNy"     , key.c_str() ) ) { ssVal >> par.py       ; }
+        else if ( !strcmp( "parNx"     , key.c_str() ) ) { ssVal >> par.nproc_x  ; }
+        else if ( !strcmp( "parNy"     , key.c_str() ) ) { ssVal >> par.nproc_y  ; }
         else {
           std::cout << "Error: key " << key << " not understood in file " << fNameIn << "\n";
           exit(-1);
@@ -75,8 +75,8 @@ public:
     if (dom.zlen      == -999) { std::cout << "Error: key " << "zlen"      << " not set."; exit(-1); }
     if (dom.cfl       == -999) { std::cout << "Error: key " << "cfl"       << " not set."; exit(-1); }
     if (dom.simLength == -999) { std::cout << "Error: key " << "simLength" << " not set."; exit(-1); }
-    if (par.px        == -999) { std::cout << "Error: key " << "parNx"     << " not set."; exit(-1); }
-    if (par.py        == -999) { std::cout << "Error: key " << "parNy"     << " not set."; exit(-1); }
+    if (par.nproc_x   == -999) { std::cout << "Error: key " << "parNx"     << " not set."; exit(-1); }
+    if (par.nproc_y   == -999) { std::cout << "Error: key " << "parNy"     << " not set."; exit(-1); }
 
     // Print out the values
     std::cout << "nx: "        << dom.nx_glob   << "\n";
@@ -87,8 +87,8 @@ public:
     std::cout << "zlen: "      << dom.zlen      << "\n";
     std::cout << "cfl: "       << dom.cfl       << "\n";
     std::cout << "simLength: " << dom.simLength << "\n";
-    std::cout << "parNx: "     << par.px        << "\n";
-    std::cout << "parNy: "     << par.py        << "\n";
+    std::cout << "parNx: "     << par.nproc_x   << "\n";
+    std::cout << "parNy: "     << par.nproc_y   << "\n";
 
   }
 

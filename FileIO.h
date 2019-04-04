@@ -59,15 +59,15 @@ public:
     ncwrap( ncmpi_enddef( ncid ) , __LINE__ );
 
     // Compute x, y, and z coordinates
-    for (int i=0; i<dom.nx; i++) { xCoord(i) = ( par.iBeg + i + 0.5_fp ) * dom.dx; }
-    for (int j=0; j<dom.ny; j++) { yCoord(j) = ( par.jBeg + j + 0.5_fp ) * dom.dy; }
+    for (int i=0; i<dom.nx; i++) { xCoord(i) = ( par.i_beg + i + 0.5_fp ) * dom.dx; }
+    for (int j=0; j<dom.ny; j++) { yCoord(j) = ( par.j_beg + j + 0.5_fp ) * dom.dy; }
     for (int k=0; k<dom.nz; k++) { zCoord(k) = (            k + 0.5_fp ) * dom.dz; }
 
     // Write out x, y, and z coordinates
-    st[0] = par.iBeg;
+    st[0] = par.i_beg;
     ct[0] = dom.nx;
     ncwrap( ncmpi_put_vara_float_all( ncid , xVar , st , ct , xCoord.get_data() ) , __LINE__ );
-    st[0] = par.jBeg;
+    st[0] = par.j_beg;
     ct[0] = dom.ny;
     ncwrap( ncmpi_put_vara_float_all( ncid , yVar , st , ct , yCoord.get_data() ) , __LINE__ );
 
@@ -86,6 +86,7 @@ public:
 
     numOut++;
   }
+
 
   inline void output(State &state, Domain const &dom, Parallel const &par) {
     int dimids[4];
@@ -108,6 +109,7 @@ public:
 
     numOut++;
   }
+
 
   void writeState(State &state, Domain const &dom, Parallel const &par) {
     Array<real> data(dom.nz,dom.ny,dom.nx);
@@ -167,6 +169,7 @@ public:
     }
     ncwrap( ncmpi_put_vara_float_all( ncid , thVar , st , ct , data.get_data() ) , __LINE__ );
   }
+
 
   //Error reporting routine for the PNetCDF I/O
   void ncwrap( int ierr , int line ) {

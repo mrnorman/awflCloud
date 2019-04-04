@@ -3,22 +3,24 @@
 #define _PARALLEL_H_
 
 #include "const.h"
+#include "Array.h"
 
 class Parallel {
 
 public:
 
-  ulong nTasks;
-  ulong myTask;
-  ulong px;
-  ulong py;
-  ulong ix;
-  ulong iy;
-  ulong iBeg;
-  ulong jBeg;
-  ulong iEnd;
-  ulong jEnd;
-  int masterTask;
+  int nranks;
+  int myrank;
+  int nproc_x;
+  int nproc_y;
+  int px;
+  int py;
+  ulong i_beg;
+  ulong j_beg;
+  ulong i_end;
+  ulong j_end;
+  int masterproc;
+  Array<int> neigh;
 };
 
 #endif

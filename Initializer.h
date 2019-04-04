@@ -6,12 +6,14 @@
 #include "Hydrostasis.h"
 #include "TransformMatrices.h"
 #include "Array.h"
+#include "mpi.h"
 
 class Initializer{
 
 public:
 
   inline void initialize(State &state, Domain &dom, Parallel &par) {
+    int ierr;
     SArray<real,ord> gllOrdPoints;
     SArray<real,ord> gllOrdWeights;
     SArray<real,tord> gllTordPoints;
@@ -24,18 +26,69 @@ public:
     trans.get_gll_points(gllTordPoints);
     trans.get_gll_weights(gllTordWeights);
 
-    // Mock MPI init
-    par.nTasks = 1;
-    par.myTask = 0;
-    par.ix = 0;
-    par.iy = 0;
-    par.iBeg = 0;
-    par.jBeg = 0;
-    par.iEnd = dom.nx_glob;
-    par.jEnd = dom.ny_glob;
-    par.masterTask = 1;
-    dom.nx = dom.nx_glob;
-    dom.ny = dom.ny_glob;
+    ierr = MPI_Comm_size(MPI_COMM_WORLD,&par.nranks);
+    ierr = MPI_Comm_rank(MPI_COMM_WORLD,&par.myrank);
+    if (par.nranks != par.nproc_x*par.nproc_y) {
+      std::cerr << "ERROR: nproc_x*nproc_y != nranks\n";
+      std::cerr << par.nproc_x << " " << par.nproc_y << " " << par.nranks << "\n";
+      exit(-1);
+    }
+
+    //Get my x and y process grid ID
+    par.px = par.myrank % par.nproc_x;
+    par.py = par.myrank / par.nproc_x;
+
+    //Get my beginning and ending global indices
+    double nper;
+    nper = ((double) dom.nx_glob)/par.nproc_x;
+    par.i_beg = (long) round( nper* par.px    );
+    par.i_end = (long) round( nper*(par.px+1) )-1;
+    nper = ((double) dom.ny_glob)/par.nproc_y;
+    par.j_beg = (long) round( nper* par.py    );
+    par.j_end = (long) round( nper*(par.py+1) )-1;
+    //Determine my number of grid cells
+    dom.nx = par.i_end - par.i_beg + 1;
+    dom.ny = par.j_end - par.j_beg + 1;
+    par.neigh.setup(3,3);
+    for (int j = 0; j < 3; j++) {
+      for (int i = 0; i < 3; i++) {
+        int pxloc = par.px+i-1;
+        if (pxloc < 0            ) pxloc = pxloc + par.nproc_x;
+        if (pxloc > par.nproc_x-1) pxloc = pxloc - par.nproc_x;
+        int pyloc = par.py+j-1;
+        if (pyloc < 0            ) pyloc = pyloc + par.nproc_y;
+        if (pyloc > par.nproc_y-1) pyloc = pyloc - par.nproc_y;
+        par.neigh(j,i) = pyloc * par.nproc_x + pxloc;
+      }
+    }
+
+    if (1) {
+      for (int rr=0; rr < par.nranks; rr++) {
+        if (rr == par.myrank) {
+          std::cout << "Hello! My Rank is what, my rank is who, my rank is: " << par.myrank << "\n";
+          std::cout << "My proc grid ID is: " << par.px << " , " << par.py << "\n";
+          std::cout << "I have: " << dom.nx << " x " << dom.ny << " cells." << "\n";
+          std::cout << "I start at index: " << par.i_beg << " x " << par.j_beg << "\n";
+          std::cout << "My neighbor matrix is:\n";
+          for (int j = 2; j >= 0; j--) {
+            for (int i = 0; i < 3; i++) {
+              std::cout << std::setw(6) << par.neigh(j,i) << " ";
+            }
+            printf("\n");
+          }
+          printf("\n");
+        }
+        ierr = MPI_Barrier(MPI_COMM_WORLD);
+      }
+      ierr = MPI_Barrier(MPI_COMM_WORLD);
+    }
+
+    //Determine if I'm the master process
+    if (par.myrank == 0) {
+      par.masterproc = 1;
+    } else {
+      par.masterproc = 0;
+    }
 
     // Initialize the grid
     dom.etime = 0;
