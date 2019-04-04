@@ -83,6 +83,30 @@ public:
     writeState(state, dom, par);
 
     ncwrap( ncmpi_close(ncid) , __LINE__ );
+
+    numOut++;
+  }
+
+  inline void output(State &state, Domain const &dom, Parallel const &par) {
+    int dimids[4];
+    MPI_Offset st[1], ct[1];
+    Array<real> xCoord(dom.nx);
+    Array<real> yCoord(dom.ny);
+    Array<real> zCoord(dom.nz);
+
+    // Create the file
+    ncwrap( ncmpi_open( MPI_COMM_WORLD , "output.nc" , NC_WRITE , MPI_INFO_NULL , &ncid ) , __LINE__ );
+    ncwrap( ncmpi_inq_varid( ncid , "density" , &rVar  ) , __LINE__ );
+    ncwrap( ncmpi_inq_varid( ncid , "u"       , &uVar  ) , __LINE__ );
+    ncwrap( ncmpi_inq_varid( ncid , "v"       , &vVar  ) , __LINE__ );
+    ncwrap( ncmpi_inq_varid( ncid , "w"       , &wVar  ) , __LINE__ );
+    ncwrap( ncmpi_inq_varid( ncid , "theta"   , &thVar ) , __LINE__ );
+
+    writeState(state, dom, par);
+
+    ncwrap( ncmpi_close(ncid) , __LINE__ );
+
+    numOut++;
   }
 
   void writeState(State &state, Domain const &dom, Parallel const &par) {

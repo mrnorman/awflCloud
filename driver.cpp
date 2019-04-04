@@ -32,4 +32,6 @@ int main(int argc, char** argv) {
 
   // Output the initial model state
   io.outputInit(state, dom, par);
+
+  io.output(state, dom, par);
 }
