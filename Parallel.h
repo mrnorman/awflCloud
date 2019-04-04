@@ -14,6 +14,10 @@ public:
   ulong py;
   ulong ix;
   ulong iy;
+  ulong iBeg;
+  ulong jBeg;
+  ulong iEnd;
+  ulong jEnd;
   int masterTask;
 };
 

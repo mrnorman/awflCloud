@@ -29,6 +29,10 @@ public:
     par.myTask = 0;
     par.ix = 0;
     par.iy = 0;
+    par.iBeg = 0;
+    par.jBeg = 0;
+    par.iEnd = dom.nx_glob;
+    par.jEnd = dom.ny_glob;
     par.masterTask = 1;
     dom.nx = dom.nx_glob;
     dom.ny = dom.ny_glob;

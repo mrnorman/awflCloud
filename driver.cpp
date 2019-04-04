@@ -8,6 +8,7 @@
 #include "Parser.h"
 #include "State.h"
 #include "Initializer.h"
+#include "FileIO.h"
 #include "Array.h"
 
 int main(int argc, char** argv) {
@@ -16,6 +17,10 @@ int main(int argc, char** argv) {
   Parallel par;
   Parser parser;
   Initializer init;
+  FileIO io;
+
+  // Initialize MPI
+  int ierr = MPI_Init( &argc , &argv );
 
   // Default input file is "input.txt" unless the user passes in another file
   std::string inFile = "input.txt";
@@ -24,4 +29,7 @@ int main(int argc, char** argv) {
 
   // Initialize the model
   init.initialize(state, dom, par);
+
+  // Output the initial model state
+  io.outputInit(state, dom, par);
 }
