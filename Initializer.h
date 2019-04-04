@@ -42,9 +42,9 @@ public:
     // Allocate the fluid state variable
     state.state.setup( numState , dom.nz+2*hs , dom.ny+2*hs , dom.nx+2*hs );
 
-    state.hyDensCells     .setup( dom.nz+2*hs );
-    state.hyDensThetaCells.setup( dom.nz+2*hs );
-    state.hyPressureCells .setup( dom.nz+2*hs );
+    state.hyDensCells     .setup( dom.nz );
+    state.hyDensThetaCells.setup( dom.nz );
+    state.hyPressureCells .setup( dom.nz );
 
     state.hyDensGLL     .setup( dom.nz , tord );
     state.hyDensThetaGLL.setup( dom.nz , tord );
@@ -54,9 +54,9 @@ public:
 
     // Initialize the hydrostatic background state for cell averages
     for (int k=0; k<dom.nz; k++) {
-      state.hyDensCells     (hs+k) = 0;
-      state.hyDensThetaCells(hs+k) = 0;
-      state.hyPressureCells (hs+k) = 0;
+      state.hyDensCells     (k) = 0;
+      state.hyDensThetaCells(k) = 0;
+      state.hyPressureCells (k) = 0;
       // Perform ord-point GLL quadrature for the cell averages
       for (int kk=0; kk<ord; kk++) {
         real zloc = (k + 0.5_fp)*dom.dz + gllOrdPoints(kk)*dom.dz;
@@ -66,12 +66,11 @@ public:
         hydro.hydroConstTheta( t0 , zloc , r );
         t = t0;
 
-        state.hyDensCells     (hs+k) += gllOrdWeights(kk) * r;
-        state.hyDensThetaCells(hs+k) += gllOrdWeights(kk) * r*t;
-        state.hyPressureCells (hs+k) += gllOrdWeights(kk) * mypow( r*t , GAMMA );
+        state.hyDensCells     (k) += gllOrdWeights(kk) * r;
+        state.hyDensThetaCells(k) += gllOrdWeights(kk) * r*t;
+        state.hyPressureCells (k) += gllOrdWeights(kk) * mypow( r*t , GAMMA );
       }
     }
-    //TODO: Apply boundary conditions to background state for cell averages
 
     // Initialize the hydrostatic background state for GLL points
     for (int k=0; k<dom.nz; k++) {
@@ -91,8 +90,56 @@ public:
     }
 
     // Initialize the state
+    for (int k=0; k<dom.nz; k++) {
+      for (int j=0; j<dom.ny; j++) {
+        for (int i=0; i<dom.nx; i++) {
+          // Initialize the state to zero
+          for (int l=0; l<numState; l++) {
+            state.state(l,hs+k,hs+j,hs+i) = 0;
+          }
+          // Perform ord-point GLL quadrature for the cell averages
+          for (int kk=0; kk<ord; kk++) {
+            real zloc = (k + 0.5_fp)*dom.dz + gllOrdPoints(kk)*dom.dz;
+            real const t0 = 300._fp;
+            real r, t;
 
+            hydro.hydroConstTheta( t0 , zloc , r );
+            t = t0;
+
+            state.state(idR ,hs+k,hs+j,hs+i) += gllOrdWeights(kk) * r;
+            state.state(idRT,hs+k,hs+j,hs+i) += gllOrdWeights(kk) * r*t;
+          }
+        }
+      }
+    }
+
+    dom.dt = 1.e12_fp;
     // Compute the time step based on the CFL value
+    for (int k=0; k<dom.nz; k++) {
+      for (int j=0; j<dom.ny; j++) {
+        for (int i=0; i<dom.nx; i++) {
+          // Grab state variables
+          real r = state.state(idR ,hs+k,hs+j,hs+i)    ;
+          real u = state.state(idRU,hs+k,hs+j,hs+i) / r;
+          real v = state.state(idRV,hs+k,hs+j,hs+i) / r;
+          real w = state.state(idRW,hs+k,hs+j,hs+i) / r;
+          real t = state.state(idRT,hs+k,hs+j,hs+i) / r;
+          real p = C0 * mypow( r*t , GAMMA );
+          real cs = mysqrt( GAMMA * p / r );
+
+          // Compute the max wave
+          real maxWave = max( max( myfabs(u) , myfabs(v)) , myfabs(w)) + cs;
+
+          // Compute the time step
+          dom.dt = min( dom.dt , dom.cfl * dom.dx / maxWave );
+        }
+      }
+    }
+
+    std::cout << "dx: " << dom.dx << "\n";
+    std::cout << "dy: " << dom.dy << "\n";
+    std::cout << "dz: " << dom.dz << "\n";
+    std::cout << "dt: " << dom.dt << "\n";
 
   }
 

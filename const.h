@@ -19,16 +19,16 @@ inline _HOSTDEV real operator"" _fp( long double x ) {
 }
 
 #define ord  5
-#define tord 2
+#define tord 3
 uint const hs = (ord-1)/2;
 
 uint const numState = 5;
 
 uint const idR  = 0;
 uint const idRU = 1;
-uint const idRV = 3;
-uint const idRW = 4;
-uint const idRT = 5;
+uint const idRV = 2;
+uint const idRW = 3;
+uint const idRT = 4;
 
 // Some physical constants
 real const PI    = 3.1415926535897932384626433832795028842;
@@ -46,5 +46,14 @@ inline _HOSTDEV double mysqrt( double const x ) { return sqrt (x); }
 inline _HOSTDEV float  mysqrt( float  const x ) { return sqrtf(x); }
 inline _HOSTDEV double myfabs( double const x ) { return fabs (x); }
 inline _HOSTDEV float  myfabs( float  const x ) { return fabsf(x); }
+
+template <class T> inline _HOSTDEV T min( T const v1 , T const v2 ) {
+  if (v1 < v2) { return v1; }
+  else         { return v2; }
+}
+template <class T> inline _HOSTDEV T max( T const v1 , T const v2 ) {
+  if (v1 > v2) { return v1; }
+  else         { return v2; }
+}
 
 #endif
