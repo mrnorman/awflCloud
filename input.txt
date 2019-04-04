@@ -2,8 +2,8 @@
 
  // Input parameters for the model
 
-nx        : 20      // Number of cells in the x-direction
-ny        : 20      // Number of cells in the y-direction
+nx        : 40      // Number of cells in the x-direction
+ny        : 40      // Number of cells in the y-direction
 nz        : 20      // Number of cells in the z-direction
 xlen      : 20000.  // Domain length in the x-direction (m)
 ylen      : 20000.  // Domain length in the y-direction (m)

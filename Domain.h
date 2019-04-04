@@ -26,7 +26,9 @@ public:
 
   real cfl;
   real simLength;
-  
+
+  real etime;
+
   real dt;
 };
 

@@ -38,6 +38,7 @@ public:
     dom.ny = dom.ny_glob;
 
     // Initialize the grid
+    dom.etime = 0;
     dom.nz = dom.nz_glob;
     dom.dx = dom.xlen / dom.nx_glob;
     dom.dy = dom.ylen / dom.ny_glob;
