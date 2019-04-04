@@ -99,15 +99,23 @@ public:
           }
           // Perform ord-point GLL quadrature for the cell averages
           for (int kk=0; kk<ord; kk++) {
-            real zloc = (k + 0.5_fp)*dom.dz + gllOrdPoints(kk)*dom.dz;
-            real const t0 = 300._fp;
-            real r, t;
+            for (int jj=0; jj<ord; jj++) {
+              for (int ii=0; ii<ord; ii++) {
+                real xloc = (i + 0.5_fp)*dom.dx + gllOrdPoints(ii)*dom.dx;
+                real yloc = (j + 0.5_fp)*dom.dy + gllOrdPoints(jj)*dom.dy;
+                real zloc = (k + 0.5_fp)*dom.dz + gllOrdPoints(kk)*dom.dz;
+                real const t0 = 300._fp;
+                real r, t;
 
-            hydro.hydroConstTheta( t0 , zloc , r );
-            t = t0;
+                hydro.hydroConstTheta( t0 , zloc , r );
+                t = t0;
+                t += ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, 2000, 2000, 2000, 2000, 2);
 
-            state.state(idR ,hs+k,hs+j,hs+i) += gllOrdWeights(kk) * r;
-            state.state(idRT,hs+k,hs+j,hs+i) += gllOrdWeights(kk) * r*t;
+                real wt = gllOrdWeights(ii)*gllOrdWeights(jj)*gllOrdWeights(kk);
+                state.state(idR ,hs+k,hs+j,hs+i) += wt * r;
+                state.state(idRT,hs+k,hs+j,hs+i) += wt * r*t;
+              }
+            }
           }
         }
       }
@@ -141,6 +149,17 @@ public:
     std::cout << "dz: " << dom.dz << "\n";
     std::cout << "dt: " << dom.dt << "\n";
 
+  }
+
+
+  inline real ellipsoid_linear(real const x   , real const y   , real const z ,
+                               real const x0  , real const y0  , real const z0,
+                               real const xrad, real const yrad, real const zrad, real const amp) {
+    real xn = (x-x0)/xrad;
+    real yn = (y-y0)/yrad;
+    real zn = (z-z0)/zrad;
+    real dist = mysqrt( xn*xn + yn*yn + zn*zn );
+    return amp * max( 1._fp - dist , 0._fp );
   }
 
 };
