@@ -14,13 +14,14 @@
 
 int main(int argc, char** argv) {
   // Create the model objects
-  State       state;
-  Domain      dom;
-  Parallel    par;
-  Parser      parser;
-  Initializer init;
-  FileIO      io;
-  Exchange    exch;
+  State          state;
+  Domain         dom;
+  Parallel       par;
+  Parser         parser;
+  Initializer    init;
+  FileIO         io;
+  Exchange       exch;
+  TimeIntegrator tint;
 
   // Initialize MPI and read the input file
   init.initialize_mpi( &argc , &argv , par );
