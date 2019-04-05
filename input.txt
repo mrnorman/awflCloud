@@ -1,6 +1,7 @@
 
-
- // Input parameters for the model
+// Input parameters for the model
+// Legal syntax is key : value
+// You can end input key:value lines with comments
 
 nx        : 40      // Number of cells in the x-direction
 ny        : 40      // Number of cells in the y-direction

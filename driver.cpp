@@ -13,15 +13,16 @@
 #include "Exchange.h"
 
 int main(int argc, char** argv) {
-  State state;
-  Domain dom;
-  Parallel par;
-  Parser parser;
+  // Create the model objects
+  State       state;
+  Domain      dom;
+  Parallel    par;
+  Parser      parser;
   Initializer init;
-  FileIO io;
-  Exchange exch;
+  FileIO      io;
+  Exchange    exch;
 
-  // Initialize MPI
+  // Initialize MPI and read the input file
   init.initialize_mpi( &argc , &argv , par );
 
   // Default input file is "input.txt" unless the user passes in another file
@@ -35,5 +36,4 @@ int main(int argc, char** argv) {
   // Output the initial model state
   io.outputInit(state, dom, par);
 
-  io.output(state, dom, par);
 }

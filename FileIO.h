@@ -18,7 +18,7 @@ protected:
 
 public:
 
-  inline void outputInit(State &state, Domain const &dom, Parallel const &par) {
+  void outputInit(State &state, Domain const &dom, Parallel const &par) {
     int dimids[4];
     MPI_Offset st[1], ct[1];
     Array<real> xCoord(dom.nx);
@@ -88,7 +88,7 @@ public:
   }
 
 
-  inline void output(State &state, Domain const &dom, Parallel const &par) {
+  void output(State &state, Domain const &dom, Parallel const &par) {
     int dimids[4];
     MPI_Offset st[1], ct[1];
     Array<real> xCoord(dom.nx);

@@ -14,7 +14,7 @@ class Initializer{
 public:
 
 
-  inline void initialize_mpi( int *argc , char ***argv , Parallel &par ) {
+  void initialize_mpi( int *argc , char ***argv , Parallel &par ) {
     int ierr = MPI_Init( argc , argv );
     ierr = MPI_Comm_size(MPI_COMM_WORLD,&par.nranks);
     ierr = MPI_Comm_rank(MPI_COMM_WORLD,&par.myrank);
@@ -27,7 +27,7 @@ public:
     }
   }
 
-  inline void initialize(State &state, Domain &dom, Parallel &par, Exchange &exch) {
+  void initialize(State &state, Domain &dom, Parallel &par, Exchange &exch) {
     int ierr;
     SArray<real,ord> gllOrdPoints;
     SArray<real,ord> gllOrdWeights;
@@ -74,7 +74,8 @@ public:
       }
     }
 
-    if (1) {
+    // Debug output for the parallel decomposition
+    if (0) {
       for (int rr=0; rr < par.nranks; rr++) {
         if (rr == par.myrank) {
           std::cout << "Hello! My Rank is what, my rank is who, my rank is: " << par.myrank << "\n";
@@ -102,6 +103,7 @@ public:
     dom.dy = dom.ylen / dom.ny_glob;
     dom.dz = dom.zlen / dom.nz_glob;
 
+    // Allocate the MPI exchange buffers
     exch.allocate(dom);
 
     // Allocate the fluid state variable
@@ -223,9 +225,9 @@ public:
   }
 
 
-  inline real ellipsoid_linear(real const x   , real const y   , real const z ,
-                               real const x0  , real const y0  , real const z0,
-                               real const xrad, real const yrad, real const zrad, real const amp) {
+  real ellipsoid_linear(real const x   , real const y   , real const z ,
+                        real const x0  , real const y0  , real const z0,
+                        real const xrad, real const yrad, real const zrad, real const amp) {
     real xn = (x-x0)/xrad;
     real yn = (y-y0)/yrad;
     real zn = (z-z0)/zrad;

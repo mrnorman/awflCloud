@@ -12,21 +12,11 @@ protected:
 
   int const maxPack = 10;
 
-  int const ID_E  = 0;  //East
-  int const ID_NE = 1;  //Northeast
-  int const ID_N  = 2;  //North
-  int const ID_NW = 3;  //Northwest
-  int const ID_W  = 4;  //West
-  int const ID_SW = 5;  //Southwest
-  int const ID_S  = 6;  //South
-  int const ID_SE = 7;  //Southeast
-  int const ID_C  = 8;  //Center
+  MPI_Request sReq [2];
+  MPI_Request rReq [2];
 
-  MPI_Request sReq [8];
-  MPI_Request rReq [8];
-
-  MPI_Status  sStat[8];
-  MPI_Status  rStat[8];
+  MPI_Status  sStat[2];
+  MPI_Status  rStat[2];
 
   int nPack;
   int nUnpack;
