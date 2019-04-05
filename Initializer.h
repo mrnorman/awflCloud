@@ -4,6 +4,7 @@
 
 #include "const.h"
 #include "Hydrostasis.h"
+#include "Exchange.h"
 #include "TransformMatrices.h"
 #include "Array.h"
 #include "mpi.h"
@@ -26,7 +27,7 @@ public:
     }
   }
 
-  inline void initialize(State &state, Domain &dom, Parallel &par) {
+  inline void initialize(State &state, Domain &dom, Parallel &par, Exchange &exch) {
     int ierr;
     SArray<real,ord> gllOrdPoints;
     SArray<real,ord> gllOrdWeights;
@@ -100,6 +101,8 @@ public:
     dom.dx = dom.xlen / dom.nx_glob;
     dom.dy = dom.ylen / dom.ny_glob;
     dom.dz = dom.zlen / dom.nz_glob;
+
+    exch.allocate(dom);
 
     // Allocate the fluid state variable
     state.state.setup( numState , dom.nz+2*hs , dom.ny+2*hs , dom.nx+2*hs );

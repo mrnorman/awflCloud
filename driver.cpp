@@ -10,6 +10,7 @@
 #include "Initializer.h"
 #include "FileIO.h"
 #include "Array.h"
+#include "Exchange.h"
 
 int main(int argc, char** argv) {
   State state;
@@ -18,6 +19,7 @@ int main(int argc, char** argv) {
   Parser parser;
   Initializer init;
   FileIO io;
+  Exchange exch;
 
   // Initialize MPI
   init.initialize_mpi( &argc , &argv , par );
@@ -28,7 +30,7 @@ int main(int argc, char** argv) {
   parser.readParamsFile(inFile, dom, par);
 
   // Initialize the model
-  init.initialize(state, dom, par);
+  init.initialize(state, dom, par, exch);
 
   // Output the initial model state
   io.outputInit(state, dom, par);
