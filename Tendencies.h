@@ -19,7 +19,9 @@ class Tendencies {
 
 public :
 
+
   Array<real> tend;
+
 
   inline void initialize(Domain &dom) {
     fluxLimits .setup(numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
@@ -27,6 +29,7 @@ public :
     flux       .setup(numState  ,dom.nz+1,dom.ny+1,dom.nx+1);
     tend       .setup(numState  ,dom.nz  ,dom.ny  ,dom.nx  );
   }
+
 
   inline void compEulerTendSD_X(Array<real> &state, Domain &dom, Exchange &exch, Parallel &par) {
     SArray<real,ord,ord,ord> s2g_lower_tmp;
@@ -115,7 +118,6 @@ public :
 
           for (int l=0; l<numState; l++) {
             flux(l,k,j,i) = 0.5_fp * ( fluxLimits(l,1,k,j,i) + fluxLimits(l,0,k,j,i) - maxwave * ( stateLimits(l,1,k,j,i) - stateLimits(l,0,k,j,i) ) );
-            // flux(l,k,j,i) = 0.5_fp * ( fluxLimits(l,1,k,j,i) + fluxLimits(l,0,k,j,i)                                                                 );
           }
         }
       }
@@ -127,6 +129,112 @@ public :
         for (int j=0; j<dom.ny; j++) {
           for (int i=0; i<dom.nx; i++) {
             tend(l,k,j,i) = - ( flux(l,k,j,i+1) - flux(l,k,j,i) ) / dom.dx;
+          }
+        }
+      }
+    }
+
+  }
+
+
+  inline void compEulerTendSD_Y(Array<real> &state, Domain &dom, Exchange &exch, Parallel &par) {
+    SArray<real,ord,ord,ord> s2g_lower_tmp;
+    SArray<real,ord,2> s2g_lower;
+
+    // Setup the matrix to transform a stencil of ord cell averages into 2 GLL points
+    trans.sten_to_gll_lower( s2g_lower_tmp );
+    for (int j=0; j<ord; j++) {
+      for (int i=0; i<2; i++) {
+        s2g_lower(j,i) = s2g_lower_tmp(1,j,i);
+      }
+    }
+
+    //Exchange halos in the x-direction
+    exch.haloInit      ();
+    exch.haloPackN_y   (dom, state, numState);
+    exch.haloExchange_y(dom, par);
+    exch.haloUnpackN_y (dom, state, numState);
+
+    // Reconstruct to 2 GLL points in the x-direction
+    for (int k=0; k<dom.nz; k++) {
+      for (int j=0; j<dom.ny; j++) {
+        for (int i=0; i<dom.nx; i++) {
+          SArray<real,numState,2> gllState;
+          SArray<real,numState,2> gllFlux;
+
+          // Compute GLL points from cell averages
+          for (int l=0; l<numState; l++) {
+            for (int ii=0; ii<2; ii++) {
+              gllState(l,ii) = 0.;
+              for (int s=0; s<ord; s++) {
+                gllState(l,ii) += s2g_lower(s,ii) * state(l,hs+k,j+s,hs+i);
+              }
+            }
+          }
+
+          // Compute fluxes and at the GLL points
+          for (int ii=0; ii<2; ii++) {
+            real r = gllState(idR ,ii);
+            real u = gllState(idRU,ii) / r;
+            real v = gllState(idRV,ii) / r;
+            real w = gllState(idRW,ii) / r;
+            real t = gllState(idRT,ii) / r;
+            real p = C0 * mypow( r*t , GAMMA );
+
+            gllFlux(idR ,ii) = r*v;
+            gllFlux(idRU,ii) = r*v*u;
+            gllFlux(idRV,ii) = r*v*v + p;
+            gllFlux(idRW,ii) = r*v*w;
+            gllFlux(idRT,ii) = r*v*t;
+          }
+
+          // Store state and flux limits into a globally indexed array
+          for (int l=0; l<numState; l++) {
+            // Store the left cell edge state and flux estimates
+            stateLimits(l,1,k,j  ,i) = gllState(l,0);
+            fluxLimits (l,1,k,j  ,i) = gllFlux (l,0);
+
+            // Store the Right cell edge state and flux estimates
+            stateLimits(l,0,k,j+1,i) = gllState(l,1);
+            fluxLimits (l,0,k,j+1,i) = gllFlux (l,1);
+          }
+
+        }
+      }
+    }
+
+    //Reconcile the edge fluxes via MPI exchange.
+    exch.haloInit      ();
+    exch.edgePackN_y   (dom, stateLimits, numState);
+    exch.edgePackN_y   (dom, fluxLimits , numState);
+    exch.edgeExchange_y(dom, par);
+    exch.edgeUnpackN_y (dom, stateLimits, numState);
+    exch.edgeUnpackN_y (dom, fluxLimits , numState);
+
+    // Local lax-friedrichs fluxes
+    for (int k=0; k<dom.nz; k++) {
+      for (int j=0; j<dom.ny+1; j++) {
+        for (int i=0; i<dom.nx; i++) {
+          real r = 0.5_fp * ( stateLimits(idR ,0,k,j,i) + stateLimits(idR ,1,k,j,i) );
+          real u = 0.5_fp * ( stateLimits(idRU,0,k,j,i) + stateLimits(idRU,1,k,j,i) ) / r;
+          real t = 0.5_fp * ( stateLimits(idRT,0,k,j,i) + stateLimits(idRT,1,k,j,i) ) / r;
+          real p = C0 * mypow( r*t , GAMMA );
+          real cs = mysqrt( GAMMA * p / r );
+          real maxwave = myfabs(u) + cs;
+
+          for (int l=0; l<numState; l++) {
+            flux(l,k,j,i) = 0.5_fp * ( fluxLimits(l,1,k,j,i) + fluxLimits(l,0,k,j,i) - maxwave * ( stateLimits(l,1,k,j,i) - stateLimits(l,0,k,j,i) ) );
+          }
+        }
+      }
+    }
+
+    // Form the tendencies
+    for (int l=0; l<numState; l++) {
+      for (int k=0; k<dom.nz; k++) {
+        for (int j=0; j<dom.ny; j++) {
+          for (int i=0; i<dom.nx; i++) {
+            tend(l,k,j,i) = - ( flux(l,k,j+1,i) - flux(l,k,j,i) ) / dom.dy;
           }
         }
       }
