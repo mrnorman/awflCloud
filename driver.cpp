@@ -40,4 +40,6 @@ int main(int argc, char** argv) {
 
   tint.stepForward(state, dom, exch, par);
 
+  io.output(state, dom, par);
+
 }

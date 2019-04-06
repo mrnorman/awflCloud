@@ -15,10 +15,11 @@ class Tendencies {
   Array<real> stateLimits;
   Array<real> fluxLimits;
   Array<real> flux;
-  Array<real> tend;
   TransformMatrices<real> trans;
 
 public :
+
+  Array<real> tend;
 
   inline void initialize(Domain &dom) {
     fluxLimits .setup(numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
@@ -38,6 +39,12 @@ public :
         s2g_lower(j,i) = s2g_lower_tmp(1,j,i);
       }
     }
+
+    //Exchange halos in the x-direction
+    exch.haloInit      ();
+    exch.haloPackN_x   (dom, state, numState);
+    exch.haloExchange_x(dom, par);
+    exch.haloUnpackN_x (dom, state, numState);
 
     // Reconstruct to 2 GLL points in the x-direction
     for (int k=0; k<dom.nz; k++) {
@@ -108,6 +115,7 @@ public :
 
           for (int l=0; l<numState; l++) {
             flux(l,k,j,i) = 0.5_fp * ( fluxLimits(l,1,k,j,i) + fluxLimits(l,0,k,j,i) - maxwave * ( stateLimits(l,1,k,j,i) - stateLimits(l,0,k,j,i) ) );
+            // flux(l,k,j,i) = 0.5_fp * ( fluxLimits(l,1,k,j,i) + fluxLimits(l,0,k,j,i)                                                                 );
           }
         }
       }
