@@ -448,7 +448,7 @@ template <class T> class Array {
     #ifdef ARRAY_DEBUG
     if (ind < lb || ind > ub) {
       std::stringstream ss;
-      ss << "Index " << dim << " of " << this->ndims << " out of bounds\n";
+      ss << "Index " << dim+1 << " of " << this->ndims << " out of bounds\n";
       ss << "File, Line: " << file << ", " << line << "\n";
       ss << "Index: " << ind << ". Bounds: (" << lb << "," << ub << ")\n";
       throw std::out_of_range(ss.str());

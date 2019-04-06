@@ -6,6 +6,7 @@
 #include "Hydrostasis.h"
 #include "Exchange.h"
 #include "TransformMatrices.h"
+#include "TimeIntegrator.h"
 #include "Array.h"
 #include "mpi.h"
 
@@ -27,7 +28,7 @@ public:
     }
   }
 
-  void initialize(State &state, Domain &dom, Parallel &par, Exchange &exch) {
+  void initialize(State &state, Domain &dom, Parallel &par, Exchange &exch, TimeIntegrator &tint) {
     int ierr;
     SArray<real,ord> gllOrdPoints;
     SArray<real,ord> gllOrdWeights;
@@ -102,6 +103,8 @@ public:
     dom.dx = dom.xlen / dom.nx_glob;
     dom.dy = dom.ylen / dom.ny_glob;
     dom.dz = dom.zlen / dom.nz_glob;
+
+    tint.initialize(dom);
 
     // Allocate the MPI exchange buffers
     exch.allocate(dom);

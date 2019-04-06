@@ -7,6 +7,7 @@
 #include "SArray.h"
 #include "Array.h"
 #include "Domain.h"
+#include "Exchange.h"
 #include "TransformMatrices.h"
 
 class Tendencies {
@@ -14,6 +15,7 @@ class Tendencies {
   Array<real> stateLimits;
   Array<real> fluxLimits;
   Array<real> flux;
+  Array<real> tend;
   TransformMatrices<real> trans;
 
 public :
@@ -22,9 +24,10 @@ public :
     fluxLimits .setup(numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
     stateLimits.setup(numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
     flux       .setup(numState  ,dom.nz+1,dom.ny+1,dom.nx+1);
+    tend       .setup(numState  ,dom.nz  ,dom.ny  ,dom.nx  );
   }
 
-  inline void compEulerTendSemiX(Array<real> &state, Array<real> &tend, Domain &dom, Parallel &par) {
+  inline void compEulerTendSD_X(Array<real> &state, Domain &dom, Exchange &exch, Parallel &par) {
     SArray<real,ord,ord,ord> s2g_lower_tmp;
     SArray<real,ord,2> s2g_lower;
 
@@ -44,7 +47,7 @@ public :
           SArray<real,numState,2> gllFlux;
 
           // Compute GLL points from cell averages
-          for (int l=0; l<numState l++) {
+          for (int l=0; l<numState; l++) {
             for (int ii=0; ii<2; ii++) {
               gllState(l,ii) = 0.;
               for (int s=0; s<ord; s++) {
@@ -62,22 +65,22 @@ public :
             real t = gllState(idRT,ii) / r;
             real p = C0 * mypow( r*t , GAMMA );
 
-            fluxGLL(idR ,ii) = r*u;
-            fluxGLL(idRU,ii) = r*u*u + p;
-            fluxGLL(idRV,ii) = r*u*v;
-            fluxGLL(idRW,ii) = r*u*w;
-            fluxGLL(idRT,ii) = r*u*t;
+            gllFlux(idR ,ii) = r*u;
+            gllFlux(idRU,ii) = r*u*u + p;
+            gllFlux(idRV,ii) = r*u*v;
+            gllFlux(idRW,ii) = r*u*w;
+            gllFlux(idRT,ii) = r*u*t;
           }
 
           // Store state and flux limits into a globally indexed array
           for (int l=0; l<numState; l++) {
             // Store the left cell edge state and flux estimates
-            stateLimits(numState,1,k,j,i  ) = stateGLL(l,0);
-            fluxLimits (numState,1,k,j,i  ) = fluxGLL (l,0);
+            stateLimits(l,1,k,j,i  ) = gllState(l,0);
+            fluxLimits (l,1,k,j,i  ) = gllFlux (l,0);
 
             // Store the Right cell edge state and flux estimates
-            stateLimits(numState,0,k,j,i+1) = stateGLL(l,1);
-            fluxLimits (numState,0,k,j,i+1) = fluxGLL (l,1);
+            stateLimits(l,0,k,j,i+1) = gllState(l,1);
+            fluxLimits (l,0,k,j,i+1) = gllFlux (l,1);
           }
 
         }
@@ -85,12 +88,12 @@ public :
     }
 
     //Reconcile the edge fluxes via MPI exchange.
-    haloInit      ();
-    edgePackN_x   (dom, stateLimits, numState);
-    edgePackN_x   (dom, fluxLimits , numState);
-    edgeExchange_x(dom, par);
-    edgeUnpackN_x (dom, stateLimits, numState);
-    edgeUnpackN_x (dom, fluxLimits , numState);
+    exch.haloInit      ();
+    exch.edgePackN_x   (dom, stateLimits, numState);
+    exch.edgePackN_x   (dom, fluxLimits , numState);
+    exch.edgeExchange_x(dom, par);
+    exch.edgeUnpackN_x (dom, stateLimits, numState);
+    exch.edgeUnpackN_x (dom, fluxLimits , numState);
 
     // Local lax-friedrichs fluxes
     for (int k=0; k<dom.nz; k++) {
@@ -101,10 +104,10 @@ public :
           real t = 0.5_fp * ( stateLimits(idRT,0,k,j,i) + stateLimits(idRT,1,k,j,i) ) / r;
           real p = C0 * mypow( r*t , GAMMA );
           real cs = mysqrt( GAMMA * p / r );
-          real maxwave = myabs(u) + cs;
+          real maxwave = myfabs(u) + cs;
 
           for (int l=0; l<numState; l++) {
-            flux(k,j,i) = 0.5_fp * ( fluxLimits(l,1,k,j,i) + fluxLimits(l,0,k,j,i) - maxwave * ( stateLimits(l,1,k,j,i) - stateLimits(l,0,k,j,i) ) )
+            flux(l,k,j,i) = 0.5_fp * ( fluxLimits(l,1,k,j,i) + fluxLimits(l,0,k,j,i) - maxwave * ( stateLimits(l,1,k,j,i) - stateLimits(l,0,k,j,i) ) );
           }
         }
       }
@@ -114,8 +117,8 @@ public :
     for (int l=0; l<numState; l++) {
       for (int k=0; k<dom.nz; k++) {
         for (int j=0; j<dom.ny; j++) {
-          for (int i=0; i<dom.nx+1; i++) {
-            tend(k,j,i) = - ( flux(k,j,i+1) - flux(k,j,i) ) / dx;
+          for (int i=0; i<dom.nx; i++) {
+            tend(l,k,j,i) = - ( flux(l,k,j,i+1) - flux(l,k,j,i) ) / dom.dx;
           }
         }
       }
