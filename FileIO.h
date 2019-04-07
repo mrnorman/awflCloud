@@ -38,22 +38,22 @@ public:
 
     // Create the variables
     dimids[0] = tDim;
-    ncwrap( ncmpi_def_var( ncid , "t"      , NC_FLOAT , 1 , dimids , &tVar ) , __LINE__ );
+    ncwrap( ncmpi_def_var( ncid , "t"      , NC_DOUBLE , 1 , dimids , &tVar ) , __LINE__ );
     dimids[0] = xDim;
-    ncwrap( ncmpi_def_var( ncid , "x"      , NC_FLOAT , 1 , dimids , &xVar ) , __LINE__ );
+    ncwrap( ncmpi_def_var( ncid , "x"      , NC_DOUBLE , 1 , dimids , &xVar ) , __LINE__ );
     dimids[0] = yDim;
-    ncwrap( ncmpi_def_var( ncid , "y"      , NC_FLOAT , 1 , dimids , &yVar ) , __LINE__ );
+    ncwrap( ncmpi_def_var( ncid , "y"      , NC_DOUBLE , 1 , dimids , &yVar ) , __LINE__ );
     dimids[0] = zDim;
-    ncwrap( ncmpi_def_var( ncid , "z"      , NC_FLOAT , 1 , dimids , &zVar ) , __LINE__ );
+    ncwrap( ncmpi_def_var( ncid , "z"      , NC_DOUBLE , 1 , dimids , &zVar ) , __LINE__ );
     dimids[0] = tDim; dimids[1] = zDim; dimids[2] = yDim; dimids[3] = xDim;
-    ncwrap( ncmpi_def_var( ncid , "density" , NC_FLOAT , 4 , dimids , &rVar  ) , __LINE__ );
-    ncwrap( ncmpi_def_var( ncid , "u"       , NC_FLOAT , 4 , dimids , &uVar  ) , __LINE__ );
-    ncwrap( ncmpi_def_var( ncid , "v"       , NC_FLOAT , 4 , dimids , &vVar  ) , __LINE__ );
-    ncwrap( ncmpi_def_var( ncid , "w"       , NC_FLOAT , 4 , dimids , &wVar  ) , __LINE__ );
-    ncwrap( ncmpi_def_var( ncid , "theta"   , NC_FLOAT , 4 , dimids , &thVar ) , __LINE__ );
+    ncwrap( ncmpi_def_var( ncid , "density" , NC_DOUBLE , 4 , dimids , &rVar  ) , __LINE__ );
+    ncwrap( ncmpi_def_var( ncid , "u"       , NC_DOUBLE , 4 , dimids , &uVar  ) , __LINE__ );
+    ncwrap( ncmpi_def_var( ncid , "v"       , NC_DOUBLE , 4 , dimids , &vVar  ) , __LINE__ );
+    ncwrap( ncmpi_def_var( ncid , "w"       , NC_DOUBLE , 4 , dimids , &wVar  ) , __LINE__ );
+    ncwrap( ncmpi_def_var( ncid , "theta"   , NC_DOUBLE , 4 , dimids , &thVar ) , __LINE__ );
     dimids[0] = zDim;
-    ncwrap( ncmpi_def_var( ncid , "hyDens"      , NC_FLOAT , 1 , dimids , &hyrVar  ) , __LINE__ );
-    ncwrap( ncmpi_def_var( ncid , "hyDensTheta" , NC_FLOAT , 1 , dimids , &hyrtVar ) , __LINE__ );
+    ncwrap( ncmpi_def_var( ncid , "hyDens"      , NC_DOUBLE , 1 , dimids , &hyrVar  ) , __LINE__ );
+    ncwrap( ncmpi_def_var( ncid , "hyDensTheta" , NC_DOUBLE , 1 , dimids , &hyrtVar ) , __LINE__ );
 
     // End "define" mode
     ncwrap( ncmpi_enddef( ncid ) , __LINE__ );
@@ -66,18 +66,18 @@ public:
     // Write out x, y, and z coordinates
     st[0] = par.i_beg;
     ct[0] = dom.nx;
-    ncwrap( ncmpi_put_vara_float_all( ncid , xVar , st , ct , xCoord.get_data() ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_double_all( ncid , xVar , st , ct , xCoord.get_data() ) , __LINE__ );
     st[0] = par.j_beg;
     ct[0] = dom.ny;
-    ncwrap( ncmpi_put_vara_float_all( ncid , yVar , st , ct , yCoord.get_data() ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_double_all( ncid , yVar , st , ct , yCoord.get_data() ) , __LINE__ );
 
     // Write out the hydrostatic background states and z coordinates
     st[0] = 0;
     ct[0] = dom.nz_glob;
     ncwrap( ncmpi_begin_indep_data(ncid) , __LINE__ );
-    ncwrap( ncmpi_put_vara_float( ncid , zVar    , st , ct , zCoord                .get_data() ) , __LINE__ );
-    ncwrap( ncmpi_put_vara_float( ncid , hyrVar  , st , ct , state.hyDensCells     .get_data() ) , __LINE__ );
-    ncwrap( ncmpi_put_vara_float( ncid , hyrtVar , st , ct , state.hyDensThetaCells.get_data() ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_double( ncid , zVar    , st , ct , zCoord                .get_data() ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_double( ncid , hyrVar  , st , ct , state.hyDensCells     .get_data() ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_double( ncid , hyrtVar , st , ct , state.hyDensThetaCells.get_data() ) , __LINE__ );
     ncwrap( ncmpi_end_indep_data(ncid) , __LINE__ );
 
     writeState(state, dom, par);
@@ -126,7 +126,7 @@ public:
         }
       }
     }
-    ncwrap( ncmpi_put_vara_float_all( ncid , rVar , st , ct , data.get_data() ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_double_all( ncid , rVar , st , ct , data.get_data() ) , __LINE__ );
 
     // Write out u wind
     for (int k=0; k<dom.nz; k++) {
@@ -136,7 +136,7 @@ public:
         }
       }
     }
-    ncwrap( ncmpi_put_vara_float_all( ncid , uVar , st , ct , data.get_data() ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_double_all( ncid , uVar , st , ct , data.get_data() ) , __LINE__ );
 
     // Write out v wind
     for (int k=0; k<dom.nz; k++) {
@@ -146,7 +146,7 @@ public:
         }
       }
     }
-    ncwrap( ncmpi_put_vara_float_all( ncid , vVar , st , ct , data.get_data() ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_double_all( ncid , vVar , st , ct , data.get_data() ) , __LINE__ );
 
     // Write out w wind
     for (int k=0; k<dom.nz; k++) {
@@ -156,7 +156,7 @@ public:
         }
       }
     }
-    ncwrap( ncmpi_put_vara_float_all( ncid , wVar , st , ct , data.get_data() ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_double_all( ncid , wVar , st , ct , data.get_data() ) , __LINE__ );
 
     // Write out potential temperature perturbations
     for (int k=0; k<dom.nz; k++) {
@@ -167,7 +167,7 @@ public:
         }
       }
     }
-    ncwrap( ncmpi_put_vara_float_all( ncid , thVar , st , ct , data.get_data() ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_double_all( ncid , thVar , st , ct , data.get_data() ) , __LINE__ );
   }
 
 

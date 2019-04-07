@@ -10,7 +10,7 @@
 
 #include "math.h"
 
-typedef float         real;
+typedef double        real;
 typedef unsigned long ulong;
 typedef unsigned int  uint;
 
