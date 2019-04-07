@@ -303,6 +303,10 @@ public :
             gllState(idRT,ii) += hyDensThetaGLL(k,ii);
           }
 
+          // Boundary conditions
+          if (k == 0       ) { gllState(idRW,0     ) = 0; }
+          if (k == dom.nz-1) { gllState(idRW,tord-1) = 0; }
+
           // Compute fluxes and at the GLL points
           for (int ii=0; ii<tord; ii++) {
             real r = gllState(idR ,ii);
@@ -341,26 +345,26 @@ public :
         stateLimits(idRU,0,0     ,j,i) = stateLimits(idRU,1,0     ,j,i);
         stateLimits(idRV,0,0     ,j,i) = stateLimits(idRV,1,0     ,j,i);
         stateLimits(idRW,0,0     ,j,i) = 0;
+        stateLimits(idRW,1,0     ,j,i) = 0;
         stateLimits(idRT,0,0     ,j,i) = stateLimits(idRT,1,0     ,j,i);
 
         stateLimits(idR ,1,dom.nz,j,i) = stateLimits(idR ,0,dom.nz,j,i);
         stateLimits(idRU,1,dom.nz,j,i) = stateLimits(idRU,0,dom.nz,j,i);
         stateLimits(idRV,1,dom.nz,j,i) = stateLimits(idRV,0,dom.nz,j,i);
+        stateLimits(idRW,0,dom.nz,j,i) = 0;
         stateLimits(idRW,1,dom.nz,j,i) = 0;
         stateLimits(idRT,1,dom.nz,j,i) = stateLimits(idRT,0,dom.nz,j,i);
 
         fluxLimits(idR ,0,0     ,j,i) = fluxLimits(idR ,1,0     ,j,i);
         fluxLimits(idRU,0,0     ,j,i) = fluxLimits(idRU,1,0     ,j,i);
         fluxLimits(idRV,0,0     ,j,i) = fluxLimits(idRV,1,0     ,j,i);
-        fluxLimits(idRW,0,0     ,j,i) = 0;
-        fluxLimits(idRW,1,0     ,j,i) = 0;
+        fluxLimits(idRW,0,0     ,j,i) = fluxLimits(idRW,1,0     ,j,i);
         fluxLimits(idRT,0,0     ,j,i) = fluxLimits(idRT,1,0     ,j,i);
 
         fluxLimits(idR ,1,dom.nz,j,i) = fluxLimits(idR ,0,dom.nz,j,i);
         fluxLimits(idRU,1,dom.nz,j,i) = fluxLimits(idRU,0,dom.nz,j,i);
         fluxLimits(idRV,1,dom.nz,j,i) = fluxLimits(idRV,0,dom.nz,j,i);
-        fluxLimits(idRW,1,dom.nz,j,i) = 0;
-        fluxLimits(idRW,0,dom.nz,j,i) = 0;
+        fluxLimits(idRW,1,dom.nz,j,i) = fluxLimits(idRW,0,dom.nz,j,i);
         fluxLimits(idRT,1,dom.nz,j,i) = fluxLimits(idRT,0,dom.nz,j,i);
       }
     }
