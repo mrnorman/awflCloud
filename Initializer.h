@@ -112,9 +112,9 @@ public:
     // Allocate the fluid state variable
     state.state.setup( numState , dom.nz+2*hs , dom.ny+2*hs , dom.nx+2*hs );
 
-    state.hyDensCells     .setup( dom.nz );
-    state.hyDensThetaCells.setup( dom.nz );
-    state.hyPressureCells .setup( dom.nz );
+    state.hyDensCells     .setup( dom.nz+2*hs );
+    state.hyDensThetaCells.setup( dom.nz+2*hs );
+    state.hyPressureCells .setup( dom.nz+2*hs );
 
     state.hyDensGLL     .setup( dom.nz , tord );
     state.hyDensThetaGLL.setup( dom.nz , tord );
@@ -124,9 +124,9 @@ public:
 
     // Initialize the hydrostatic background state for cell averages
     for (int k=0; k<dom.nz; k++) {
-      state.hyDensCells     (k) = 0;
-      state.hyDensThetaCells(k) = 0;
-      state.hyPressureCells (k) = 0;
+      state.hyDensCells     (hs+k) = 0;
+      state.hyDensThetaCells(hs+k) = 0;
+      state.hyPressureCells (hs+k) = 0;
       // Perform ord-point GLL quadrature for the cell averages
       for (int kk=0; kk<ord; kk++) {
         real zloc = (k + 0.5_fp)*dom.dz + gllOrdPoints(kk)*dom.dz;
@@ -136,10 +136,20 @@ public:
         hydro.hydroConstTheta( t0 , zloc , r );
         t = t0;
 
-        state.hyDensCells     (k) += gllOrdWeights(kk) * r;
-        state.hyDensThetaCells(k) += gllOrdWeights(kk) * r*t;
-        state.hyPressureCells (k) += gllOrdWeights(kk) * mypow( r*t , GAMMA );
+        state.hyDensCells     (hs+k) += gllOrdWeights(kk) * r;
+        state.hyDensThetaCells(hs+k) += gllOrdWeights(kk) * r*t;
+        state.hyPressureCells (hs+k) += gllOrdWeights(kk) * mypow( r*t , GAMMA );
       }
+    }
+
+    // Enforce vertical boundaries
+    for (int ii=0; ii<hs; ii++) {
+      state.hyDensCells     (ii) = state.hyDensCells     (hs);
+      state.hyDensThetaCells(ii) = state.hyDensThetaCells(hs);
+      state.hyPressureCells (ii) = state.hyPressureCells (hs);
+      state.hyDensCells     (dom.nz+hs+ii) = state.hyDensCells     (dom.nz+hs-1);
+      state.hyDensThetaCells(dom.nz+hs+ii) = state.hyDensThetaCells(dom.nz+hs-1);
+      state.hyPressureCells (dom.nz+hs+ii) = state.hyPressureCells (dom.nz+hs-1);
     }
 
     // Initialize the hydrostatic background state for GLL points

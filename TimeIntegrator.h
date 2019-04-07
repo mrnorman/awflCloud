@@ -31,6 +31,11 @@ public :
 
     tend.compEulerTendSD_Y(state.state, dom, exch, par);
     applyTendencies(state.state, dom, tend.tend);
+
+    tend.compEulerTendSD_Z(state.state, dom, exch, par,
+                           state.hyDensCells, state.hyDensThetaCells,
+                           state.hyDensGLL  , state.hyDensThetaGLL  , state.hyPressureGLL);
+    applyTendencies(state.state, dom, tend.tend);
   }
 
   inline void applyTendencies(Array<real> &state, Domain const &dom, Array<real> const &tend) {
