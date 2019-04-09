@@ -35,6 +35,8 @@ public:
     SArray<real,tord> gllTordPoints;
     SArray<real,tord> gllTordWeights;
 
+    if (dom.ny_glob == 1) { dom.run2d = 1; } else { dom.run2d = 0; }
+
     //Get GLL points and weights
     TransformMatrices<real> trans;
     trans.get_gll_points(gllOrdPoints);
@@ -186,6 +188,8 @@ public:
                 real zloc = (k + 0.5_fp)*dom.dz + gllOrdPoints(kk)*dom.dz;
                 real const t0 = 300._fp;
                 real r, t;
+
+                if (dom.run2d) yloc = dom.ylen/2;
 
                 hydro.hydroConstTheta( t0 , zloc , r );
                 t = ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, 2000, 2000, 2000, 2000, 2);

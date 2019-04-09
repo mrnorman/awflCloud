@@ -31,22 +31,28 @@ public :
 
   inline void stepForwardSSPRK3(State &state, Domain &dom, Exchange &exch, Parallel &par) {
     // Stage 1
-    tend.compEulerTendSD_X(state.state, state.hyDensGLL, state.hyDensThetaGLL, dom, exch, par, tendArr   );
-    tend.compEulerTendSD_Y(state.state, state.hyDensGLL, state.hyDensThetaGLL, dom, exch, par, tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
+    tend.compEulerTendSD_X(state.state, state.hyDensCells, state.hyDensThetaCells, dom, exch, par, tendArr   );
+    if (!dom.run2d) {
+      tend.compEulerTendSD_Y(state.state, state.hyDensCells, state.hyDensThetaCells, dom, exch, par, tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
+    }
     tend.compEulerTendSD_Z(state.state, state.hyDensGLL, state.hyDensThetaGLL, dom, exch, par, tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
     tend.compEulerTendSD_S(state.state,                                        dom,            tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
     applyTendencies(stateTmp, state.state, dom, tendArr, dom.dt/3);
 
     // Stage 2
-    tend.compEulerTendSD_X(stateTmp, state.hyDensGLL, state.hyDensThetaGLL, dom, exch, par, tendArr   );
-    tend.compEulerTendSD_Y(stateTmp, state.hyDensGLL, state.hyDensThetaGLL, dom, exch, par, tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
+    tend.compEulerTendSD_X(stateTmp, state.hyDensCells, state.hyDensThetaCells, dom, exch, par, tendArr   );
+    if (!dom.run2d) {
+      tend.compEulerTendSD_Y(stateTmp, state.hyDensCells, state.hyDensThetaCells, dom, exch, par, tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
+    }
     tend.compEulerTendSD_Z(stateTmp, state.hyDensGLL, state.hyDensThetaGLL, dom, exch, par, tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
     tend.compEulerTendSD_S(stateTmp,                                        dom,            tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
     applyTendencies(stateTmp, state.state, dom, tendArr, dom.dt/2);
 
     // Stage 3
     tend.compEulerTendSD_X(stateTmp, state.hyDensGLL, state.hyDensThetaGLL, dom, exch, par, tendArr   );
-    tend.compEulerTendSD_Y(stateTmp, state.hyDensGLL, state.hyDensThetaGLL, dom, exch, par, tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
+    if (!dom.run2d) {
+      tend.compEulerTendSD_Y(stateTmp, state.hyDensGLL, state.hyDensThetaGLL, dom, exch, par, tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
+    }
     tend.compEulerTendSD_Z(stateTmp, state.hyDensGLL, state.hyDensThetaGLL, dom, exch, par, tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
     tend.compEulerTendSD_S(stateTmp,                                        dom,            tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
     applyTendencies(state.state, state.state, dom, tendArr, dom.dt/1);

@@ -27,7 +27,7 @@ public :
   }
 
 
-  inline void compEulerTendSD_X(Array<real> &state, Array<real> &hyDensGLL, Array<real> &hyDensThetaGLL,
+  inline void compEulerTendSD_X(Array<real> &state, Array<real> &hyDensCells, Array<real> &hyDensThetaCells,
                                 Domain &dom, Exchange &exch, Parallel &par, Array<real> &tend) {
     SArray<real,ord,ord,ord> s2g_lower_tmp;
     SArray<real,ord,tord> s2g_lower;
@@ -63,8 +63,8 @@ public :
             }
           }
           for (int ii=0; ii<tord; ii++) {
-            gllState(idR ,ii) += hyDensGLL     (k,ii);
-            gllState(idTH,ii) += hyDensThetaGLL(k,ii);
+            gllState(idR ,ii) += hyDensCells     (hs+k);
+            gllState(idTH,ii) += hyDensThetaCells(hs+k);
           }
 
           // Compute fluxes and at the GLL points
@@ -110,16 +110,61 @@ public :
     for (int k=0; k<dom.nz; k++) {
       for (int j=0; j<dom.ny; j++) {
         for (int i=0; i<dom.nx+1; i++) {
-          real r = 0.5_fp * ( stateLimits(idR ,0,k,j,i) + stateLimits(idR ,1,k,j,i) );
-          real u = 0.5_fp * ( stateLimits(idRU,0,k,j,i) + stateLimits(idRU,1,k,j,i) ) / r;
-          real t = 0.5_fp * ( stateLimits(idTH,0,k,j,i) + stateLimits(idTH,1,k,j,i) ) / r;
+          SArray<real,numState> s1, s2, f1, f2, ch1, ch2, chu, ev;
+
+          // Store into local arrays
+          for (int l=0; l<numState; l++) {
+            s1(l) = stateLimits(l,0,k,j,i);
+            s2(l) = stateLimits(l,1,k,j,i);
+            f1(l) = fluxLimits (l,0,k,j,i);
+            f2(l) = fluxLimits (l,1,k,j,i);
+          }
+
+          // Compute interface values
+          real r = 0.5_fp * ( s1(idR ) + s2(idR ) );
+          real u = 0.5_fp * ( s1(idRU) + s2(idRU) ) / r;
+          real v = 0.5_fp * ( s1(idRV) + s2(idRV) ) / r;
+          real w = 0.5_fp * ( s1(idRW) + s2(idRW) ) / r;
+          real t = 0.5_fp * ( s1(idTH) + s2(idTH) ) / r;
           real p = C0 * mypow( r*t , GAMMA );
           real cs = mysqrt( GAMMA * p / r );
-          real maxwave = myfabs(u) + cs;
 
+          // Compute left and right characteristic variables
+          ch1(0) =  u*f1(0)/(2*cs) - f1(1)/(2*cs) + f1(4)/(2*t);
+          ch1(1) = -u*f1(0)/(2*cs) + f1(1)/(2*cs) + f1(4)/(2*t);
+          ch1(2) = f1(0) -   f1(4)/t;
+          ch1(3) = f1(2) - v*f1(4)/t;
+          ch1(4) = f1(3) - w*f1(4)/t;
+
+          ch2(0) =  u*f2(0)/(2*cs) - f2(1)/(2*cs) + f2(4)/(2*t);
+          ch2(1) = -u*f2(0)/(2*cs) + f2(1)/(2*cs) + f2(4)/(2*t);
+          ch2(2) = f2(0) -   f2(4)/t;
+          ch2(3) = f2(2) - v*f2(4)/t;
+          ch2(4) = f2(3) - w*f2(4)/t;
+
+          ev(0) = u-cs;
+          ev(1) = u+cs;
+          ev(2) = u;
+          ev(3) = u;
+          ev(4) = u;
+
+          // Compute the upwind characteristics
           for (int l=0; l<numState; l++) {
-            flux(l,k,j,i) = 0.5_fp * ( fluxLimits(l,1,k,j,i) + fluxLimits(l,0,k,j,i) - maxwave * ( stateLimits(l,1,k,j,i) - stateLimits(l,0,k,j,i) ) );
+            if        (ev(l) > 0._fp) {
+              chu(l) = ch1(l);
+            } else if (ev(l) < 0._fp) {
+              chu(l) = ch2(l);
+            } else {
+              chu(l) = 0.5_fp * (ch1(l) + ch2(l));
+            }
           }
+
+          // Compute the fluxes
+          flux(0,k,j,i) = chu(0) + chu(1) + chu(2);
+          flux(1,k,j,i) = (u-cs)*chu(0) + (u+cs)*chu(1) + u*chu(2);
+          flux(2,k,j,i) = v*chu(0) + v*chu(1) + chu(3);
+          flux(3,k,j,i) = w*chu(0) + w*chu(1) + chu(4);
+          flux(4,k,j,i) = t*chu(0) + t*chu(1);
         }
       }
     }
@@ -137,7 +182,7 @@ public :
   }
 
 
-  inline void compEulerTendSD_Y(Array<real> &state, Array<real> &hyDensGLL, Array<real> &hyDensThetaGLL,
+  inline void compEulerTendSD_Y(Array<real> &state, Array<real> &hyDensCells, Array<real> &hyDensThetaCells,
                                 Domain &dom, Exchange &exch, Parallel &par, Array<real> &tend) {
     SArray<real,ord,ord,ord> s2g_lower_tmp;
     SArray<real,ord,tord> s2g_lower;
@@ -173,8 +218,8 @@ public :
             }
           }
           for (int ii=0; ii<tord; ii++) {
-            gllState(idR ,ii) += hyDensGLL     (k,ii);
-            gllState(idTH,ii) += hyDensThetaGLL(k,ii);
+            gllState(idR ,ii) += hyDensCells     (hs+k);
+            gllState(idTH,ii) += hyDensThetaCells(hs+k);
           }
 
           // Compute fluxes and at the GLL points
@@ -220,16 +265,61 @@ public :
     for (int k=0; k<dom.nz; k++) {
       for (int j=0; j<dom.ny+1; j++) {
         for (int i=0; i<dom.nx; i++) {
-          real r = 0.5_fp * ( stateLimits(idR ,0,k,j,i) + stateLimits(idR ,1,k,j,i) );
-          real v = 0.5_fp * ( stateLimits(idRV,0,k,j,i) + stateLimits(idRV,1,k,j,i) ) / r;
-          real t = 0.5_fp * ( stateLimits(idTH,0,k,j,i) + stateLimits(idTH,1,k,j,i) ) / r;
+          SArray<real,numState> s1, s2, f1, f2, ch1, ch2, chu, ev;
+
+          // Store into local arrays
+          for (int l=0; l<numState; l++) {
+            s1(l) = stateLimits(l,0,k,j,i);
+            s2(l) = stateLimits(l,1,k,j,i);
+            f1(l) = fluxLimits (l,0,k,j,i);
+            f2(l) = fluxLimits (l,1,k,j,i);
+          }
+
+          // Compute interface values
+          real r = 0.5_fp * ( s1(idR ) + s2(idR ) );
+          real u = 0.5_fp * ( s1(idRU) + s2(idRU) ) / r;
+          real v = 0.5_fp * ( s1(idRV) + s2(idRV) ) / r;
+          real w = 0.5_fp * ( s1(idRW) + s2(idRW) ) / r;
+          real t = 0.5_fp * ( s1(idTH) + s2(idTH) ) / r;
           real p = C0 * mypow( r*t , GAMMA );
           real cs = mysqrt( GAMMA * p / r );
-          real maxwave = myfabs(v) + cs;
 
+          // Compute left and right characteristic variables
+          ch1(0) =  v*f1(0)/(2*cs) - f1(2)/(2*cs) + f1(4)/(2*t);
+          ch1(1) = -v*f1(0)/(2*cs) + f1(2)/(2*cs) + f1(4)/(2*t);
+          ch1(2) = f1(0) -   f1(4)/t;
+          ch1(3) = f1(1) - u*f1(4)/t;
+          ch1(4) = f1(3) - w*f1(4)/t;
+
+          ch2(0) =  v*f2(0)/(2*cs) - f2(2)/(2*cs) + f2(4)/(2*t);
+          ch2(1) = -v*f2(0)/(2*cs) + f2(2)/(2*cs) + f2(4)/(2*t);
+          ch2(2) = f2(0) -   f2(4)/t;
+          ch2(3) = f2(1) - u*f2(4)/t;
+          ch2(4) = f2(3) - w*f2(4)/t;
+
+          ev(0) = v-cs;
+          ev(1) = v+cs;
+          ev(2) = v;
+          ev(3) = v;
+          ev(4) = v;
+
+          // Compute the upwind characteristics
           for (int l=0; l<numState; l++) {
-            flux(l,k,j,i) = 0.5_fp * ( fluxLimits(l,1,k,j,i) + fluxLimits(l,0,k,j,i) - maxwave * ( stateLimits(l,1,k,j,i) - stateLimits(l,0,k,j,i) ) );
+            if        (ev(l) > 0._fp) {
+              chu(l) = ch1(l);
+            } else if (ev(l) < 0._fp) {
+              chu(l) = ch2(l);
+            } else {
+              chu(l) = 0.5_fp * (ch1(l) + ch2(l));
+            }
           }
+
+          // Compute the fluxes
+          flux(0,k,j,i) = chu(0) + chu(1) + chu(2);
+          flux(1,k,j,i) = u*chu(0) + u*chu(1) + chu(3);
+          flux(2,k,j,i) = (v-cs)*chu(0) + (v+cs)*chu(1) + v*chu(2);
+          flux(3,k,j,i) = w*chu(0) + w*chu(1) + chu(4);
+          flux(4,k,j,i) = t*chu(0) + t*chu(1);
         }
       }
     }
@@ -370,16 +460,61 @@ public :
     for (int k=0; k<dom.nz+1; k++) {
       for (int j=0; j<dom.ny; j++) {
         for (int i=0; i<dom.nx; i++) {
-          real r = 0.5_fp * ( stateLimits(idR ,0,k,j,i) + stateLimits(idR ,1,k,j,i) );
-          real w = 0.5_fp * ( stateLimits(idRW,0,k,j,i) + stateLimits(idRW,1,k,j,i) ) / r;
-          real t = 0.5_fp * ( stateLimits(idTH,0,k,j,i) + stateLimits(idTH,1,k,j,i) ) / r;
+          SArray<real,numState> s1, s2, f1, f2, ch1, ch2, chu, ev;
+
+          // Store into local arrays
+          for (int l=0; l<numState; l++) {
+            s1(l) = stateLimits(l,0,k,j,i);
+            s2(l) = stateLimits(l,1,k,j,i);
+            f1(l) = fluxLimits (l,0,k,j,i);
+            f2(l) = fluxLimits (l,1,k,j,i);
+          }
+
+          // Compute interface values
+          real r = 0.5_fp * ( s1(idR ) + s2(idR ) );
+          real u = 0.5_fp * ( s1(idRU) + s2(idRU) ) / r;
+          real v = 0.5_fp * ( s1(idRV) + s2(idRV) ) / r;
+          real w = 0.5_fp * ( s1(idRW) + s2(idRW) ) / r;
+          real t = 0.5_fp * ( s1(idTH) + s2(idTH) ) / r;
           real p = C0 * mypow( r*t , GAMMA );
           real cs = mysqrt( GAMMA * p / r );
-          real maxwave = myfabs(w) + cs;
 
+          // Compute left and right characteristic variables
+          ch1(0) =  w*f1(0)/(2*cs) - f1(3)/(2*cs) + f1(4)/(2*t);
+          ch1(1) = -w*f1(0)/(2*cs) + f1(3)/(2*cs) + f1(4)/(2*t);
+          ch1(2) = f1(0) -   f1(4)/t;
+          ch1(3) = f1(1) - u*f1(4)/t;
+          ch1(4) = f1(2) - v*f1(4)/t;
+
+          ch2(0) =  w*f2(0)/(2*cs) - f2(3)/(2*cs) + f2(4)/(2*t);
+          ch2(1) = -w*f2(0)/(2*cs) + f2(3)/(2*cs) + f2(4)/(2*t);
+          ch2(2) = f2(0) -   f2(4)/t;
+          ch2(3) = f2(1) - u*f2(4)/t;
+          ch2(4) = f2(2) - v*f2(4)/t;
+
+          ev(0) = w-cs;
+          ev(1) = w+cs;
+          ev(2) = w;
+          ev(3) = w;
+          ev(4) = w;
+
+          // Compute the upwind characteristics
           for (int l=0; l<numState; l++) {
-            flux(l,k,j,i) = 0.5_fp * ( fluxLimits(l,1,k,j,i) + fluxLimits(l,0,k,j,i) - maxwave * ( stateLimits(l,1,k,j,i) - stateLimits(l,0,k,j,i) ) );
+            if        (ev(l) > 0._fp) {
+              chu(l) = ch1(l);
+            } else if (ev(l) < 0._fp) {
+              chu(l) = ch2(l);
+            } else {
+              chu(l) = 0.5_fp * (ch1(l) + ch2(l));
+            }
           }
+
+          // Compute the fluxes
+          flux(0,k,j,i) = chu(0) + chu(1) + chu(2);
+          flux(1,k,j,i) = u*chu(0) + u*chu(1) + chu(3);
+          flux(2,k,j,i) = v*chu(0) + v*chu(1) + chu(4);
+          flux(3,k,j,i) = (w-cs)*chu(0) + (w+cs)*chu(1) + w*chu(3);
+          flux(4,k,j,i) = t*chu(0) + t*chu(1);
         }
       }
     }

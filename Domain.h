@@ -16,6 +16,8 @@ public:
   uint ny;
   uint nz;
 
+  int run2d;
+
   real xlen;
   real ylen;
   real zlen;
