@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
   // Default input file is "input.txt" unless the user passes in another file
   std::string inFile = "input.txt";
   if (argc > 1) inFile = argv[1];
-  parser.readParamsFile(inFile, dom, par);
+  parser.readParamsFile(inFile, dom, par, io);
 
   // Initialize the model
   init.initialize(state, dom, par, exch, tint);
@@ -43,6 +43,7 @@ int main(int argc, char** argv) {
     tint.stepForward(state, dom, exch, par);
     dom.etime += dom.dt;
     if (par.masterproc) {std::cout << dom.etime << "\n";}
+    io.output(state, dom, par);
   }
 
   io.output(state, dom, par);

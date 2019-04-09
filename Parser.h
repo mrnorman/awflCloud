@@ -8,6 +8,7 @@
 #include <sstream>
 #include <algorithm>
 #include "Domain.h"
+#include "FileIO.h"
 #include "Parallel.h"
 
 
@@ -15,7 +16,7 @@ class Parser {
 
 public:
 
-  void readParamsFile(std::string fNameIn, Domain &dom, Parallel &par) {
+  void readParamsFile(std::string fNameIn, Domain &dom, Parallel &par, FileIO &io) {
 
     // Initialize all read-in values to -999
     dom.nx_glob   = -999;
@@ -28,6 +29,7 @@ public:
     dom.simLength = -999;
     par.nproc_x   = -999;
     par.nproc_y   = -999;
+    io.outFreq    = -999;
 
     // Read in colon-separated key: value file line by line
     std::ifstream fInStream(fNameIn);
@@ -59,6 +61,7 @@ public:
         else if ( !strcmp( "simLength" , key.c_str() ) ) { ssVal >> dom.simLength; }
         else if ( !strcmp( "parNx"     , key.c_str() ) ) { ssVal >> par.nproc_x  ; }
         else if ( !strcmp( "parNy"     , key.c_str() ) ) { ssVal >> par.nproc_y  ; }
+        else if ( !strcmp( "outFreq"   , key.c_str() ) ) { ssVal >> io.outFreq   ; }
         else {
           std::cout << "Error: key " << key << " not understood in file " << fNameIn << "\n";
           exit(-1);
@@ -77,6 +80,7 @@ public:
     if (dom.simLength == -999) { std::cout << "Error: key " << "simLength" << " not set."; exit(-1); }
     if (par.nproc_x   == -999) { std::cout << "Error: key " << "parNx"     << " not set."; exit(-1); }
     if (par.nproc_y   == -999) { std::cout << "Error: key " << "parNy"     << " not set."; exit(-1); }
+    if (io.outFreq    == -999) { std::cout << "Error: key " << "outFreq"   << " not set."; exit(-1); }
 
     // Print out the values
     if (par.masterproc) {
@@ -90,6 +94,7 @@ public:
       std::cout << "simLength: " << dom.simLength << "\n";
       std::cout << "parNx: "     << par.nproc_x   << "\n";
       std::cout << "parNy: "     << par.nproc_y   << "\n";
+      std::cout << "outFreq: "   << io.outFreq    << "\n";
     }
 
   }

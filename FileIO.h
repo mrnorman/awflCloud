@@ -12,11 +12,14 @@ class FileIO {
 
 protected:
 
+  real outTimer;
   int ncid, numOut;
   int tDim, xDim, yDim, zDim;
   int tVar, xVar, yVar, zVar, rVar, uVar, vVar, wVar, thVar, hyrVar, hyrtVar;
 
 public:
+
+  real outFreq;
 
   void outputInit(State &state, Domain const &dom, Parallel const &par) {
     int dimids[4];
@@ -26,6 +29,8 @@ public:
     Array<real> zCoord(dom.nz);
 
     numOut = 0;
+
+    outTimer = 0.;
 
     // Create the file
     ncwrap( ncmpi_create( MPI_COMM_WORLD , "output.nc" , NC_CLOBBER , MPI_INFO_NULL , &ncid ) , __LINE__ );
@@ -94,6 +99,13 @@ public:
     Array<real> xCoord(dom.nx);
     Array<real> yCoord(dom.ny);
     Array<real> zCoord(dom.nz);
+
+    outTimer += dom.dt;
+    if (outTimer < outFreq) {
+      return;
+    } else {
+      outTimer -= outFreq;
+    }
 
     // Create the file
     ncwrap( ncmpi_open( MPI_COMM_WORLD , "output.nc" , NC_WRITE , MPI_INFO_NULL , &ncid ) , __LINE__ );
