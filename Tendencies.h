@@ -20,19 +20,15 @@ class Tendencies {
 public :
 
 
-  Array<real> tend;
-
-
   inline void initialize(Domain &dom) {
     fluxLimits .setup(numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
     stateLimits.setup(numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
     flux       .setup(numState  ,dom.nz+1,dom.ny+1,dom.nx+1);
-    tend       .setup(numState  ,dom.nz  ,dom.ny  ,dom.nx  );
   }
 
 
   inline void compEulerTendSD_X(Array<real> &state, Array<real> &hyDensGLL, Array<real> &hyDensThetaGLL,
-                                Domain &dom, Exchange &exch, Parallel &par) {
+                                Domain &dom, Exchange &exch, Parallel &par, Array<real> &tend) {
     SArray<real,ord,ord,ord> s2g_lower_tmp;
     SArray<real,ord,tord> s2g_lower;
 
@@ -142,7 +138,7 @@ public :
 
 
   inline void compEulerTendSD_Y(Array<real> &state, Array<real> &hyDensGLL, Array<real> &hyDensThetaGLL,
-                                Domain &dom, Exchange &exch, Parallel &par) {
+                                Domain &dom, Exchange &exch, Parallel &par, Array<real> &tend) {
     SArray<real,ord,ord,ord> s2g_lower_tmp;
     SArray<real,ord,tord> s2g_lower;
 
@@ -251,7 +247,8 @@ public :
   }
 
 
-  inline void compEulerTendSD_Z(Array<real> &state, Array<real> &hyDensGLL, Array<real> &hyDensThetaGLL, Domain &dom, Exchange &exch, Parallel &par) {
+  inline void compEulerTendSD_Z(Array<real> &state, Array<real> &hyDensGLL, Array<real> &hyDensThetaGLL,
+                                Domain &dom, Exchange &exch, Parallel &par, Array<real> &tend) {
     SArray<real,ord,ord,ord> s2g_lower_tmp;
     SArray<real,ord,tord> s2g_lower;
 
@@ -398,6 +395,23 @@ public :
       }
     }
   }
+
+
+  inline void compEulerTendSD_S(Array<real> &state, Domain &dom, Array<real> &tend) {
+    // Form the tendencies
+    for (int k=0; k<dom.nz; k++) {
+      for (int j=0; j<dom.ny; j++) {
+        for (int i=0; i<dom.nx; i++) {
+          tend(idR ,k,j,i) = 0;
+          tend(idRU,k,j,i) = 0;
+          tend(idRV,k,j,i) = 0;
+          tend(idRW,k,j,i) = -state(idR,hs+k,hs+j,hs+i) * GRAV;
+          tend(idTH,k,j,i) = 0;
+        }
+      }
+    }
+  }
+
 
 
 };
