@@ -184,12 +184,12 @@ public:
     int ierr;
 
     //Pre-post the receives
-    ierr = MPI_Irecv( haloRecvBufW.get_data() , nPack*dom.nz*dom.ny*hs , MPI_DOUBLE_PRECISION , par.neigh(1,0) , 0 , MPI_COMM_WORLD , &rReq[0] );
-    ierr = MPI_Irecv( haloRecvBufE.get_data() , nPack*dom.nz*dom.ny*hs , MPI_DOUBLE_PRECISION , par.neigh(1,2) , 1 , MPI_COMM_WORLD , &rReq[1] );
+    ierr = MPI_Irecv( haloRecvBufW.get_data() , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,0) , 0 , MPI_COMM_WORLD , &rReq[0] );
+    ierr = MPI_Irecv( haloRecvBufE.get_data() , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,2) , 1 , MPI_COMM_WORLD , &rReq[1] );
 
     //Send the data
-    ierr = MPI_Isend( haloSendBufW.get_data() , nPack*dom.nz*dom.ny*hs , MPI_DOUBLE_PRECISION , par.neigh(1,0) , 1 , MPI_COMM_WORLD , &sReq[0] );
-    ierr = MPI_Isend( haloSendBufE.get_data() , nPack*dom.nz*dom.ny*hs , MPI_DOUBLE_PRECISION , par.neigh(1,2) , 0 , MPI_COMM_WORLD , &sReq[1] );
+    ierr = MPI_Isend( haloSendBufW.get_data() , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,0) , 1 , MPI_COMM_WORLD , &sReq[0] );
+    ierr = MPI_Isend( haloSendBufE.get_data() , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,2) , 0 , MPI_COMM_WORLD , &sReq[1] );
 
     //Wait for the sends and receives to finish
     ierr = MPI_Waitall(2, sReq, sStat);
@@ -201,12 +201,12 @@ public:
     int ierr;
 
     //Pre-post the receives
-    ierr = MPI_Irecv( haloRecvBufS.get_data() , nPack*dom.nz*hs*dom.nx , MPI_DOUBLE_PRECISION , par.neigh(0,1) , 0 , MPI_COMM_WORLD , &rReq[0] );
-    ierr = MPI_Irecv( haloRecvBufN.get_data() , nPack*dom.nz*hs*dom.nx , MPI_DOUBLE_PRECISION , par.neigh(2,1) , 1 , MPI_COMM_WORLD , &rReq[1] );
+    ierr = MPI_Irecv( haloRecvBufS.get_data() , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(0,1) , 0 , MPI_COMM_WORLD , &rReq[0] );
+    ierr = MPI_Irecv( haloRecvBufN.get_data() , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(2,1) , 1 , MPI_COMM_WORLD , &rReq[1] );
 
     //Send the data
-    ierr = MPI_Isend( haloSendBufS.get_data() , nPack*dom.nz*hs*dom.nx , MPI_DOUBLE_PRECISION , par.neigh(0,1) , 1 , MPI_COMM_WORLD , &sReq[0] );
-    ierr = MPI_Isend( haloSendBufN.get_data() , nPack*dom.nz*hs*dom.nx , MPI_DOUBLE_PRECISION , par.neigh(2,1) , 0 , MPI_COMM_WORLD , &sReq[1] );
+    ierr = MPI_Isend( haloSendBufS.get_data() , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(0,1) , 1 , MPI_COMM_WORLD , &sReq[0] );
+    ierr = MPI_Isend( haloSendBufN.get_data() , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(2,1) , 0 , MPI_COMM_WORLD , &sReq[1] );
 
     //Wait for the sends and receives to finish
     ierr = MPI_Waitall(2, sReq, sStat);
@@ -270,12 +270,12 @@ public:
     int ierr;
 
     //Pre-post the receives
-    ierr = MPI_Irecv( edgeRecvBufW.get_data() , nPack*dom.nz*dom.ny , MPI_DOUBLE_PRECISION , par.neigh(1,0) , 0 , MPI_COMM_WORLD , &rReq[0] );
-    ierr = MPI_Irecv( edgeRecvBufE.get_data() , nPack*dom.nz*dom.ny , MPI_DOUBLE_PRECISION , par.neigh(1,2) , 1 , MPI_COMM_WORLD , &rReq[1] );
+    ierr = MPI_Irecv( edgeRecvBufW.get_data() , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,0) , 0 , MPI_COMM_WORLD , &rReq[0] );
+    ierr = MPI_Irecv( edgeRecvBufE.get_data() , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,2) , 1 , MPI_COMM_WORLD , &rReq[1] );
 
     //Send the data
-    ierr = MPI_Isend( edgeSendBufW.get_data() , nPack*dom.nz*dom.ny , MPI_DOUBLE_PRECISION , par.neigh(1,0) , 1 , MPI_COMM_WORLD , &sReq[0] );
-    ierr = MPI_Isend( edgeSendBufE.get_data() , nPack*dom.nz*dom.ny , MPI_DOUBLE_PRECISION , par.neigh(1,2) , 0 , MPI_COMM_WORLD , &sReq[1] );
+    ierr = MPI_Isend( edgeSendBufW.get_data() , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,0) , 1 , MPI_COMM_WORLD , &sReq[0] );
+    ierr = MPI_Isend( edgeSendBufE.get_data() , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,2) , 0 , MPI_COMM_WORLD , &sReq[1] );
 
     //Wait for the sends and receives to finish
     ierr = MPI_Waitall(2, sReq, sStat);
@@ -287,12 +287,12 @@ public:
     int ierr;
 
     //Pre-post the receives
-    ierr = MPI_Irecv( edgeRecvBufS.get_data() , nPack*dom.nz*dom.nx , MPI_DOUBLE_PRECISION , par.neigh(0,1) , 0 , MPI_COMM_WORLD , &rReq[0] );
-    ierr = MPI_Irecv( edgeRecvBufN.get_data() , nPack*dom.nz*dom.nx , MPI_DOUBLE_PRECISION , par.neigh(2,1) , 1 , MPI_COMM_WORLD , &rReq[1] );
+    ierr = MPI_Irecv( edgeRecvBufS.get_data() , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(0,1) , 0 , MPI_COMM_WORLD , &rReq[0] );
+    ierr = MPI_Irecv( edgeRecvBufN.get_data() , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(2,1) , 1 , MPI_COMM_WORLD , &rReq[1] );
 
     //Send the data
-    ierr = MPI_Isend( edgeSendBufS.get_data() , nPack*dom.nz*dom.nx , MPI_DOUBLE_PRECISION , par.neigh(0,1) , 1 , MPI_COMM_WORLD , &sReq[0] );
-    ierr = MPI_Isend( edgeSendBufN.get_data() , nPack*dom.nz*dom.nx , MPI_DOUBLE_PRECISION , par.neigh(2,1) , 0 , MPI_COMM_WORLD , &sReq[1] );
+    ierr = MPI_Isend( edgeSendBufS.get_data() , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(0,1) , 1 , MPI_COMM_WORLD , &sReq[0] );
+    ierr = MPI_Isend( edgeSendBufN.get_data() , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(2,1) , 0 , MPI_COMM_WORLD , &sReq[1] );
 
     //Wait for the sends and receives to finish
     ierr = MPI_Waitall(2, sReq, sStat);
