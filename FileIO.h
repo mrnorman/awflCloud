@@ -162,8 +162,8 @@ public:
     for (int k=0; k<dom.nz; k++) {
       for (int j=0; j<dom.ny; j++) {
         for (int i=0; i<dom.nx; i++) {
-          data(k,j,i) = ( state.state(idRT,hs+k,hs+j,hs+i) + state.hyDensThetaCells(hs+k) ) /
-                        ( state.state(idR ,hs+k,hs+j,hs+i) + state.hyDensCells     (hs+k) ) - 
+          data(k,j,i) = ( state.state(idTH,hs+k,hs+j,hs+i) + state.hyDensThetaCells(hs+k) ) /
+                        ( state.state(idR ,hs+k,hs+j,hs+i) + state.hyDensCells     (hs+k) ) -
                         state.hyDensThetaCells(k) / state.hyDensCells(k);
         }
       }

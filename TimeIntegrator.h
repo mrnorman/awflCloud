@@ -27,21 +27,19 @@ public :
 
   inline void stepForwardSSPRK3(State &state, Domain &dom, Exchange &exch, Parallel &par) {
     tend.compEulerTendSD_X(state.state, state.hyDensGLL, state.hyDensThetaGLL, dom, exch, par);
-    applyTendencies(state.state, dom, tend.tend);
-
+    applyTendencies(state.state, dom, tend.tend, dom.dt/3);
     tend.compEulerTendSD_Y(state.state, state.hyDensGLL, state.hyDensThetaGLL, dom, exch, par);
-    applyTendencies(state.state, dom, tend.tend);
-
+    applyTendencies(state.state, dom, tend.tend, dom.dt/3);
     tend.compEulerTendSD_Z(state.state, state.hyDensGLL, state.hyDensThetaGLL, dom, exch, par);
-    applyTendencies(state.state, dom, tend.tend);
+    applyTendencies(state.state, dom, tend.tend, dom.dt/3);
   }
 
-  inline void applyTendencies(Array<real> &state, Domain const &dom, Array<real> const &tend) {
+  inline void applyTendencies(Array<real> &state, Domain const &dom, Array<real> const &tend, real const dt) {
     for (int l=0; l<numState; l++) {
       for (int k=0; k<dom.nz; k++) {
         for (int j=0; j<dom.ny; j++) {
           for (int i=0; i<dom.nx; i++) {
-            state(l,hs+k,hs+j,hs+i) += dom.dt * tend(l,k,j,i);
+            state(l,hs+k,hs+j,hs+i) += dt * tend(l,k,j,i);
           }
         }
       }

@@ -28,7 +28,7 @@ uint const idR  = 0;
 uint const idRU = 1;
 uint const idRV = 2;
 uint const idRW = 3;
-uint const idRT = 4;
+uint const idTH = 4;
 
 // Some physical constants
 real const PI    = 3.1415926535897932384626433832795028842;

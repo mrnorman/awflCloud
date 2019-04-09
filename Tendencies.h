@@ -68,7 +68,7 @@ public :
           }
           for (int ii=0; ii<tord; ii++) {
             gllState(idR ,ii) += hyDensGLL     (k,ii);
-            gllState(idRT,ii) += hyDensThetaGLL(k,ii);
+            gllState(idTH,ii) += hyDensThetaGLL(k,ii);
           }
 
           // Compute fluxes and at the GLL points
@@ -77,14 +77,14 @@ public :
             real u = gllState(idRU,ii) / r;
             real v = gllState(idRV,ii) / r;
             real w = gllState(idRW,ii) / r;
-            real t = gllState(idRT,ii) / r;
+            real t = gllState(idTH,ii) / r;
             real p = C0 * mypow( r*t , GAMMA );
 
             gllFlux(idR ,ii) = r*u;
             gllFlux(idRU,ii) = r*u*u + p;
             gllFlux(idRV,ii) = r*u*v;
             gllFlux(idRW,ii) = r*u*w;
-            gllFlux(idRT,ii) = r*u*t;
+            gllFlux(idTH,ii) = r*u*t;
           }
 
           // Store state and flux limits into a globally indexed array
@@ -116,7 +116,7 @@ public :
         for (int i=0; i<dom.nx+1; i++) {
           real r = 0.5_fp * ( stateLimits(idR ,0,k,j,i) + stateLimits(idR ,1,k,j,i) );
           real u = 0.5_fp * ( stateLimits(idRU,0,k,j,i) + stateLimits(idRU,1,k,j,i) ) / r;
-          real t = 0.5_fp * ( stateLimits(idRT,0,k,j,i) + stateLimits(idRT,1,k,j,i) ) / r;
+          real t = 0.5_fp * ( stateLimits(idTH,0,k,j,i) + stateLimits(idTH,1,k,j,i) ) / r;
           real p = C0 * mypow( r*t , GAMMA );
           real cs = mysqrt( GAMMA * p / r );
           real maxwave = myfabs(u) + cs;
@@ -178,7 +178,7 @@ public :
           }
           for (int ii=0; ii<tord; ii++) {
             gllState(idR ,ii) += hyDensGLL     (k,ii);
-            gllState(idRT,ii) += hyDensThetaGLL(k,ii);
+            gllState(idTH,ii) += hyDensThetaGLL(k,ii);
           }
 
           // Compute fluxes and at the GLL points
@@ -187,14 +187,14 @@ public :
             real u = gllState(idRU,ii) / r;
             real v = gllState(idRV,ii) / r;
             real w = gllState(idRW,ii) / r;
-            real t = gllState(idRT,ii) / r;
+            real t = gllState(idTH,ii) / r;
             real p = C0 * mypow( r*t , GAMMA );
 
             gllFlux(idR ,ii) = r*v;
             gllFlux(idRU,ii) = r*v*u;
             gllFlux(idRV,ii) = r*v*v + p;
             gllFlux(idRW,ii) = r*v*w;
-            gllFlux(idRT,ii) = r*v*t;
+            gllFlux(idTH,ii) = r*v*t;
           }
 
           // Store state and flux limits into a globally indexed array
@@ -226,7 +226,7 @@ public :
         for (int i=0; i<dom.nx; i++) {
           real r = 0.5_fp * ( stateLimits(idR ,0,k,j,i) + stateLimits(idR ,1,k,j,i) );
           real v = 0.5_fp * ( stateLimits(idRV,0,k,j,i) + stateLimits(idRV,1,k,j,i) ) / r;
-          real t = 0.5_fp * ( stateLimits(idRT,0,k,j,i) + stateLimits(idRT,1,k,j,i) ) / r;
+          real t = 0.5_fp * ( stateLimits(idTH,0,k,j,i) + stateLimits(idTH,1,k,j,i) ) / r;
           real p = C0 * mypow( r*t , GAMMA );
           real cs = mysqrt( GAMMA * p / r );
           real maxwave = myfabs(v) + cs;
@@ -271,13 +271,13 @@ public :
           state(idRU,ii,hs+j,hs+i) = state(idRU,hs,hs+j,hs+i);
           state(idRV,ii,hs+j,hs+i) = state(idRV,hs,hs+j,hs+i);
           state(idRW,ii,hs+j,hs+i) = 0;
-          state(idRT,ii,hs+j,hs+i) = state(idRT,hs,hs+j,hs+i);
+          state(idTH,ii,hs+j,hs+i) = state(idTH,hs,hs+j,hs+i);
 
           state(idR ,dom.nz+hs+ii,hs+j,hs+i) = state(idR ,dom.nz+hs-1,hs+j,hs+i);
           state(idRU,dom.nz+hs+ii,hs+j,hs+i) = state(idRU,dom.nz+hs-1,hs+j,hs+i);
           state(idRV,dom.nz+hs+ii,hs+j,hs+i) = state(idRV,dom.nz+hs-1,hs+j,hs+i);
           state(idRW,dom.nz+hs+ii,hs+j,hs+i) = 0;
-          state(idRT,dom.nz+hs+ii,hs+j,hs+i) = state(idRT,dom.nz+hs-1,hs+j,hs+i);
+          state(idTH,dom.nz+hs+ii,hs+j,hs+i) = state(idTH,dom.nz+hs-1,hs+j,hs+i);
         }
       }
     }
@@ -300,7 +300,7 @@ public :
           }
           for (int ii=0; ii<tord; ii++) {
             gllState(idR ,ii) += hyDensGLL     (k,ii);
-            gllState(idRT,ii) += hyDensThetaGLL(k,ii);
+            gllState(idTH,ii) += hyDensThetaGLL(k,ii);
           }
 
           // Boundary conditions
@@ -313,14 +313,14 @@ public :
             real u = gllState(idRU,ii) / r;
             real v = gllState(idRV,ii) / r;
             real w = gllState(idRW,ii) / r;
-            real t = gllState(idRT,ii) / r;
+            real t = gllState(idTH,ii) / r;
             real p = C0 * mypow( r*t , GAMMA );
 
             gllFlux(idR ,ii) = r*w;
             gllFlux(idRU,ii) = r*w*u;
             gllFlux(idRV,ii) = r*w*v;
             gllFlux(idRW,ii) = r*w*w + p - C0*mypow(hyDensThetaGLL(k,ii),GAMMA);
-            gllFlux(idRT,ii) = r*w*t;
+            gllFlux(idTH,ii) = r*w*t;
           }
 
           // Store state and flux limits into a globally indexed array
@@ -346,26 +346,26 @@ public :
         stateLimits(idRV,0,0     ,j,i) = stateLimits(idRV,1,0     ,j,i);
         stateLimits(idRW,0,0     ,j,i) = 0;
         stateLimits(idRW,1,0     ,j,i) = 0;
-        stateLimits(idRT,0,0     ,j,i) = stateLimits(idRT,1,0     ,j,i);
+        stateLimits(idTH,0,0     ,j,i) = stateLimits(idTH,1,0     ,j,i);
 
         stateLimits(idR ,1,dom.nz,j,i) = stateLimits(idR ,0,dom.nz,j,i);
         stateLimits(idRU,1,dom.nz,j,i) = stateLimits(idRU,0,dom.nz,j,i);
         stateLimits(idRV,1,dom.nz,j,i) = stateLimits(idRV,0,dom.nz,j,i);
         stateLimits(idRW,0,dom.nz,j,i) = 0;
         stateLimits(idRW,1,dom.nz,j,i) = 0;
-        stateLimits(idRT,1,dom.nz,j,i) = stateLimits(idRT,0,dom.nz,j,i);
+        stateLimits(idTH,1,dom.nz,j,i) = stateLimits(idTH,0,dom.nz,j,i);
 
         fluxLimits(idR ,0,0     ,j,i) = fluxLimits(idR ,1,0     ,j,i);
         fluxLimits(idRU,0,0     ,j,i) = fluxLimits(idRU,1,0     ,j,i);
         fluxLimits(idRV,0,0     ,j,i) = fluxLimits(idRV,1,0     ,j,i);
         fluxLimits(idRW,0,0     ,j,i) = fluxLimits(idRW,1,0     ,j,i);
-        fluxLimits(idRT,0,0     ,j,i) = fluxLimits(idRT,1,0     ,j,i);
+        fluxLimits(idTH,0,0     ,j,i) = fluxLimits(idTH,1,0     ,j,i);
 
         fluxLimits(idR ,1,dom.nz,j,i) = fluxLimits(idR ,0,dom.nz,j,i);
         fluxLimits(idRU,1,dom.nz,j,i) = fluxLimits(idRU,0,dom.nz,j,i);
         fluxLimits(idRV,1,dom.nz,j,i) = fluxLimits(idRV,0,dom.nz,j,i);
         fluxLimits(idRW,1,dom.nz,j,i) = fluxLimits(idRW,0,dom.nz,j,i);
-        fluxLimits(idRT,1,dom.nz,j,i) = fluxLimits(idRT,0,dom.nz,j,i);
+        fluxLimits(idTH,1,dom.nz,j,i) = fluxLimits(idTH,0,dom.nz,j,i);
       }
     }
 
@@ -375,7 +375,7 @@ public :
         for (int i=0; i<dom.nx; i++) {
           real r = 0.5_fp * ( stateLimits(idR ,0,k,j,i) + stateLimits(idR ,1,k,j,i) );
           real w = 0.5_fp * ( stateLimits(idRW,0,k,j,i) + stateLimits(idRW,1,k,j,i) ) / r;
-          real t = 0.5_fp * ( stateLimits(idRT,0,k,j,i) + stateLimits(idRT,1,k,j,i) ) / r;
+          real t = 0.5_fp * ( stateLimits(idTH,0,k,j,i) + stateLimits(idTH,1,k,j,i) ) / r;
           real p = C0 * mypow( r*t , GAMMA );
           real cs = mysqrt( GAMMA * p / r );
           real maxwave = myfabs(w) + cs;
