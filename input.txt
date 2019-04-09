@@ -10,6 +10,6 @@ xlen      : 20000.  // Domain length in the x-direction (m)
 ylen      : 20000.  // Domain length in the y-direction (m)
 zlen      : 10000.  // Domain length in the z-direction (m)
 cfl       : 0.4     // CFL value to use
-simLength : 1000.   // How long to simulation (s)
+simLength : 10.     // How long to simulation (s)
 parNx     : 2       // Number of parallel tasks in the x-direction
 parNy     : 3       // Number of parallel tasks in the y-direction

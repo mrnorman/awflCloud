@@ -38,7 +38,12 @@ int main(int argc, char** argv) {
   // Output the initial model state
   io.outputInit(state, dom, par);
 
-  tint.stepForward(state, dom, exch, par);
+  while (dom.etime < dom.simLength) {
+    if (dom.etime + dom.dt > dom.simLength) { dom.dt = dom.simLength - dom.etime; }
+    tint.stepForward(state, dom, exch, par);
+    dom.etime += dom.dt;
+    if (par.masterproc) {std::cout << dom.etime << "\n";}
+  }
 
   io.output(state, dom, par);
 

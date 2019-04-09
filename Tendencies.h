@@ -291,7 +291,7 @@ public :
             for (int ii=0; ii<tord; ii++) {
               gllState(l,ii) = 0.;
               for (int s=0; s<ord; s++) {
-                gllState(l,ii) += s2g_lower(s,ii) * state(l,hs+k,j+s,hs+i);
+                gllState(l,ii) += s2g_lower(s,ii) * state(l,k+s,hs+j,hs+i);
               }
             }
           }
