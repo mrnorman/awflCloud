@@ -76,8 +76,8 @@ public:
     ct[0] = dom.nz_glob;
     ncwrap( ncmpi_begin_indep_data(ncid) , __LINE__ );
     ncwrap( ncmpi_put_vara_double( ncid , zVar    , st , ct , zCoord                .get_data() ) , __LINE__ );
-    ncwrap( ncmpi_put_vara_double( ncid , hyrVar  , st , ct , state.hyDensCells     .get_data() ) , __LINE__ );
-    ncwrap( ncmpi_put_vara_double( ncid , hyrtVar , st , ct , state.hyDensThetaCells.get_data() ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_double( ncid , hyrVar  , st , ct , &(state.hyDensCells     .get_data()[hs]) ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_double( ncid , hyrtVar , st , ct , &(state.hyDensThetaCells.get_data()[hs]) ) , __LINE__ );
     ncwrap( ncmpi_end_indep_data(ncid) , __LINE__ );
 
     writeState(state, dom, par);
@@ -122,7 +122,7 @@ public:
     for (int k=0; k<dom.nz; k++) {
       for (int j=0; j<dom.ny; j++) {
         for (int i=0; i<dom.nx; i++) {
-          data(k,j,i) = state.state(idR,hs+k,hs+j,hs+i) - state.hyDensCells(k);
+          data(k,j,i) = state.state(idR,hs+k,hs+j,hs+i);
         }
       }
     }
@@ -132,7 +132,7 @@ public:
     for (int k=0; k<dom.nz; k++) {
       for (int j=0; j<dom.ny; j++) {
         for (int i=0; i<dom.nx; i++) {
-          data(k,j,i) = state.state(idRU,hs+k,hs+j,hs+i) / state.state(idR,hs+k,hs+j,hs+i);
+          data(k,j,i) = state.state(idRU,hs+k,hs+j,hs+i) / ( state.state(idR,hs+k,hs+j,hs+i) + state.hyDensCells(hs+k) );
         }
       }
     }
@@ -142,7 +142,7 @@ public:
     for (int k=0; k<dom.nz; k++) {
       for (int j=0; j<dom.ny; j++) {
         for (int i=0; i<dom.nx; i++) {
-          data(k,j,i) = state.state(idRV,hs+k,hs+j,hs+i) / state.state(idR,hs+k,hs+j,hs+i);
+          data(k,j,i) = state.state(idRV,hs+k,hs+j,hs+i) / ( state.state(idR,hs+k,hs+j,hs+i) + state.hyDensCells(hs+k) );
         }
       }
     }
@@ -152,7 +152,7 @@ public:
     for (int k=0; k<dom.nz; k++) {
       for (int j=0; j<dom.ny; j++) {
         for (int i=0; i<dom.nx; i++) {
-          data(k,j,i) = state.state(idRW,hs+k,hs+j,hs+i) / state.state(idR,hs+k,hs+j,hs+i);
+          data(k,j,i) = state.state(idRW,hs+k,hs+j,hs+i) / ( state.state(idR,hs+k,hs+j,hs+i) + state.hyDensCells(hs+k) );
         }
       }
     }
@@ -162,7 +162,8 @@ public:
     for (int k=0; k<dom.nz; k++) {
       for (int j=0; j<dom.ny; j++) {
         for (int i=0; i<dom.nx; i++) {
-          data(k,j,i) = state.state(idRT,hs+k,hs+j,hs+i) / state.state(idR,hs+k,hs+j,hs+i) -
+          data(k,j,i) = ( state.state(idRT,hs+k,hs+j,hs+i) + state.hyDensThetaCells(hs+k) ) /
+                        ( state.state(idR ,hs+k,hs+j,hs+i) + state.hyDensCells     (hs+k) ) - 
                         state.hyDensThetaCells(k) / state.hyDensCells(k);
         }
       }

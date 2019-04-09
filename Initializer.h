@@ -188,11 +188,9 @@ public:
                 real r, t;
 
                 hydro.hydroConstTheta( t0 , zloc , r );
-                t = t0;
-                t += ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, 2000, 2000, 2000, 2000, 2);
+                t = ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, 2000, 2000, 2000, 2000, 2);
 
                 real wt = gllOrdWeights(ii)*gllOrdWeights(jj)*gllOrdWeights(kk);
-                state.state(idR ,hs+k,hs+j,hs+i) += wt * r;
                 state.state(idRT,hs+k,hs+j,hs+i) += wt * r*t;
               }
             }
@@ -207,11 +205,11 @@ public:
       for (int j=0; j<dom.ny; j++) {
         for (int i=0; i<dom.nx; i++) {
           // Grab state variables
-          real r = state.state(idR ,hs+k,hs+j,hs+i)    ;
+          real r = state.state(idR ,hs+k,hs+j,hs+i) + state.hyDensCells(hs+k);
           real u = state.state(idRU,hs+k,hs+j,hs+i) / r;
           real v = state.state(idRV,hs+k,hs+j,hs+i) / r;
           real w = state.state(idRW,hs+k,hs+j,hs+i) / r;
-          real t = state.state(idRT,hs+k,hs+j,hs+i) / r;
+          real t = ( state.state(idRT,hs+k,hs+j,hs+i) + state.hyDensThetaCells(hs+k) ) / r;
           real p = C0 * mypow( r*t , GAMMA );
           real cs = mysqrt( GAMMA * p / r );
 

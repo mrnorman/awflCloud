@@ -26,15 +26,13 @@ public :
   }
 
   inline void stepForwardSSPRK3(State &state, Domain &dom, Exchange &exch, Parallel &par) {
-    tend.compEulerTendSD_X(state.state, dom, exch, par);
+    tend.compEulerTendSD_X(state.state, state.hyDensGLL, state.hyDensThetaGLL, dom, exch, par);
     applyTendencies(state.state, dom, tend.tend);
 
-    tend.compEulerTendSD_Y(state.state, dom, exch, par);
+    tend.compEulerTendSD_Y(state.state, state.hyDensGLL, state.hyDensThetaGLL, dom, exch, par);
     applyTendencies(state.state, dom, tend.tend);
 
-    tend.compEulerTendSD_Z(state.state, dom, exch, par,
-                           state.hyDensCells, state.hyDensThetaCells,
-                           state.hyDensGLL  , state.hyDensThetaGLL  , state.hyPressureGLL);
+    tend.compEulerTendSD_Z(state.state, state.hyDensGLL, state.hyDensThetaGLL, dom, exch, par);
     applyTendencies(state.state, dom, tend.tend);
   }
 

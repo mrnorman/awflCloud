@@ -31,7 +31,8 @@ public :
   }
 
 
-  inline void compEulerTendSD_X(Array<real> &state, Domain &dom, Exchange &exch, Parallel &par) {
+  inline void compEulerTendSD_X(Array<real> &state, Array<real> &hyDensGLL, Array<real> &hyDensThetaGLL,
+                                Domain &dom, Exchange &exch, Parallel &par) {
     SArray<real,ord,ord,ord> s2g_lower_tmp;
     SArray<real,ord,tord> s2g_lower;
 
@@ -64,6 +65,10 @@ public :
                 gllState(l,ii) += s2g_lower(s,ii) * state(l,hs+k,hs+j,i+s);
               }
             }
+          }
+          for (int ii=0; ii<tord; ii++) {
+            gllState(idR ,ii) += hyDensGLL     (k,ii);
+            gllState(idRT,ii) += hyDensThetaGLL(k,ii);
           }
 
           // Compute fluxes and at the GLL points
@@ -136,7 +141,8 @@ public :
   }
 
 
-  inline void compEulerTendSD_Y(Array<real> &state, Domain &dom, Exchange &exch, Parallel &par) {
+  inline void compEulerTendSD_Y(Array<real> &state, Array<real> &hyDensGLL, Array<real> &hyDensThetaGLL,
+                                Domain &dom, Exchange &exch, Parallel &par) {
     SArray<real,ord,ord,ord> s2g_lower_tmp;
     SArray<real,ord,tord> s2g_lower;
 
@@ -169,6 +175,10 @@ public :
                 gllState(l,ii) += s2g_lower(s,ii) * state(l,hs+k,j+s,hs+i);
               }
             }
+          }
+          for (int ii=0; ii<tord; ii++) {
+            gllState(idR ,ii) += hyDensGLL     (k,ii);
+            gllState(idRT,ii) += hyDensThetaGLL(k,ii);
           }
 
           // Compute fluxes and at the GLL points
@@ -241,10 +251,7 @@ public :
   }
 
 
-  inline void compEulerTendSD_Z(Array<real> &state, Domain &dom, Exchange &exch, Parallel &par,
-                                Array<real> &hyDensCells, Array<real> &hyDensThetaCells,
-                                Array<real> &hyDensGLL  , Array<real> &hyDensThetaGLL,
-                                Array<real> &hyPressureGLL  ) {
+  inline void compEulerTendSD_Z(Array<real> &state, Array<real> &hyDensGLL, Array<real> &hyDensThetaGLL, Domain &dom, Exchange &exch, Parallel &par) {
     SArray<real,ord,ord,ord> s2g_lower_tmp;
     SArray<real,ord,tord> s2g_lower;
 
@@ -283,21 +290,14 @@ public :
           SArray<real,numState,tord> gllFlux;
 
           // Compute GLL points from cell averages
-          for (int ii=0; ii<tord; ii++) {
-            gllState(idR ,ii) = 0.;
-            gllState(idRU,ii) = 0.;
-            gllState(idRV,ii) = 0.;
-            gllState(idRW,ii) = 0.;
-            gllState(idRT,ii) = 0.;
-            for (int s=0; s<ord; s++) {
-              gllState(idR ,ii) += s2g_lower(s,ii) * ( state(idR ,k+s,hs+j,hs+i) - hyDensCells     (k+s) );
-              gllState(idRU,ii) += s2g_lower(s,ii) *   state(idRU,k+s,hs+j,hs+i);
-              gllState(idRV,ii) += s2g_lower(s,ii) *   state(idRV,k+s,hs+j,hs+i);
-              gllState(idRW,ii) += s2g_lower(s,ii) *   state(idRW,k+s,hs+j,hs+i);
-              gllState(idRT,ii) += s2g_lower(s,ii) * ( state(idRT,k+s,hs+j,hs+i) - hyDensThetaCells(k+s) );
+          for (int l=0; l<numState; l++) {
+            for (int ii=0; ii<tord; ii++) {
+              gllState(l,ii) = 0.;
+              for (int s=0; s<ord; s++) {
+                gllState(l,ii) += s2g_lower(s,ii) * state(l,hs+k,j+s,hs+i);
+              }
             }
           }
-
           for (int ii=0; ii<tord; ii++) {
             gllState(idR ,ii) += hyDensGLL     (k,ii);
             gllState(idRT,ii) += hyDensThetaGLL(k,ii);
@@ -319,7 +319,7 @@ public :
             gllFlux(idR ,ii) = r*w;
             gllFlux(idRU,ii) = r*w*u;
             gllFlux(idRV,ii) = r*w*v;
-            gllFlux(idRW,ii) = r*w*w + p - hyPressureGLL(k,ii);
+            gllFlux(idRW,ii) = r*w*w + p - C0*mypow(hyDensThetaGLL(k,ii),GAMMA);
             gllFlux(idRT,ii) = r*w*t;
           }
 
