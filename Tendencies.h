@@ -53,9 +53,9 @@ public :
     trans.weno_sten_to_coefs(wenoRecon);
 
     SArray<real,tord,tord> g2c, c2d, c2g;
-    trans.gll_to_coefs(g2c);
-    trans.coefs_to_deriv(c2d);
-    trans.coefs_to_gll(c2g);
+    trans.gll_to_coefs  ( g2c);
+    trans.coefs_to_deriv( c2d);
+    trans.coefs_to_gll  ( c2g);
     aderDerivX = (c2g * c2d * g2c) / dom.dx;
     aderDerivY = (c2g * c2d * g2c) / dom.dy;
     aderDerivZ = (c2g * c2d * g2c) / dom.dz;
@@ -302,7 +302,7 @@ public :
       }
     }
 
-    // Reconstruct to 2 GLL points in the x-direction
+    // Reconstruct to tord GLL points in the x-direction
     for (int k=0; k<dom.nz; k++) {
       for (int j=0; j<dom.ny; j++) {
         for (int i=0; i<dom.nx; i++) {

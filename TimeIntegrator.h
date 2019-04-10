@@ -27,7 +27,7 @@ public :
     }
     tendArr.setup(numState,dom.nz,dom.ny,dom.nx);
     tend.initialize(dom);
-    dsSwitch = 0;
+    dsSwitch = 1;
   }
 
 
@@ -44,8 +44,8 @@ public :
 
 
   inline void stepForwardADER(State &state, Domain &dom, Exchange &exch, Parallel &par) {
-    // if (dsSwitch) {
-    //   dsSwitch = 0;
+    if (dsSwitch) {
+      dsSwitch = 0;
       tend.compEulerTendADER_X(state.state, state.hyDensCells, state.hyDensThetaCells, dom, exch, par, tendArr);
       applyTendencies( state.state , 1._fp , state.state , 0._fp , state.state , 1._fp , tendArr, dom);
       if (!dom.run2d) {
@@ -56,19 +56,19 @@ public :
       applyTendencies( state.state , 1._fp , state.state , 0._fp , state.state , 1._fp , tendArr, dom);
       tend.compEulerTendSD_S(state.state , dom , tendArr);
       applyTendencies( state.state , 1._fp , state.state , 0._fp , state.state , 1._fp , tendArr, dom);
-    // } else {
-    //   dsSwitch = 1;
-    //   tend.compEulerTendSD_S(state.state , dom , tendArr);
-    //   applyTendencies( state.state , 1._fp , state.state , 0._fp , state.state , 1._fp , tendArr, dom);
-    //   tend.compEulerTendADER_Z(state.state, state.hyDensGLL, state.hyDensThetaGLL, dom, exch, par, tendArr);
-    //   applyTendencies( state.state , 1._fp , state.state , 0._fp , state.state , 1._fp , tendArr, dom);
-    //   if (!dom.run2d) {
-    //     tend.compEulerTendADER_Y(state.state, state.hyDensCells, state.hyDensThetaCells, dom, exch, par, tendArr);
-    //     applyTendencies( state.state , 1._fp , state.state , 0._fp , state.state , 1._fp , tendArr, dom);
-    //   }
-    //   tend.compEulerTendADER_X(state.state, state.hyDensCells, state.hyDensThetaCells, dom, exch, par, tendArr);
-    //   applyTendencies( state.state , 1._fp , state.state , 0._fp , state.state , 1._fp , tendArr, dom);
-    // }
+    } else {
+      dsSwitch = 1;
+      tend.compEulerTendSD_S(state.state , dom , tendArr);
+      applyTendencies( state.state , 1._fp , state.state , 0._fp , state.state , 1._fp , tendArr, dom);
+      tend.compEulerTendADER_Z(state.state, state.hyDensGLL, state.hyDensThetaGLL, dom, exch, par, tendArr);
+      applyTendencies( state.state , 1._fp , state.state , 0._fp , state.state , 1._fp , tendArr, dom);
+      if (!dom.run2d) {
+        tend.compEulerTendADER_Y(state.state, state.hyDensCells, state.hyDensThetaCells, dom, exch, par, tendArr);
+        applyTendencies( state.state , 1._fp , state.state , 0._fp , state.state , 1._fp , tendArr, dom);
+      }
+      tend.compEulerTendADER_X(state.state, state.hyDensCells, state.hyDensThetaCells, dom, exch, par, tendArr);
+      applyTendencies( state.state , 1._fp , state.state , 0._fp , state.state , 1._fp , tendArr, dom);
+    }
   }
 
 
