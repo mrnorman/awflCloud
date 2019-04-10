@@ -19,8 +19,6 @@ protected:
 
 public:
 
-  real outFreq;
-
   void outputInit(State &state, Domain const &dom, Parallel const &par) {
     int dimids[4];
     MPI_Offset st[1], ct[1];

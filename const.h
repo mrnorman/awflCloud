@@ -14,6 +14,8 @@ typedef float         real;
 typedef unsigned long ulong;
 typedef unsigned int  uint;
 
+#include "params.h"
+
 inline _HOSTDEV real operator"" _fp( long double x ) {
   return static_cast<real>(x);
 }

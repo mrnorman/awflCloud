@@ -18,6 +18,7 @@ class Tendencies {
   Array<real> flux;
   TransformMatrices<real> trans;
   Riemann riem;
+  SArray<real,ord,tord> s2g_lower;
 
 public :
 
@@ -26,14 +27,8 @@ public :
     fluxLimits .setup(numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
     stateLimits.setup(numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
     flux       .setup(numState  ,dom.nz+1,dom.ny+1,dom.nx+1);
-  }
 
-
-  inline void compEulerTendSD_X(Array<real> &state, Array<real> &hyDensCells, Array<real> &hyDensThetaCells,
-                                Domain &dom, Exchange &exch, Parallel &par, Array<real> &tend) {
     SArray<real,ord,ord,ord> s2g_lower_tmp;
-    SArray<real,ord,tord> s2g_lower;
-
     // Setup the matrix to transform a stencil of ord cell averages into tord GLL points
     trans.sten_to_gll_lower( s2g_lower_tmp );
     for (int j=0; j<ord; j++) {
@@ -41,6 +36,11 @@ public :
         s2g_lower(j,i) = s2g_lower_tmp(tord-1,j,i);
       }
     }
+  }
+
+
+  inline void compEulerTendSD_X(Array<real> &state, Array<real> &hyDensCells, Array<real> &hyDensThetaCells,
+                                Domain &dom, Exchange &exch, Parallel &par, Array<real> &tend) {
 
     //Exchange halos in the x-direction
     exch.haloInit      ();
@@ -142,18 +142,7 @@ public :
 
   inline void compEulerTendSD_Y(Array<real> &state, Array<real> &hyDensCells, Array<real> &hyDensThetaCells,
                                 Domain &dom, Exchange &exch, Parallel &par, Array<real> &tend) {
-    SArray<real,ord,ord,ord> s2g_lower_tmp;
-    SArray<real,ord,tord> s2g_lower;
-
-    // Setup the matrix to transform a stencil of ord cell averages into tord GLL points
-    trans.sten_to_gll_lower( s2g_lower_tmp );
-    for (int j=0; j<ord; j++) {
-      for (int i=0; i<tord; i++) {
-        s2g_lower(j,i) = s2g_lower_tmp(tord-1,j,i);
-      }
-    }
-
-    //Exchange halos in the x-direction
+    //Exchange halos in the y-direction
     exch.haloInit      ();
     exch.haloPackN_y   (dom, state, numState);
     exch.haloExchange_y(dom, par);
@@ -253,17 +242,6 @@ public :
 
   inline void compEulerTendSD_Z(Array<real> &state, Array<real> &hyDensGLL, Array<real> &hyDensThetaGLL,
                                 Domain &dom, Exchange &exch, Parallel &par, Array<real> &tend) {
-    SArray<real,ord,ord,ord> s2g_lower_tmp;
-    SArray<real,ord,tord> s2g_lower;
-
-    // Setup the matrix to transform a stencil of ord cell averages into 2 GLL points
-    trans.sten_to_gll_lower( s2g_lower_tmp );
-    for (int j=0; j<ord; j++) {
-      for (int i=0; i<tord; i++) {
-        s2g_lower(j,i) = s2g_lower_tmp(tord-1,j,i);
-      }
-    }
-
     // Boundaries for the fluid state in the z-direction
     for (int j=0; j<dom.ny; j++) {
       for (int i=0; i<dom.nx; i++) {
