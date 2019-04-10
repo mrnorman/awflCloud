@@ -49,6 +49,26 @@ public :
   }
 
 
+  // Transform ord stencil cell averages into tord GLL point values
+  inline void reconStencil(SArray<real,ord> &stencil, SArray<real,tord> &gll) {
+    SArray<real,ord> coefs;
+    if (doWeno) {
+      weno.compute_weno_coefs(wenoRecon,stencil,coefs);
+    } else {
+      for (int ii=0; ii<ord; ii++) {
+        coefs(ii) = stencil(ii);
+      }
+    }
+
+    for (int ii=0; ii<tord; ii++) {
+      gll(ii) = 0.;
+      for (int s=0; s<ord; s++) {
+        gll(ii) += to_gll(s,ii) * coefs(s);
+      }
+    }
+  }
+
+
   inline void compEulerTendSD_X(Array<real> &state, Array<real> &hyDensCells, Array<real> &hyDensThetaCells,
                                 Domain &dom, Exchange &exch, Parallel &par, Array<real> &tend) {
 
@@ -62,29 +82,16 @@ public :
     for (int k=0; k<dom.nz; k++) {
       for (int j=0; j<dom.ny; j++) {
         for (int i=0; i<dom.nx; i++) {
-          SArray<real,numState,tord> gllState;
-          SArray<real,numState,tord> gllFlux;
+          SArray<real,numState,tord> gllState;  // GLL state values
+          SArray<real,numState,tord> gllFlux;   // GLL flux values
 
+          // Compute tord GLL points of the state vector
           for (int l=0; l<numState; l++) {
             SArray<real,ord> stencil;
-            SArray<real,ord> coefs;
-            for (int ii=0; ii<ord; ii++) {
-              stencil(ii) = state(l,hs+k,hs+j,i+ii);
-            }
-            if (doWeno) {
-              weno.compute_weno_coefs(wenoRecon,stencil,coefs);
-            } else {
-              for (int ii=0; ii<ord; ii++) {
-                coefs(ii) = stencil(ii);
-              }
-            }
-
-            for (int ii=0; ii<tord; ii++) {
-              gllState(l,ii) = 0.;
-              for (int s=0; s<ord; s++) {
-                gllState(l,ii) += to_gll(s,ii) * coefs(s);
-              }
-            }
+            SArray<real,tord> gllPts;
+            for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,hs+k,hs+j,i+ii); }
+            reconStencil(stencil,gllPts);
+            for (int ii=0; ii<tord; ii++) { gllState(l,ii) = gllPts(ii); }
           }
           for (int ii=0; ii<tord; ii++) {
             gllState(idR ,ii) += hyDensCells     (hs+k);
@@ -130,7 +137,7 @@ public :
     exch.edgeUnpackN_x (dom, stateLimits, numState);
     exch.edgeUnpackN_x (dom, fluxLimits , numState);
 
-    // Local lax-friedrichs fluxes
+    // Riemann solver
     for (int k=0; k<dom.nz; k++) {
       for (int j=0; j<dom.ny; j++) {
         for (int i=0; i<dom.nx+1; i++) {
@@ -180,23 +187,10 @@ public :
           // Compute GLL points from cell averages
           for (int l=0; l<numState; l++) {
             SArray<real,ord> stencil;
-            SArray<real,ord> coefs;
-            for (int ii=0; ii<ord; ii++) {
-              stencil(ii) = state(l,hs+k,j+ii,hs+i);
-            }
-            if (doWeno) {
-              weno.compute_weno_coefs(wenoRecon,stencil,coefs);
-            } else {
-              for (int ii=0; ii<ord; ii++) {
-                coefs(ii) = stencil(ii);
-              }
-            }
-            for (int ii=0; ii<tord; ii++) {
-              gllState(l,ii) = 0.;
-              for (int s=0; s<ord; s++) {
-                gllState(l,ii) += to_gll(s,ii) * coefs(s);
-              }
-            }
+            SArray<real,tord> gllPts;
+            for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,hs+k,j+ii,hs+i); }
+            reconStencil(stencil,gllPts);
+            for (int ii=0; ii<tord; ii++) { gllState(l,ii) = gllPts(ii); }
           }
           for (int ii=0; ii<tord; ii++) {
             gllState(idR ,ii) += hyDensCells     (hs+k);
@@ -305,23 +299,10 @@ public :
           // Compute GLL points from cell averages
           for (int l=0; l<numState; l++) {
             SArray<real,ord> stencil;
-            SArray<real,ord> coefs;
-            for (int ii=0; ii<ord; ii++) {
-              stencil(ii) = state(l,k+ii,hs+j,hs+i);
-            }
-            if (doWeno) {
-              weno.compute_weno_coefs(wenoRecon,stencil,coefs);
-            } else {
-              for (int ii=0; ii<ord; ii++) {
-                coefs(ii) = stencil(ii);
-              }
-            }
-            for (int ii=0; ii<tord; ii++) {
-              gllState(l,ii) = 0.;
-              for (int s=0; s<ord; s++) {
-                gllState(l,ii) += to_gll(s,ii) * coefs(s);
-              }
-            }
+            SArray<real,tord> gllPts;
+            for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,k+ii,hs+j,hs+i); }
+            reconStencil(stencil,gllPts);
+            for (int ii=0; ii<tord; ii++) { gllState(l,ii) = gllPts(ii); }
           }
           for (int ii=0; ii<tord; ii++) {
             gllState(idR ,ii) += hyDensGLL     (k,ii);
