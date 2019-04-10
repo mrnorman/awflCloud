@@ -15,21 +15,62 @@ class TimeIntegrator {
   Array<real> tendArr;
   Array<real> tendArrTmp;
   Tendencies tend;
+  int dsSwitch;
 
 public :
 
+
   inline void initialize(Domain &dom) {
-    stateTmp  .setup(numState,dom.nz+2*hs,dom.ny+2*hs,dom.nx+2*hs);
-    tendArr   .setup(numState,dom.nz,dom.ny,dom.nx);
-    tendArrTmp.setup(numState,dom.nz,dom.ny,dom.nx);
+    if (timeMethod == TIME_SSPRK3) {
+      stateTmp  .setup(numState,dom.nz+2*hs,dom.ny+2*hs,dom.nx+2*hs);
+      tendArrTmp.setup(numState,dom.nz,dom.ny,dom.nx);
+    }
+    tendArr.setup(numState,dom.nz,dom.ny,dom.nx);
     tend.initialize(dom);
+    dsSwitch = 0;
   }
+
 
   inline void stepForward(State &state, Domain &dom, Exchange &exch, Parallel &par) {
     if (timeMethod == TIME_SSPRK3) {
       stepForwardSSPRK3(state, dom, exch, par);
+    } else if (timeMethod == TIME_ADER) {
+      stepForwardADER(state, dom, exch, par);
+    } else {
+      std::cout << "Error: Unrecognized timeMethod\n";
+      exit(-1);
     }
   }
+
+
+  inline void stepForwardADER(State &state, Domain &dom, Exchange &exch, Parallel &par) {
+    // if (dsSwitch) {
+    //   dsSwitch = 0;
+      tend.compEulerTendADER_X(state.state, state.hyDensCells, state.hyDensThetaCells, dom, exch, par, tendArr);
+      applyTendencies( state.state , 1._fp , state.state , 0._fp , state.state , 1._fp , tendArr, dom);
+      if (!dom.run2d) {
+        tend.compEulerTendADER_Y(state.state, state.hyDensCells, state.hyDensThetaCells, dom, exch, par, tendArr);
+        applyTendencies( state.state , 1._fp , state.state , 0._fp , state.state , 1._fp , tendArr, dom);
+      }
+      tend.compEulerTendADER_Z(state.state, state.hyDensGLL, state.hyDensThetaGLL, dom, exch, par, tendArr);
+      applyTendencies( state.state , 1._fp , state.state , 0._fp , state.state , 1._fp , tendArr, dom);
+      tend.compEulerTendSD_S(state.state , dom , tendArr);
+      applyTendencies( state.state , 1._fp , state.state , 0._fp , state.state , 1._fp , tendArr, dom);
+    // } else {
+    //   dsSwitch = 1;
+    //   tend.compEulerTendSD_S(state.state , dom , tendArr);
+    //   applyTendencies( state.state , 1._fp , state.state , 0._fp , state.state , 1._fp , tendArr, dom);
+    //   tend.compEulerTendADER_Z(state.state, state.hyDensGLL, state.hyDensThetaGLL, dom, exch, par, tendArr);
+    //   applyTendencies( state.state , 1._fp , state.state , 0._fp , state.state , 1._fp , tendArr, dom);
+    //   if (!dom.run2d) {
+    //     tend.compEulerTendADER_Y(state.state, state.hyDensCells, state.hyDensThetaCells, dom, exch, par, tendArr);
+    //     applyTendencies( state.state , 1._fp , state.state , 0._fp , state.state , 1._fp , tendArr, dom);
+    //   }
+    //   tend.compEulerTendADER_X(state.state, state.hyDensCells, state.hyDensThetaCells, dom, exch, par, tendArr);
+    //   applyTendencies( state.state , 1._fp , state.state , 0._fp , state.state , 1._fp , tendArr, dom);
+    // }
+  }
+
 
   inline void stepForwardSSPRK3(State &state, Domain &dom, Exchange &exch, Parallel &par) {
     // Stage 1
@@ -60,6 +101,7 @@ public :
     applyTendencies( state.state , 1._fp/3._fp , state.state , 2._fp/3._fp , stateTmp , 2._fp/3._fp , tendArr , dom);
   }
 
+
   inline void applyTendencies(Array<real> &state2, real const c0, Array<real> &state0,
                                                    real const c1, Array<real> &state1,
                                                    real const ct, Array<real> &tend, Domain &dom) {
@@ -73,6 +115,7 @@ public :
       }
     }
   }
+
 
   inline void appendTendencies(Array<real> &tend, Array<real> &tendTmp, Domain &dom) {
     for (int l=0; l<numState; l++) {

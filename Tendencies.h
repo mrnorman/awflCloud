@@ -10,6 +10,7 @@
 #include "Domain.h"
 #include "Exchange.h"
 #include "WenoLimiter.h"
+#include "AderDT.h"
 #include "TransformMatrices.h"
 
 class Tendencies {
@@ -22,6 +23,10 @@ class Tendencies {
   SArray<real,ord,tord> to_gll;
   WenoLimiter<real> weno;
   SArray<real,ord,ord,ord> wenoRecon;
+  AderDT ader;
+  SArray<real,tord,tord> aderDerivX;
+  SArray<real,tord,tord> aderDerivY;
+  SArray<real,tord,tord> aderDerivZ;
 
 public :
 
@@ -46,6 +51,14 @@ public :
     }
 
     trans.weno_sten_to_coefs(wenoRecon);
+
+    SArray<real,tord,tord> g2c, c2d, c2g;
+    trans.gll_to_coefs(g2c);
+    trans.coefs_to_deriv(c2d);
+    trans.coefs_to_gll(c2g);
+    aderDerivX = (c2g * c2d * g2c) / dom.dx;
+    aderDerivY = (c2g * c2d * g2c) / dom.dy;
+    aderDerivZ = (c2g * c2d * g2c) / dom.dz;
   }
 
 
@@ -435,8 +448,8 @@ public :
     for (int k=0; k<dom.nz; k++) {
       for (int j=0; j<dom.ny; j++) {
         for (int i=0; i<dom.nx; i++) {
-          SArray<real,numState,tord> gllState;  // GLL state values
-          SArray<real,numState,tord> gllFlux;   // GLL flux values
+          SArray<real,numState,tord,tord> stateDTs;  // GLL state values
+          SArray<real,numState,tord,tord> fluxDTs;   // GLL flux values
 
           // Compute tord GLL points of the state vector
           for (int l=0; l<numState; l++) {
@@ -444,38 +457,27 @@ public :
             SArray<real,tord> gllPts;
             for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,hs+k,hs+j,i+ii); }
             reconStencil(stencil,gllPts);
-            for (int ii=0; ii<tord; ii++) { gllState(l,ii) = gllPts(ii); }
+            for (int ii=0; ii<tord; ii++) { stateDTs(l,0,ii) = gllPts(ii); }
           }
           for (int ii=0; ii<tord; ii++) {
-            gllState(idR ,ii) += hyDensCells     (hs+k);
-            gllState(idTH,ii) += hyDensThetaCells(hs+k);
+            stateDTs(idR ,0,ii) += hyDensCells     (hs+k);
+            stateDTs(idTH,0,ii) += hyDensThetaCells(hs+k);
           }
 
-          // Compute fluxes and at the GLL points
-          for (int ii=0; ii<tord; ii++) {
-            real r = gllState(idR ,ii);
-            real u = gllState(idRU,ii) / r;
-            real v = gllState(idRV,ii) / r;
-            real w = gllState(idRW,ii) / r;
-            real t = gllState(idTH,ii) / r;
-            real p = C0 * mypow( r*t , GAMMA );
-
-            gllFlux(idR ,ii) = r*u;
-            gllFlux(idRU,ii) = r*u*u + p;
-            gllFlux(idRV,ii) = r*u*v;
-            gllFlux(idRW,ii) = r*u*w;
-            gllFlux(idTH,ii) = r*u*t;
-          }
+          // Compute DTs of the state and flux, and collapse down into a time average
+          ader.diffTransformEulerX( stateDTs , fluxDTs , aderDerivX );
+          ader.timeAvg( stateDTs , dom );
+          ader.timeAvg( fluxDTs  , dom );
 
           // Store state and flux limits into a globally indexed array
           for (int l=0; l<numState; l++) {
             // Store the left cell edge state and flux estimates
-            stateLimits(l,1,k,j,i  ) = gllState(l,0);
-            fluxLimits (l,1,k,j,i  ) = gllFlux (l,0);
+            stateLimits(l,1,k,j,i  ) = stateDTs(l,0,0);
+            fluxLimits (l,1,k,j,i  ) = fluxDTs (l,0,0);
 
             // Store the Right cell edge state and flux estimates
-            stateLimits(l,0,k,j,i+1) = gllState(l,tord-1);
-            fluxLimits (l,0,k,j,i+1) = gllFlux (l,tord-1);
+            stateLimits(l,0,k,j,i+1) = stateDTs(l,0,tord-1);
+            fluxLimits (l,0,k,j,i+1) = fluxDTs (l,0,tord-1);
           }
 
         }
@@ -534,8 +536,8 @@ public :
     for (int k=0; k<dom.nz; k++) {
       for (int j=0; j<dom.ny; j++) {
         for (int i=0; i<dom.nx; i++) {
-          SArray<real,numState,tord> gllState;
-          SArray<real,numState,tord> gllFlux;
+          SArray<real,numState,tord,tord> stateDTs;  // GLL state values
+          SArray<real,numState,tord,tord> fluxDTs;   // GLL flux values
 
           // Compute GLL points from cell averages
           for (int l=0; l<numState; l++) {
@@ -543,38 +545,27 @@ public :
             SArray<real,tord> gllPts;
             for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,hs+k,j+ii,hs+i); }
             reconStencil(stencil,gllPts);
-            for (int ii=0; ii<tord; ii++) { gllState(l,ii) = gllPts(ii); }
+            for (int ii=0; ii<tord; ii++) { stateDTs(l,0,ii) = gllPts(ii); }
           }
           for (int ii=0; ii<tord; ii++) {
-            gllState(idR ,ii) += hyDensCells     (hs+k);
-            gllState(idTH,ii) += hyDensThetaCells(hs+k);
+            stateDTs(idR ,0,ii) += hyDensCells     (hs+k);
+            stateDTs(idTH,0,ii) += hyDensThetaCells(hs+k);
           }
 
-          // Compute fluxes and at the GLL points
-          for (int ii=0; ii<tord; ii++) {
-            real r = gllState(idR ,ii);
-            real u = gllState(idRU,ii) / r;
-            real v = gllState(idRV,ii) / r;
-            real w = gllState(idRW,ii) / r;
-            real t = gllState(idTH,ii) / r;
-            real p = C0 * mypow( r*t , GAMMA );
-
-            gllFlux(idR ,ii) = r*v;
-            gllFlux(idRU,ii) = r*v*u;
-            gllFlux(idRV,ii) = r*v*v + p;
-            gllFlux(idRW,ii) = r*v*w;
-            gllFlux(idTH,ii) = r*v*t;
-          }
+          // Compute DTs of the state and flux, and collapse down into a time average
+          ader.diffTransformEulerY( stateDTs , fluxDTs , aderDerivY );
+          ader.timeAvg( stateDTs , dom );
+          ader.timeAvg( fluxDTs  , dom );
 
           // Store state and flux limits into a globally indexed array
           for (int l=0; l<numState; l++) {
             // Store the left cell edge state and flux estimates
-            stateLimits(l,1,k,j  ,i) = gllState(l,0);
-            fluxLimits (l,1,k,j  ,i) = gllFlux (l,0);
+            stateLimits(l,1,k,j  ,i) = stateDTs(l,0,0);
+            fluxLimits (l,1,k,j  ,i) = fluxDTs (l,0,0);
 
             // Store the Right cell edge state and flux estimates
-            stateLimits(l,0,k,j+1,i) = gllState(l,tord-1);
-            fluxLimits (l,0,k,j+1,i) = gllFlux (l,tord-1);
+            stateLimits(l,0,k,j+1,i) = stateDTs(l,0,tord-1);
+            fluxLimits (l,0,k,j+1,i) = fluxDTs (l,0,tord-1);
           }
 
         }
@@ -646,8 +637,9 @@ public :
     for (int k=0; k<dom.nz; k++) {
       for (int j=0; j<dom.ny; j++) {
         for (int i=0; i<dom.nx; i++) {
-          SArray<real,numState,tord> gllState;
-          SArray<real,numState,tord> gllFlux;
+          SArray<real,numState,tord,tord> stateDTs;  // GLL state values
+          SArray<real,numState,tord,tord> fluxDTs;   // GLL flux values
+          SArray<real,tord> hyRHOT;   // GLL flux values
 
           // Compute GLL points from cell averages
           for (int l=0; l<numState; l++) {
@@ -655,42 +647,36 @@ public :
             SArray<real,tord> gllPts;
             for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,k+ii,hs+j,hs+i); }
             reconStencil(stencil,gllPts);
-            for (int ii=0; ii<tord; ii++) { gllState(l,ii) = gllPts(ii); }
+            for (int ii=0; ii<tord; ii++) { stateDTs(l,0,ii) = gllPts(ii); }
           }
           for (int ii=0; ii<tord; ii++) {
-            gllState(idR ,ii) += hyDensGLL     (k,ii);
-            gllState(idTH,ii) += hyDensThetaGLL(k,ii);
+            stateDTs(idR ,0,ii) += hyDensGLL     (k,ii);
+            stateDTs(idTH,0,ii) += hyDensThetaGLL(k,ii);
+            hyRHOT(ii) = hyDensThetaGLL(k,ii);
           }
 
           // Boundary conditions
-          if (k == 0       ) { gllState(idRW,0     ) = 0; }
-          if (k == dom.nz-1) { gllState(idRW,tord-1) = 0; }
+          if (k == 0       ) { stateDTs(idRW,0,0     ) = 0; }
+          if (k == dom.nz-1) { stateDTs(idRW,0,tord-1) = 0; }
 
-          // Compute fluxes and at the GLL points
-          for (int ii=0; ii<tord; ii++) {
-            real r = gllState(idR ,ii);
-            real u = gllState(idRU,ii) / r;
-            real v = gllState(idRV,ii) / r;
-            real w = gllState(idRW,ii) / r;
-            real t = gllState(idTH,ii) / r;
-            real p = C0 * mypow( r*t , GAMMA );
+          // Compute DTs of the state and flux, and collapse down into a time average
+          ader.diffTransformEulerZ( stateDTs , fluxDTs , aderDerivZ , hyRHOT );
+          ader.timeAvg( stateDTs , dom );
+          ader.timeAvg( fluxDTs  , dom );
 
-            gllFlux(idR ,ii) = r*w;
-            gllFlux(idRU,ii) = r*w*u;
-            gllFlux(idRV,ii) = r*w*v;
-            gllFlux(idRW,ii) = r*w*w + p - C0*mypow(hyDensThetaGLL(k,ii),GAMMA);
-            gllFlux(idTH,ii) = r*w*t;
-          }
+          // Boundary conditions
+          if (k == 0       ) { stateDTs(idRW,0,0     ) = 0; }
+          if (k == dom.nz-1) { stateDTs(idRW,0,tord-1) = 0; }
 
           // Store state and flux limits into a globally indexed array
           for (int l=0; l<numState; l++) {
             // Store the left cell edge state and flux estimates
-            stateLimits(l,1,k  ,j,i) = gllState(l,0);
-            fluxLimits (l,1,k  ,j,i) = gllFlux (l,0);
+            stateLimits(l,1,k  ,j,i) = stateDTs(l,0,0);
+            fluxLimits (l,1,k  ,j,i) = fluxDTs (l,0,0);
 
             // Store the Right cell edge state and flux estimates
-            stateLimits(l,0,k+1,j,i) = gllState(l,tord-1);
-            fluxLimits (l,0,k+1,j,i) = gllFlux (l,tord-1);
+            stateLimits(l,0,k+1,j,i) = stateDTs(l,0,tord-1);
+            fluxLimits (l,0,k+1,j,i) = fluxDTs (l,0,tord-1);
           }
 
         }

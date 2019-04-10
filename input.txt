@@ -3,9 +3,9 @@
 // Legal syntax is key : value
 // You can end input key:value lines with comments
 
-nx         : 200      // Number of cells in the x-direction
-ny         : 1       // Number of cells in the y-direction
-nz         : 100      // Number of cells in the z-direction
+nx         : 80      // Number of cells in the x-direction
+ny         : 80      // Number of cells in the y-direction
+nz         : 40      // Number of cells in the z-direction
 xlen       : 20000.  // Domain length in the x-direction (m)
 ylen       : 20000.  // Domain length in the y-direction (m)
 zlen       : 10000.  // Domain length in the z-direction (m)
@@ -13,6 +13,6 @@ cfl        : 0.9     // CFL value to use
 simLength  : 1000.     // How long to simulation (s)
 parNx      : 24       // Number of parallel tasks in the x-direction
 parNy      : 1       // Number of parallel tasks in the y-direction
-outFreq    : 100.    // Frequency for output in seconds
+outFreq    : 0.01  // Frequency for output in seconds
 doWeno     : 1
-timeMethod : SSPRK3  // Method to use in time (SSPRK3 or ADER)
+timeMethod : ADER  // Method to use in time (SSPRK3 or ADER)
