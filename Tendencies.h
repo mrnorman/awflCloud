@@ -9,6 +9,7 @@
 #include "Riemann.h"
 #include "Domain.h"
 #include "Exchange.h"
+#include "WenoLimiter.h"
 #include "TransformMatrices.h"
 
 class Tendencies {
@@ -18,7 +19,9 @@ class Tendencies {
   Array<real> flux;
   TransformMatrices<real> trans;
   Riemann riem;
-  SArray<real,ord,tord> s2g_lower;
+  SArray<real,ord,tord> to_gll;
+  WenoLimiter<real> weno;
+  SArray<real,ord,ord,ord> wenoRecon;
 
 public :
 
@@ -28,14 +31,21 @@ public :
     stateLimits.setup(numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
     flux       .setup(numState  ,dom.nz+1,dom.ny+1,dom.nx+1);
 
-    SArray<real,ord,ord,ord> s2g_lower_tmp;
+    SArray<real,ord,ord,ord> to_gll_tmp;
+
     // Setup the matrix to transform a stencil of ord cell averages into tord GLL points
-    trans.sten_to_gll_lower( s2g_lower_tmp );
+    if (doWeno) {
+      trans.coefs_to_gll_lower( to_gll_tmp );
+    } else {
+      trans.sten_to_gll_lower( to_gll_tmp );
+    }
     for (int j=0; j<ord; j++) {
       for (int i=0; i<tord; i++) {
-        s2g_lower(j,i) = s2g_lower_tmp(tord-1,j,i);
+        to_gll(j,i) = to_gll_tmp(tord-1,j,i);
       }
     }
+
+    trans.weno_sten_to_coefs(wenoRecon);
   }
 
 
@@ -55,12 +65,24 @@ public :
           SArray<real,numState,tord> gllState;
           SArray<real,numState,tord> gllFlux;
 
-          // Compute GLL points from cell averages
           for (int l=0; l<numState; l++) {
+            SArray<real,ord> stencil;
+            SArray<real,ord> coefs;
+            for (int ii=0; ii<ord; ii++) {
+              stencil(ii) = state(l,hs+k,hs+j,i+ii);
+            }
+            if (doWeno) {
+              weno.compute_weno_coefs(wenoRecon,stencil,coefs);
+            } else {
+              for (int ii=0; ii<ord; ii++) {
+                coefs(ii) = stencil(ii);
+              }
+            }
+
             for (int ii=0; ii<tord; ii++) {
               gllState(l,ii) = 0.;
               for (int s=0; s<ord; s++) {
-                gllState(l,ii) += s2g_lower(s,ii) * state(l,hs+k,hs+j,i+s);
+                gllState(l,ii) += to_gll(s,ii) * coefs(s);
               }
             }
           }
@@ -157,10 +179,22 @@ public :
 
           // Compute GLL points from cell averages
           for (int l=0; l<numState; l++) {
+            SArray<real,ord> stencil;
+            SArray<real,ord> coefs;
+            for (int ii=0; ii<ord; ii++) {
+              stencil(ii) = state(l,hs+k,j+ii,hs+i);
+            }
+            if (doWeno) {
+              weno.compute_weno_coefs(wenoRecon,stencil,coefs);
+            } else {
+              for (int ii=0; ii<ord; ii++) {
+                coefs(ii) = stencil(ii);
+              }
+            }
             for (int ii=0; ii<tord; ii++) {
               gllState(l,ii) = 0.;
               for (int s=0; s<ord; s++) {
-                gllState(l,ii) += s2g_lower(s,ii) * state(l,hs+k,j+s,hs+i);
+                gllState(l,ii) += to_gll(s,ii) * coefs(s);
               }
             }
           }
@@ -270,10 +304,22 @@ public :
 
           // Compute GLL points from cell averages
           for (int l=0; l<numState; l++) {
+            SArray<real,ord> stencil;
+            SArray<real,ord> coefs;
+            for (int ii=0; ii<ord; ii++) {
+              stencil(ii) = state(l,k+ii,hs+j,hs+i);
+            }
+            if (doWeno) {
+              weno.compute_weno_coefs(wenoRecon,stencil,coefs);
+            } else {
+              for (int ii=0; ii<ord; ii++) {
+                coefs(ii) = stencil(ii);
+              }
+            }
             for (int ii=0; ii<tord; ii++) {
               gllState(l,ii) = 0.;
               for (int s=0; s<ord; s++) {
-                gllState(l,ii) += s2g_lower(s,ii) * state(l,k+s,hs+j,hs+i);
+                gllState(l,ii) += to_gll(s,ii) * coefs(s);
               }
             }
           }
