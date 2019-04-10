@@ -2,6 +2,7 @@
 #ifndef _PARSER_H_
 #define _PARSER_H_
 
+#include "const.h"
 #include <fstream>
 #include <string>
 #include "string.h"
@@ -18,6 +19,8 @@ public:
 
   void readParamsFile(std::string fNameIn, Domain &dom, Parallel &par, FileIO &io) {
 
+    std::string strTimeMethod;
+
     // Initialize all read-in values to -999
     dom.nx_glob   = -999;
     dom.ny_glob   = -999;
@@ -31,6 +34,7 @@ public:
     par.nproc_y   = -999;
     outFreq       = -999;
     doWeno        = -999;
+    timeMethod    = -999;
 
     // Read in colon-separated key: value file line by line
     std::ifstream fInStream(fNameIn);
@@ -64,6 +68,7 @@ public:
         else if ( !strcmp( "parNy"     , key.c_str() ) ) { ssVal >> par.nproc_y  ; }
         else if ( !strcmp( "outFreq"   , key.c_str() ) ) { ssVal >> outFreq      ; }
         else if ( !strcmp( "doWeno"    , key.c_str() ) ) { ssVal >> doWeno       ; }
+        else if ( !strcmp( "timeMethod", key.c_str() ) ) { ssVal >> strTimeMethod; handleTimeMethod(strTimeMethod,fNameIn); }
         else {
           std::cout << "Error: key " << key << " not understood in file " << fNameIn << "\n";
           exit(-1);
@@ -87,20 +92,37 @@ public:
 
     // Print out the values
     if (par.masterproc) {
-      std::cout << "nx: "        << dom.nx_glob   << "\n";
-      std::cout << "ny: "        << dom.ny_glob   << "\n";
-      std::cout << "nz: "        << dom.nz_glob   << "\n";
-      std::cout << "xlen: "      << dom.xlen      << "\n";
-      std::cout << "ylen: "      << dom.ylen      << "\n";
-      std::cout << "zlen: "      << dom.zlen      << "\n";
-      std::cout << "cfl: "       << dom.cfl       << "\n";
-      std::cout << "simLength: " << dom.simLength << "\n";
-      std::cout << "parNx: "     << par.nproc_x   << "\n";
-      std::cout << "parNy: "     << par.nproc_y   << "\n";
-      std::cout << "outFreq: "   << outFreq       << "\n";
-      std::cout << "doWeno: "    << doWeno        << "\n";
+      std::cout << "nx: "         << dom.nx_glob   << "\n";
+      std::cout << "ny: "         << dom.ny_glob   << "\n";
+      std::cout << "nz: "         << dom.nz_glob   << "\n";
+      std::cout << "xlen: "       << dom.xlen      << "\n";
+      std::cout << "ylen: "       << dom.ylen      << "\n";
+      std::cout << "zlen: "       << dom.zlen      << "\n";
+      std::cout << "cfl: "        << dom.cfl       << "\n";
+      std::cout << "simLength: "  << dom.simLength << "\n";
+      std::cout << "parNx: "      << par.nproc_x   << "\n";
+      std::cout << "parNy: "      << par.nproc_y   << "\n";
+      std::cout << "outFreq: "    << outFreq       << "\n";
+      std::cout << "doWeno: "     << doWeno        << "\n";
+      std::cout << "timeMethod: " << timeMethod    << "\n";
     }
 
+  }
+
+  void handleTimeMethod(std::string &str, std::string &fNameIn) {
+    size_t splitloc = str.find("//",0);
+    std::string strloc;
+    if (splitloc != std::string::npos){
+      strloc = str.substr(0,splitloc);
+    } else {
+      strloc = str;
+    }
+    if      ( !strcmp(strloc.c_str(),"SSPRK3") ) { timeMethod = TIME_SSPRK3; }
+    else if ( !strcmp(strloc.c_str(),"ADER"  ) ) { timeMethod = TIME_ADER  ; }
+    else  {
+      std::cout << "Error: unrecognized timeMethod " << str << " in file " << fNameIn << "\n";
+      exit(-1);
+    }
   }
 
 };

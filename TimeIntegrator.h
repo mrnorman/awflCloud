@@ -26,7 +26,9 @@ public :
   }
 
   inline void stepForward(State &state, Domain &dom, Exchange &exch, Parallel &par) {
-    stepForwardSSPRK3(state, dom, exch, par);
+    if (timeMethod == TIME_SSPRK3) {
+      stepForwardSSPRK3(state, dom, exch, par);
+    }
   }
 
   inline void stepForwardSSPRK3(State &state, Domain &dom, Exchange &exch, Parallel &par) {
