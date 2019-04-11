@@ -203,7 +203,8 @@ public:
   }
 
 
-  inline void diffTransformEulerZ( SArray<real,numState,tord,tord> &state, SArray<real,numState,tord,tord> &flux, SArray<real,tord,tord> &deriv, SArray<real,tord> &hyRHOT ) {
+  inline void diffTransformEulerZ( SArray<real,numState,tord,tord> &state, SArray<real,numState,tord,tord> &flux,
+                                   SArray<real,numState,tord,tord> &source, SArray<real,tord,tord> &deriv, SArray<real,tord> &hyRHOT, SArray<real,tord> &hyRHO ) {
     SArray<real,tord,tord> rwu, rwv, rww, rwt, rtgamma;
     SArray<real,tord> tot_rwu, tot_rwv, tot_rww, tot_rwt, tot_rtgamma;
 
@@ -217,6 +218,7 @@ public:
         rtgamma(kt,ii) = 0;
       }
     }
+    source = 0;
 
     // Compute the zeroth-order DTs of the intermediate functions and fluxes
     for (int ii=0; ii<tord; ii++) {
@@ -237,6 +239,8 @@ public:
       flux(idRV,0,ii) = rwv(0,ii);
       flux(idRW,0,ii) = rww(0,ii) + C0*rtgamma(0,ii) - C0*mypow(hyRHOT(ii),GAMMA);
       flux(idTH,0,ii) = rwt(0,ii);
+
+      source(idRW,0,ii) = -( state(idR,0,ii) - hyRHO(ii) )*GRAV;
     }
 
     // Loop over the time derivatives
@@ -248,7 +252,7 @@ public:
           for (int s=0; s<tord; s++) {
             d_dx += deriv(s,ii) * flux(l,kt,s);
           }
-          state(l,kt+1,ii) = -d_dx/(kt+1);
+          state(l,kt+1,ii) = ( -d_dx + source(l,kt,ii) ) / (kt+1);
         }
       }
 
@@ -294,6 +298,7 @@ public:
         flux(idRV,kt+1,ii) = rwv(kt+1,ii);
         flux(idRW,kt+1,ii) = rww(kt+1,ii) + C0*rtgamma(kt+1,ii)/2;
         flux(idTH,kt+1,ii) = rwt(kt+1,ii);
+        source(idRW,kt+1,ii) = -state(idR,kt+1,ii)*GRAV;
       }
     }
   }

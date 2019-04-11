@@ -18,6 +18,8 @@ class Tendencies {
   Array<real> stateLimits;
   Array<real> fluxLimits;
   Array<real> flux;
+  Array<real> src;
+  SArray<real,tord> gllWts;
   TransformMatrices<real> trans;
   Riemann riem;
   SArray<real,ord,tord> to_gll;
@@ -35,6 +37,7 @@ public :
     fluxLimits .setup(numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
     stateLimits.setup(numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
     flux       .setup(numState  ,dom.nz+1,dom.ny+1,dom.nx+1);
+    src        .setup(numState  ,dom.nz  ,dom.ny  ,dom.nx  );
 
     SArray<real,ord,ord,ord> to_gll_tmp;
 
@@ -59,6 +62,8 @@ public :
     aderDerivX = (c2g * c2d * g2c) / dom.dx;
     aderDerivY = (c2g * c2d * g2c) / dom.dy;
     aderDerivZ = (c2g * c2d * g2c) / dom.dz;
+
+    trans.get_gll_weights(gllWts);
   }
 
 
@@ -639,7 +644,9 @@ public :
         for (int i=0; i<dom.nx; i++) {
           SArray<real,numState,tord,tord> stateDTs;  // GLL state values
           SArray<real,numState,tord,tord> fluxDTs;   // GLL flux values
-          SArray<real,tord> hyRHOT;   // GLL flux values
+          SArray<real,numState,tord,tord> sourceDTs;   // GLL source values
+          SArray<real,tord> hyRHOT;
+          SArray<real,tord> hyRHO;
 
           // Compute GLL points from cell averages
           for (int l=0; l<numState; l++) {
@@ -653,6 +660,7 @@ public :
             stateDTs(idR ,0,ii) += hyDensGLL     (k,ii);
             stateDTs(idTH,0,ii) += hyDensThetaGLL(k,ii);
             hyRHOT(ii) = hyDensThetaGLL(k,ii);
+            hyRHO (ii) = hyDensGLL     (k,ii);
           }
 
           // Boundary conditions
@@ -660,9 +668,10 @@ public :
           if (k == dom.nz-1) { stateDTs(idRW,0,tord-1) = 0; }
 
           // Compute DTs of the state and flux, and collapse down into a time average
-          ader.diffTransformEulerZ( stateDTs , fluxDTs , aderDerivZ , hyRHOT );
-          ader.timeAvg( stateDTs , dom );
-          ader.timeAvg( fluxDTs  , dom );
+          ader.diffTransformEulerZ( stateDTs , fluxDTs, sourceDTs , aderDerivZ , hyRHOT, hyRHO );
+          ader.timeAvg( stateDTs  , dom );
+          ader.timeAvg( fluxDTs   , dom );
+          ader.timeAvg( sourceDTs , dom );
 
           // Boundary conditions
           if (k == 0       ) { stateDTs(idRW,0,0     ) = 0; }
@@ -677,6 +686,10 @@ public :
             // Store the Right cell edge state and flux estimates
             stateLimits(l,0,k+1,j,i) = stateDTs(l,0,tord-1);
             fluxLimits (l,0,k+1,j,i) = fluxDTs (l,0,tord-1);
+          }
+          src(idRW,k,j,i) = 0;
+          for (int ii=0; ii<tord; ii++) {
+            src(idRW,k,j,i) += sourceDTs(idRW,0,ii) * gllWts(ii);
           }
 
         }
@@ -739,6 +752,9 @@ public :
         for (int j=0; j<dom.ny; j++) {
           for (int i=0; i<dom.nx; i++) {
             tend(l,k,j,i) = - ( flux(l,k+1,j,i) - flux(l,k,j,i) ) / dom.dz;
+            if (l==idRW) {
+              tend(l,k,j,i) += src(l,k,j,i);
+            }
           }
         }
       }
