@@ -56,14 +56,15 @@ public :
     trans.weno_sten_to_coefs(wenoRecon);
 
     SArray<real,tord,tord> g2c, c2d, c2g;
-    trans.gll_to_coefs  ( g2c);
-    trans.coefs_to_deriv( c2d);
-    trans.coefs_to_gll  ( c2g);
+    trans.gll_to_coefs  (g2c);
+    trans.coefs_to_deriv(c2d);
+    trans.coefs_to_gll  (c2g);
     aderDerivX = (c2g * c2d * g2c) / dom.dx;
     aderDerivY = (c2g * c2d * g2c) / dom.dy;
     aderDerivZ = (c2g * c2d * g2c) / dom.dz;
 
     trans.get_gll_weights(gllWts);
+
   }
 
 
@@ -668,7 +669,7 @@ public :
           if (k == dom.nz-1) { stateDTs(idRW,0,tord-1) = 0; }
 
           // Compute DTs of the state and flux, and collapse down into a time average
-          ader.diffTransformEulerZ( stateDTs , fluxDTs, sourceDTs , aderDerivZ , hyRHOT, hyRHO );
+          ader.diffTransformEulerZ( stateDTs , fluxDTs , sourceDTs , aderDerivZ , hyRHOT, hyRHO );
           ader.timeAvg( stateDTs  , dom );
           ader.timeAvg( fluxDTs   , dom );
           ader.timeAvg( sourceDTs , dom );
