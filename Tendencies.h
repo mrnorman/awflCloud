@@ -645,7 +645,7 @@ public :
         for (int i=0; i<dom.nx; i++) {
           SArray<real,numState,tord,tord> stateDTs;  // GLL state values
           SArray<real,numState,tord,tord> fluxDTs;   // GLL flux values
-          SArray<real,numState,tord,tord> sourceDTs;   // GLL source values
+          SArray<real,tord,tord> sourceDTs;   // GLL source values
           SArray<real,tord> hyRHOT;
           SArray<real,tord> hyRHO;
 
@@ -690,7 +690,7 @@ public :
           }
           src(idRW,k,j,i) = 0;
           for (int ii=0; ii<tord; ii++) {
-            src(idRW,k,j,i) += sourceDTs(idRW,0,ii) * gllWts(ii);
+            src(idRW,k,j,i) += sourceDTs(0,ii) * gllWts(ii);
           }
 
         }

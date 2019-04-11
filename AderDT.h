@@ -62,7 +62,7 @@ public:
         tot_ruv = 0;
         tot_ruw = 0;
         tot_rut = 0;
-        for (int rt=0; rt<kt+1; rt++) {
+        for (int rt=0; rt<=kt+1; rt++) {
           tot_ruu += state(idRU,rt,ii) * state(idRU,kt+1-rt,ii) - state(idR,rt,ii) * ruu(kt+1-rt,ii);
           tot_ruv += state(idRU,rt,ii) * state(idRV,kt+1-rt,ii) - state(idR,rt,ii) * ruv(kt+1-rt,ii);
           tot_ruw += state(idRU,rt,ii) * state(idRW,kt+1-rt,ii) - state(idR,rt,ii) * ruw(kt+1-rt,ii);
@@ -75,7 +75,7 @@ public:
 
         // Compute rtgamma at the next time level
         tot_rtgamma = 0;
-        for (int rt=0; rt<kt; rt++) {
+        for (int rt=0; rt<=kt; rt++) {
           tot_rtgamma += (kt+1._fp -rt) * ( GAMMA*rtgamma(rt,ii)*state(idTH,kt+1-rt,ii) - state(idTH,rt,ii)*rtgamma(kt+1-rt,ii) );
         }
         rtgamma(kt+1,ii) = ( GAMMA*rtgamma(0,ii)*state(idTH,kt+1,ii) + tot_rtgamma / (kt+1._fp) ) / state(idTH,0,ii);
@@ -142,7 +142,7 @@ public:
         tot_rvv = 0;
         tot_rvw = 0;
         tot_rvt = 0;
-        for (int rt=0; rt<kt+1; rt++) {
+        for (int rt=0; rt<=kt+1; rt++) {
           tot_rvu += state(idRV,rt,ii) * state(idRU,kt+1-rt,ii) - state(idR,rt,ii) * rvu(kt+1-rt,ii);
           tot_rvv += state(idRV,rt,ii) * state(idRV,kt+1-rt,ii) - state(idR,rt,ii) * rvv(kt+1-rt,ii);
           tot_rvw += state(idRV,rt,ii) * state(idRW,kt+1-rt,ii) - state(idR,rt,ii) * rvw(kt+1-rt,ii);
@@ -155,7 +155,7 @@ public:
 
         // Compute rtgamma at the next time level
         tot_rtgamma = 0;
-        for (int rt=0; rt<kt; rt++) {
+        for (int rt=0; rt<=kt; rt++) {
           tot_rtgamma += (kt+1._fp -rt) * ( GAMMA*rtgamma(rt,ii)*state(idTH,kt+1-rt,ii) - state(idTH,rt,ii)*rtgamma(kt+1-rt,ii) );
         }
         rtgamma(kt+1,ii) = ( GAMMA*rtgamma(0,ii)*state(idTH,kt+1,ii) + tot_rtgamma / (kt+1._fp) ) / state(idTH,0,ii);
@@ -172,7 +172,7 @@ public:
 
 
   inline void diffTransformEulerZ( SArray<real,numState,tord,tord> &state, SArray<real,numState,tord,tord> &flux,
-                                   SArray<real,numState,tord,tord> &source, SArray<real,tord,tord> &deriv, SArray<real,tord> &hyRHOT, SArray<real,tord> &hyRHO ) {
+                                   SArray<real,tord,tord> &source, SArray<real,tord,tord> &deriv, SArray<real,tord> &hyRHOT, SArray<real,tord> &hyRHO ) {
     SArray<real,tord,tord> rwu, rwv, rww, rwt, rtgamma;
     real tot_rwu, tot_rwv, tot_rww, tot_rwt, tot_rtgamma;
 
@@ -182,7 +182,6 @@ public:
     rww     = 0;
     rwt     = 0;
     rtgamma = 0;
-    source  = 0;
 
     // Compute the zeroth-order DTs of the intermediate functions and fluxes
     for (int ii=0; ii<tord; ii++) {
@@ -204,7 +203,7 @@ public:
       flux(idRW,0,ii) = rww(0,ii) + C0*rtgamma(0,ii) - C0*mypow(hyRHOT(ii),GAMMA);
       flux(idTH,0,ii) = rwt(0,ii);
 
-      source(idRW,0,ii) = -( state(idR,0,ii) - hyRHO(ii) )*GRAV;
+      source(0,ii) = -( state(idR,0,ii) - hyRHO(ii) )*GRAV;
     }
 
     // Loop over the time derivatives
@@ -216,8 +215,11 @@ public:
           for (int s=0; s<tord; s++) {
             d_dx += deriv(s,ii) * flux(l,kt,s);
           }
-          state(l,kt+1,ii) = ( -d_dx + source(l,kt,ii) ) / (kt+1._fp);
+          state(l,kt+1,ii) = -d_dx/(kt+1);
         }
+      }
+      for (int ii=0; ii<tord; ii++) {
+        state(idRW,kt+1,ii) += source(kt,ii)/(kt+1);;
       }
 
       // Compute rw* at the next time level
@@ -226,7 +228,7 @@ public:
         tot_rwv = 0;
         tot_rww = 0;
         tot_rwt = 0;
-        for (int rt=0; rt<kt+1; rt++) {
+        for (int rt=0; rt<=kt+1; rt++) {
           tot_rwu += state(idRW,rt,ii) * state(idRU,kt+1-rt,ii) - state(idR,rt,ii) * rwu(kt+1-rt,ii);
           tot_rwv += state(idRW,rt,ii) * state(idRV,kt+1-rt,ii) - state(idR,rt,ii) * rwv(kt+1-rt,ii);
           tot_rww += state(idRW,rt,ii) * state(idRW,kt+1-rt,ii) - state(idR,rt,ii) * rww(kt+1-rt,ii);
@@ -239,10 +241,10 @@ public:
 
         // Compute rtgamma at the next time level
         tot_rtgamma = 0;
-        for (int rt=0; rt<kt; rt++) {
-          tot_rtgamma += (kt+1._fp -rt) * ( GAMMA*rtgamma(rt,ii)*state(idTH,kt+1-rt,ii) - state(idTH,rt,ii)*rtgamma(kt+1-rt,ii) );
+        for (int rt=0; rt<=kt; rt++) {
+          tot_rtgamma += (kt+1-rt) * ( GAMMA*rtgamma(rt,ii)*state(idTH,kt+1-rt,ii) - state(idTH,rt,ii)*rtgamma(kt+1-rt,ii) );
         }
-        rtgamma(kt+1,ii) = ( GAMMA*rtgamma(0,ii)*state(idTH,kt+1,ii) + tot_rtgamma / (kt+1._fp) ) / state(idTH,0,ii);
+        rtgamma(kt+1,ii) = ( GAMMA*rtgamma(0,ii)*state(idTH,kt+1,ii) + tot_rtgamma / (kt+1) ) / state(idTH,0,ii);
 
         // Compute the fluxes at the next time level
         flux(idR ,kt+1,ii) = state(idRW,kt+1,ii);
@@ -250,7 +252,7 @@ public:
         flux(idRV,kt+1,ii) = rwv(kt+1,ii);
         flux(idRW,kt+1,ii) = rww(kt+1,ii) + C0*rtgamma(kt+1,ii)/2;
         flux(idTH,kt+1,ii) = rwt(kt+1,ii);
-        source(idRW,kt+1,ii) = -state(idR,kt+1,ii)*GRAV;
+        source(kt+1,ii) = -state(idR,kt+1,ii)*GRAV;
       }
     }
   }
@@ -267,6 +269,18 @@ public:
       dtmult *= dom.dt;
     }
   }
+
+
+  inline void timeAvg( SArray<real,tord,tord> &dts , Domain &dom ) {
+    real dtmult = dom.dt;
+    for (int kt=1; kt<tord; kt++) {
+      for (int ii=0; ii<tord; ii++) {
+        dts(0,ii) += dts(kt,ii) * dtmult / (kt+1._fp);
+      }
+      dtmult *= dom.dt;
+    }
+  }
+
 
 };
 
