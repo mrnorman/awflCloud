@@ -12,9 +12,9 @@ public:
   ulong ny_glob;
   ulong nz_glob;
 
-  uint nx;
-  uint ny;
-  uint nz;
+  int nx;
+  int ny;
+  int nz;
 
   int run2d;
 

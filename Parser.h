@@ -22,9 +22,9 @@ public:
     std::string strTimeMethod;
 
     // Initialize all read-in values to -999
-    dom.nx_glob   = -999;
-    dom.ny_glob   = -999;
-    dom.nz_glob   = -999;
+    dom.nx_glob   = 0;
+    dom.ny_glob   = 0;
+    dom.nz_glob   = 0;
     dom.xlen      = -999;
     dom.ylen      = -999;
     dom.zlen      = -999;
@@ -77,9 +77,9 @@ public:
     }
 
     // Test to make sure all values were initialized
-    if (dom.nx_glob   == -999) { std::cout << "Error: key " << "nx"        << " not set."; exit(-1); }
-    if (dom.ny_glob   == -999) { std::cout << "Error: key " << "ny"        << " not set."; exit(-1); }
-    if (dom.nz_glob   == -999) { std::cout << "Error: key " << "nz"        << " not set."; exit(-1); }
+    if (dom.nx_glob   == 0   ) { std::cout << "Error: key " << "nx"        << " not set."; exit(-1); }
+    if (dom.ny_glob   == 0   ) { std::cout << "Error: key " << "ny"        << " not set."; exit(-1); }
+    if (dom.nz_glob   == 0   ) { std::cout << "Error: key " << "nz"        << " not set."; exit(-1); }
     if (dom.xlen      == -999) { std::cout << "Error: key " << "xlen"      << " not set."; exit(-1); }
     if (dom.ylen      == -999) { std::cout << "Error: key " << "ylen"      << " not set."; exit(-1); }
     if (dom.zlen      == -999) { std::cout << "Error: key " << "zlen"      << " not set."; exit(-1); }
