@@ -37,7 +37,7 @@ public :
     fluxLimits .setup(numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
     stateLimits.setup(numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
     flux       .setup(numState  ,dom.nz+1,dom.ny+1,dom.nx+1);
-    src        .setup(numState  ,dom.nz  ,dom.ny  ,dom.nx  );
+    src        .setup(           dom.nz  ,dom.ny  ,dom.nx  );
 
     SArray<real,ord,ord,ord> to_gll_tmp;
 
@@ -688,9 +688,9 @@ public :
             stateLimits(l,0,k+1,j,i) = stateDTs(l,0,tord-1);
             fluxLimits (l,0,k+1,j,i) = fluxDTs (l,0,tord-1);
           }
-          src(idRW,k,j,i) = 0;
+          src(k,j,i) = 0;
           for (int ii=0; ii<tord; ii++) {
-            src(idRW,k,j,i) += sourceDTs(0,ii) * gllWts(ii);
+            src(k,j,i) += sourceDTs(0,ii) * gllWts(ii);
           }
 
         }
@@ -754,7 +754,7 @@ public :
           for (int i=0; i<dom.nx; i++) {
             tend(l,k,j,i) = - ( flux(l,k+1,j,i) - flux(l,k,j,i) ) / dom.dz;
             if (l==idRW) {
-              tend(l,k,j,i) += src(l,k,j,i);
+              tend(l,k,j,i) += src(k,j,i);
             }
           }
         }

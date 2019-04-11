@@ -15,4 +15,4 @@ parNx      : 24       // Number of parallel tasks in the x-direction
 parNy      : 1       // Number of parallel tasks in the y-direction
 outFreq    : 10.    // Frequency for output in seconds
 doWeno     : 1
-timeMethod : SSPRK3  // Method to use in time (SSPRK3 or ADER)
+timeMethod : ADER  // Method to use in time (SSPRK3 or ADER)
