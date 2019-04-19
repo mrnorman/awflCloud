@@ -41,7 +41,7 @@ public:
     real u = 0.5_fp * ( s1(idRU) + s2(idRU) ) / r;
     real v = 0.5_fp * ( s1(idRV) + s2(idRV) ) / r;
     real w = 0.5_fp * ( s1(idRW) + s2(idRW) ) / r;
-    real t = 0.5_fp * ( s1(idTH) + s2(idTH) ) / r;
+    real t = 0.5_fp * ( s1(idRT) + s2(idRT) ) / r;
     real p = C0 * mypow( r*t , GAMMA );
     real cs = mysqrt( GAMMA * p / r );
 
@@ -94,7 +94,7 @@ public:
     real u = 0.5_fp * ( s1(idRU) + s2(idRU) ) / r;
     real v = 0.5_fp * ( s1(idRV) + s2(idRV) ) / r;
     real w = 0.5_fp * ( s1(idRW) + s2(idRW) ) / r;
-    real t = 0.5_fp * ( s1(idTH) + s2(idTH) ) / r;
+    real t = 0.5_fp * ( s1(idRT) + s2(idRT) ) / r;
     real p = C0 * mypow( r*t , GAMMA );
     real cs = mysqrt( GAMMA * p / r );
 
@@ -146,7 +146,7 @@ public:
     real u = 0.5_fp * ( s1(idRU) + s2(idRU) ) / r;
     real v = 0.5_fp * ( s1(idRV) + s2(idRV) ) / r;
     real w = 0.5_fp * ( s1(idRW) + s2(idRW) ) / r;
-    real t = 0.5_fp * ( s1(idTH) + s2(idTH) ) / r;
+    real t = 0.5_fp * ( s1(idRT) + s2(idRT) ) / r;
     real p = C0 * mypow( r*t , GAMMA );
     real cs = mysqrt( GAMMA * p / r );
 
