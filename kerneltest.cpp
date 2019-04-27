@@ -2,46 +2,57 @@
 #include "const.h"
 #include "Array.h"
 #include <iostream>
-#include <type_traits>
 
-class Nope {
-};
-Nope _nope;
+#ifdef _TARGET_GPU
+#define _HOSTDEV __host__ __device__
+#define _GLOBAL __global__
+#else
+#define _HOSTDEV 
+#define _GLOBAL 
+#endif
 
-template <class F, class T1=Nope, class T2=Nope, class T3=Nope, class T4=Nope, class T5=Nope, 
-                   class T6=Nope, class T7=Nope, class T8=Nope, class T9=Nope, class T10=Nope>
-  void launch( ulong nIter , F const &func , T1 &p1=_nope , T2 &p2=_nope , T3 &p3=_nope , T4 &p4=_nope , T5  &p5 =_nope , 
-                                             T6 &p6=_nope , T7 &p7=_nope , T8 &p8=_nope , T9 &p9=_nope , T10 &p10=_nope ) {
-  for (ulong i=0; i<nIter; i++) {
-    if        constexpr ( std::is_same<T1 ,Nope>::value ) {
-      func(i);
-    } else if constexpr ( std::is_same<T2 ,Nope>::value ) {
-      func(i,p1);
-    } else if constexpr ( std::is_same<T3 ,Nope>::value ) {
-      func(i,p1,p2);
-    } else if constexpr ( std::is_same<T4 ,Nope>::value ) {
-      func(i,p1,p2,p3);
-    } else if constexpr ( std::is_same<T5 ,Nope>::value ) {
-      func(i,p1,p2,p3,p4);
-    } else if constexpr ( std::is_same<T6 ,Nope>::value ) {
-      func(i,p1,p2,p3,p4,p5);
-    } else if constexpr ( std::is_same<T7 ,Nope>::value ) {
-      func(i,p1,p2,p3,p4,p5,p6);
-    } else if constexpr ( std::is_same<T8 ,Nope>::value ) {
-      func(i,p1,p2,p3,p4,p5,p6,p7);
-    } else if constexpr ( std::is_same<T9 ,Nope>::value ) {
-      func(i,p1,p2,p3,p4,p5,p6,p7,p8);
-    } else if constexpr ( std::is_same<T10,Nope>::value ) {
-      func(i,p1,p2,p3,p4,p5,p6,p7,p8,p9);
-    } else {
-      func(i,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10);
-    }
+template <class F, class ... Ts> void launchCPU( int nIter , F const &func , Ts&&... args) {
+  for (int i=0; i<nIter; i++) {
+    func(i,args...);
   }
 }
 
+#ifdef _TARGET_GPU
+template <class F, class ... Ts> _GLOBAL void launchCUDA( int nIter , F const &func , Ts&&... args) {
+  int i = blockIdx.x*blockDim.x + threadIdx.x;
+  if (i < nIter) {
+    func(i,args...);
+  }
+}
+#endif
+
+template <class F, class ... Ts> void launch( int nIter , F const &func , Ts&&... args) {
+#ifdef _TARGET_GPU
+  launchCUDA <<< nIter/128+1 , 128 >>> (nIter,func,args...);
+#else
+  launchCPU(nIter,func,args...);
+#endif
+}
+
+
+#ifdef _TARGET_GPU
+void synchronizeCUDA() { cudaDeviceSynchronize(); }
+#endif
+
+void synchronizeCPU() { }
+
+void synchronize() {
+#ifdef _TARGET_GPU
+  synchronizeCUDA();
+#else
+  synchronizeCPU();
+#endif
+}
+
+
 int main() {
-  Array<float> a, b, c;
-  ulong n = 1024*1024;
+  Array<real> a, b, c;
+  int n = 1024*1024;
   a.setup(n);
   b.setup(n);
   c.setup(n);
@@ -49,7 +60,9 @@ int main() {
   a = 2;
   b = 3;
 
-  launch( n , []( ulong i , Array<float> &a , Array<float> &b , Array<float> &c ) { c(i) = a(i) + b(i); } , a , b , c );
+  launch( n , [] _HOSTDEV (int i, Array<real> &a, Array<real> &b, Array<real> &c) { c(i) = a(i) + b(i); } , a , b , c );
+  synchronize();
 
   std::cout << (int) c.sum() << " " << 5*1024*1024 << "\n";
 }
+
