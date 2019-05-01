@@ -10,7 +10,7 @@ class Exchange {
 
 protected:
 
-  int const maxPack = 10;
+  int const maxPack = numState*2;
 
   MPI_Request sReq [2];
   MPI_Request rReq [2];
