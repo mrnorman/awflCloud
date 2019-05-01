@@ -28,7 +28,7 @@ public:
       real u = state(idRU,0,ii) / r;
       real v = state(idRV,0,ii) / r;
       real w = state(idRW,0,ii) / r;
-      real t = state(idTH,0,ii) / r;
+      real t = state(idRT,0,ii) / r;
 
       ruu    (0,ii) = r*u*u;
       ruv    (0,ii) = r*u*v;
@@ -40,7 +40,7 @@ public:
       flux(idRU,0,ii) = ruu(0,ii) + C0*rtgamma(0,ii);
       flux(idRV,0,ii) = ruv(0,ii);
       flux(idRW,0,ii) = ruw(0,ii);
-      flux(idTH,0,ii) = rut(0,ii);
+      flux(idRT,0,ii) = rut(0,ii);
     }
 
     // Loop over the time derivatives
@@ -66,7 +66,7 @@ public:
           tot_ruu += state(idRU,rt,ii) * state(idRU,kt+1-rt,ii) - state(idR,rt,ii) * ruu(kt+1-rt,ii);
           tot_ruv += state(idRU,rt,ii) * state(idRV,kt+1-rt,ii) - state(idR,rt,ii) * ruv(kt+1-rt,ii);
           tot_ruw += state(idRU,rt,ii) * state(idRW,kt+1-rt,ii) - state(idR,rt,ii) * ruw(kt+1-rt,ii);
-          tot_rut += state(idRU,rt,ii) * state(idTH,kt+1-rt,ii) - state(idR,rt,ii) * rut(kt+1-rt,ii);
+          tot_rut += state(idRU,rt,ii) * state(idRT,kt+1-rt,ii) - state(idR,rt,ii) * rut(kt+1-rt,ii);
         }
         ruu(kt+1,ii) = tot_ruu / state(idR,0,ii);
         ruv(kt+1,ii) = tot_ruv / state(idR,0,ii);
@@ -76,16 +76,16 @@ public:
         // Compute rtgamma at the next time level
         tot_rtgamma = 0;
         for (int rt=0; rt<=kt; rt++) {
-          tot_rtgamma += (kt+1._fp -rt) * ( GAMMA*rtgamma(rt,ii)*state(idTH,kt+1-rt,ii) - state(idTH,rt,ii)*rtgamma(kt+1-rt,ii) );
+          tot_rtgamma += (kt+1._fp -rt) * ( GAMMA*rtgamma(rt,ii)*state(idRT,kt+1-rt,ii) - state(idRT,rt,ii)*rtgamma(kt+1-rt,ii) );
         }
-        rtgamma(kt+1,ii) = ( GAMMA*rtgamma(0,ii)*state(idTH,kt+1,ii) + tot_rtgamma / (kt+1._fp) ) / state(idTH,0,ii);
+        rtgamma(kt+1,ii) = ( GAMMA*rtgamma(0,ii)*state(idRT,kt+1,ii) + tot_rtgamma / (kt+1._fp) ) / state(idRT,0,ii);
 
         // Compute the fluxes at the next time level
         flux(idR ,kt+1,ii) = state(idRU,kt+1,ii);
         flux(idRU,kt+1,ii) = ruu(kt+1,ii) + C0*rtgamma(kt+1,ii)/2;
         flux(idRV,kt+1,ii) = ruv(kt+1,ii);
         flux(idRW,kt+1,ii) = ruw(kt+1,ii);
-        flux(idTH,kt+1,ii) = rut(kt+1,ii);
+        flux(idRT,kt+1,ii) = rut(kt+1,ii);
       }
     }
   }
@@ -108,7 +108,7 @@ public:
       real u = state(idRU,0,ii) / r;
       real v = state(idRV,0,ii) / r;
       real w = state(idRW,0,ii) / r;
-      real t = state(idTH,0,ii) / r;
+      real t = state(idRT,0,ii) / r;
 
       rvu    (0,ii) = r*v*u;
       rvv    (0,ii) = r*v*v;
@@ -120,7 +120,7 @@ public:
       flux(idRU,0,ii) = rvu(0,ii);
       flux(idRV,0,ii) = rvv(0,ii) + C0*rtgamma(0,ii);
       flux(idRW,0,ii) = rvw(0,ii);
-      flux(idTH,0,ii) = rvt(0,ii);
+      flux(idRT,0,ii) = rvt(0,ii);
     }
 
     // Loop over the time derivatives
@@ -146,7 +146,7 @@ public:
           tot_rvu += state(idRV,rt,ii) * state(idRU,kt+1-rt,ii) - state(idR,rt,ii) * rvu(kt+1-rt,ii);
           tot_rvv += state(idRV,rt,ii) * state(idRV,kt+1-rt,ii) - state(idR,rt,ii) * rvv(kt+1-rt,ii);
           tot_rvw += state(idRV,rt,ii) * state(idRW,kt+1-rt,ii) - state(idR,rt,ii) * rvw(kt+1-rt,ii);
-          tot_rvt += state(idRV,rt,ii) * state(idTH,kt+1-rt,ii) - state(idR,rt,ii) * rvt(kt+1-rt,ii);
+          tot_rvt += state(idRV,rt,ii) * state(idRT,kt+1-rt,ii) - state(idR,rt,ii) * rvt(kt+1-rt,ii);
         }
         rvu(kt+1,ii) = tot_rvu / state(idR,0,ii);
         rvv(kt+1,ii) = tot_rvv / state(idR,0,ii);
@@ -156,16 +156,16 @@ public:
         // Compute rtgamma at the next time level
         tot_rtgamma = 0;
         for (int rt=0; rt<=kt; rt++) {
-          tot_rtgamma += (kt+1._fp -rt) * ( GAMMA*rtgamma(rt,ii)*state(idTH,kt+1-rt,ii) - state(idTH,rt,ii)*rtgamma(kt+1-rt,ii) );
+          tot_rtgamma += (kt+1._fp -rt) * ( GAMMA*rtgamma(rt,ii)*state(idRT,kt+1-rt,ii) - state(idRT,rt,ii)*rtgamma(kt+1-rt,ii) );
         }
-        rtgamma(kt+1,ii) = ( GAMMA*rtgamma(0,ii)*state(idTH,kt+1,ii) + tot_rtgamma / (kt+1._fp) ) / state(idTH,0,ii);
+        rtgamma(kt+1,ii) = ( GAMMA*rtgamma(0,ii)*state(idRT,kt+1,ii) + tot_rtgamma / (kt+1._fp) ) / state(idRT,0,ii);
 
         // Compute the fluxes at the next time level
         flux(idR ,kt+1,ii) = state(idRV,kt+1,ii);
         flux(idRU,kt+1,ii) = rvu(kt+1,ii);
         flux(idRV,kt+1,ii) = rvv(kt+1,ii) + C0*rtgamma(kt+1,ii)/2;
         flux(idRW,kt+1,ii) = rvw(kt+1,ii);
-        flux(idTH,kt+1,ii) = rvt(kt+1,ii);
+        flux(idRT,kt+1,ii) = rvt(kt+1,ii);
       }
     }
   }
@@ -189,7 +189,7 @@ public:
       real u = state(idRU,0,ii) / r;
       real v = state(idRV,0,ii) / r;
       real w = state(idRW,0,ii) / r;
-      real t = state(idTH,0,ii) / r;
+      real t = state(idRT,0,ii) / r;
 
       rwu    (0,ii) = r*w*u;
       rwv    (0,ii) = r*w*v;
@@ -201,7 +201,7 @@ public:
       flux(idRU,0,ii) = rwu(0,ii);
       flux(idRV,0,ii) = rwv(0,ii);
       flux(idRW,0,ii) = rww(0,ii) + C0*rtgamma(0,ii) - C0*mypow(hyRHOT(ii),GAMMA);
-      flux(idTH,0,ii) = rwt(0,ii);
+      flux(idRT,0,ii) = rwt(0,ii);
 
       source(0,ii) = -( state(idR,0,ii) - hyRHO(ii) )*GRAV;
     }
@@ -232,7 +232,7 @@ public:
           tot_rwu += state(idRW,rt,ii) * state(idRU,kt+1-rt,ii) - state(idR,rt,ii) * rwu(kt+1-rt,ii);
           tot_rwv += state(idRW,rt,ii) * state(idRV,kt+1-rt,ii) - state(idR,rt,ii) * rwv(kt+1-rt,ii);
           tot_rww += state(idRW,rt,ii) * state(idRW,kt+1-rt,ii) - state(idR,rt,ii) * rww(kt+1-rt,ii);
-          tot_rwt += state(idRW,rt,ii) * state(idTH,kt+1-rt,ii) - state(idR,rt,ii) * rwt(kt+1-rt,ii);
+          tot_rwt += state(idRW,rt,ii) * state(idRT,kt+1-rt,ii) - state(idR,rt,ii) * rwt(kt+1-rt,ii);
         }
         rwu(kt+1,ii) = tot_rwu / state(idR,0,ii);
         rwv(kt+1,ii) = tot_rwv / state(idR,0,ii);
@@ -242,16 +242,16 @@ public:
         // Compute rtgamma at the next time level
         tot_rtgamma = 0;
         for (int rt=0; rt<=kt; rt++) {
-          tot_rtgamma += (kt+1-rt) * ( GAMMA*rtgamma(rt,ii)*state(idTH,kt+1-rt,ii) - state(idTH,rt,ii)*rtgamma(kt+1-rt,ii) );
+          tot_rtgamma += (kt+1-rt) * ( GAMMA*rtgamma(rt,ii)*state(idRT,kt+1-rt,ii) - state(idRT,rt,ii)*rtgamma(kt+1-rt,ii) );
         }
-        rtgamma(kt+1,ii) = ( GAMMA*rtgamma(0,ii)*state(idTH,kt+1,ii) + tot_rtgamma / (kt+1) ) / state(idTH,0,ii);
+        rtgamma(kt+1,ii) = ( GAMMA*rtgamma(0,ii)*state(idRT,kt+1,ii) + tot_rtgamma / (kt+1) ) / state(idRT,0,ii);
 
         // Compute the fluxes at the next time level
         flux(idR ,kt+1,ii) = state(idRW,kt+1,ii);
         flux(idRU,kt+1,ii) = rwu(kt+1,ii);
         flux(idRV,kt+1,ii) = rwv(kt+1,ii);
         flux(idRW,kt+1,ii) = rww(kt+1,ii) + C0*rtgamma(kt+1,ii)/2;
-        flux(idTH,kt+1,ii) = rwt(kt+1,ii);
+        flux(idRT,kt+1,ii) = rwt(kt+1,ii);
         source(kt+1,ii) = -state(idR,kt+1,ii)*GRAV;
       }
     }

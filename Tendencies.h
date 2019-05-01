@@ -114,7 +114,7 @@ public :
           }
           for (int ii=0; ii<tord; ii++) {
             gllState(idR ,ii) += hyDensCells     (hs+k);
-            gllState(idTH,ii) += hyDensThetaCells(hs+k);
+            gllState(idRT,ii) += hyDensThetaCells(hs+k);
           }
 
           // Compute fluxes and at the GLL points
@@ -123,14 +123,14 @@ public :
             real u = gllState(idRU,ii) / r;
             real v = gllState(idRV,ii) / r;
             real w = gllState(idRW,ii) / r;
-            real t = gllState(idTH,ii) / r;
+            real t = gllState(idRT,ii) / r;
             real p = C0 * mypow( r*t , GAMMA );
 
             gllFlux(idR ,ii) = r*u;
             gllFlux(idRU,ii) = r*u*u + p;
             gllFlux(idRV,ii) = r*u*v;
             gllFlux(idRW,ii) = r*u*w;
-            gllFlux(idTH,ii) = r*u*t;
+            gllFlux(idRT,ii) = r*u*t;
           }
 
           // Store state and flux limits into a globally indexed array
@@ -213,7 +213,7 @@ public :
           }
           for (int ii=0; ii<tord; ii++) {
             gllState(idR ,ii) += hyDensCells     (hs+k);
-            gllState(idTH,ii) += hyDensThetaCells(hs+k);
+            gllState(idRT,ii) += hyDensThetaCells(hs+k);
           }
 
           // Compute fluxes and at the GLL points
@@ -222,14 +222,14 @@ public :
             real u = gllState(idRU,ii) / r;
             real v = gllState(idRV,ii) / r;
             real w = gllState(idRW,ii) / r;
-            real t = gllState(idTH,ii) / r;
+            real t = gllState(idRT,ii) / r;
             real p = C0 * mypow( r*t , GAMMA );
 
             gllFlux(idR ,ii) = r*v;
             gllFlux(idRU,ii) = r*v*u;
             gllFlux(idRV,ii) = r*v*v + p;
             gllFlux(idRW,ii) = r*v*w;
-            gllFlux(idTH,ii) = r*v*t;
+            gllFlux(idRT,ii) = r*v*t;
           }
 
           // Store state and flux limits into a globally indexed array
@@ -297,13 +297,13 @@ public :
           state(idRU,ii,hs+j,hs+i) = state(idRU,hs,hs+j,hs+i);
           state(idRV,ii,hs+j,hs+i) = state(idRV,hs,hs+j,hs+i);
           state(idRW,ii,hs+j,hs+i) = 0;
-          state(idTH,ii,hs+j,hs+i) = state(idTH,hs,hs+j,hs+i);
+          state(idRT,ii,hs+j,hs+i) = state(idRT,hs,hs+j,hs+i);
 
           state(idR ,dom.nz+hs+ii,hs+j,hs+i) = state(idR ,dom.nz+hs-1,hs+j,hs+i);
           state(idRU,dom.nz+hs+ii,hs+j,hs+i) = state(idRU,dom.nz+hs-1,hs+j,hs+i);
           state(idRV,dom.nz+hs+ii,hs+j,hs+i) = state(idRV,dom.nz+hs-1,hs+j,hs+i);
           state(idRW,dom.nz+hs+ii,hs+j,hs+i) = 0;
-          state(idTH,dom.nz+hs+ii,hs+j,hs+i) = state(idTH,dom.nz+hs-1,hs+j,hs+i);
+          state(idRT,dom.nz+hs+ii,hs+j,hs+i) = state(idRT,dom.nz+hs-1,hs+j,hs+i);
         }
       }
     }
@@ -325,7 +325,7 @@ public :
           }
           for (int ii=0; ii<tord; ii++) {
             gllState(idR ,ii) += hyDensGLL     (k,ii);
-            gllState(idTH,ii) += hyDensThetaGLL(k,ii);
+            gllState(idRT,ii) += hyDensThetaGLL(k,ii);
           }
 
           // Boundary conditions
@@ -338,14 +338,14 @@ public :
             real u = gllState(idRU,ii) / r;
             real v = gllState(idRV,ii) / r;
             real w = gllState(idRW,ii) / r;
-            real t = gllState(idTH,ii) / r;
+            real t = gllState(idRT,ii) / r;
             real p = C0 * mypow( r*t , GAMMA );
 
             gllFlux(idR ,ii) = r*w;
             gllFlux(idRU,ii) = r*w*u;
             gllFlux(idRV,ii) = r*w*v;
             gllFlux(idRW,ii) = r*w*w + p - C0*mypow(hyDensThetaGLL(k,ii),GAMMA);
-            gllFlux(idTH,ii) = r*w*t;
+            gllFlux(idRT,ii) = r*w*t;
           }
 
           // Store state and flux limits into a globally indexed array
@@ -371,26 +371,26 @@ public :
         stateLimits(idRV,0,0     ,j,i) = stateLimits(idRV,1,0     ,j,i);
         stateLimits(idRW,0,0     ,j,i) = 0;
         stateLimits(idRW,1,0     ,j,i) = 0;
-        stateLimits(idTH,0,0     ,j,i) = stateLimits(idTH,1,0     ,j,i);
+        stateLimits(idRT,0,0     ,j,i) = stateLimits(idRT,1,0     ,j,i);
 
         stateLimits(idR ,1,dom.nz,j,i) = stateLimits(idR ,0,dom.nz,j,i);
         stateLimits(idRU,1,dom.nz,j,i) = stateLimits(idRU,0,dom.nz,j,i);
         stateLimits(idRV,1,dom.nz,j,i) = stateLimits(idRV,0,dom.nz,j,i);
         stateLimits(idRW,0,dom.nz,j,i) = 0;
         stateLimits(idRW,1,dom.nz,j,i) = 0;
-        stateLimits(idTH,1,dom.nz,j,i) = stateLimits(idTH,0,dom.nz,j,i);
+        stateLimits(idRT,1,dom.nz,j,i) = stateLimits(idRT,0,dom.nz,j,i);
 
         fluxLimits(idR ,0,0     ,j,i) = fluxLimits(idR ,1,0     ,j,i);
         fluxLimits(idRU,0,0     ,j,i) = fluxLimits(idRU,1,0     ,j,i);
         fluxLimits(idRV,0,0     ,j,i) = fluxLimits(idRV,1,0     ,j,i);
         fluxLimits(idRW,0,0     ,j,i) = fluxLimits(idRW,1,0     ,j,i);
-        fluxLimits(idTH,0,0     ,j,i) = fluxLimits(idTH,1,0     ,j,i);
+        fluxLimits(idRT,0,0     ,j,i) = fluxLimits(idRT,1,0     ,j,i);
 
         fluxLimits(idR ,1,dom.nz,j,i) = fluxLimits(idR ,0,dom.nz,j,i);
         fluxLimits(idRU,1,dom.nz,j,i) = fluxLimits(idRU,0,dom.nz,j,i);
         fluxLimits(idRV,1,dom.nz,j,i) = fluxLimits(idRV,0,dom.nz,j,i);
         fluxLimits(idRW,1,dom.nz,j,i) = fluxLimits(idRW,0,dom.nz,j,i);
-        fluxLimits(idTH,1,dom.nz,j,i) = fluxLimits(idTH,0,dom.nz,j,i);
+        fluxLimits(idRT,1,dom.nz,j,i) = fluxLimits(idRT,0,dom.nz,j,i);
       }
     }
 
@@ -435,7 +435,7 @@ public :
           tend(idRU,k,j,i) = 0;
           tend(idRV,k,j,i) = 0;
           tend(idRW,k,j,i) = -state(idR,hs+k,hs+j,hs+i) * GRAV;
-          tend(idTH,k,j,i) = 0;
+          tend(idRT,k,j,i) = 0;
         }
       }
     }
@@ -467,7 +467,7 @@ public :
           }
           for (int ii=0; ii<tord; ii++) {
             stateDTs(idR ,0,ii) += hyDensCells     (hs+k);
-            stateDTs(idTH,0,ii) += hyDensThetaCells(hs+k);
+            stateDTs(idRT,0,ii) += hyDensThetaCells(hs+k);
           }
 
           // Compute DTs of the state and flux, and collapse down into a time average
@@ -555,7 +555,7 @@ public :
           }
           for (int ii=0; ii<tord; ii++) {
             stateDTs(idR ,0,ii) += hyDensCells     (hs+k);
-            stateDTs(idTH,0,ii) += hyDensThetaCells(hs+k);
+            stateDTs(idRT,0,ii) += hyDensThetaCells(hs+k);
           }
 
           // Compute DTs of the state and flux, and collapse down into a time average
@@ -628,13 +628,13 @@ public :
           state(idRU,ii,hs+j,hs+i) = state(idRU,hs,hs+j,hs+i);
           state(idRV,ii,hs+j,hs+i) = state(idRV,hs,hs+j,hs+i);
           state(idRW,ii,hs+j,hs+i) = 0;
-          state(idTH,ii,hs+j,hs+i) = state(idTH,hs,hs+j,hs+i);
+          state(idRT,ii,hs+j,hs+i) = state(idRT,hs,hs+j,hs+i);
 
           state(idR ,dom.nz+hs+ii,hs+j,hs+i) = state(idR ,dom.nz+hs-1,hs+j,hs+i);
           state(idRU,dom.nz+hs+ii,hs+j,hs+i) = state(idRU,dom.nz+hs-1,hs+j,hs+i);
           state(idRV,dom.nz+hs+ii,hs+j,hs+i) = state(idRV,dom.nz+hs-1,hs+j,hs+i);
           state(idRW,dom.nz+hs+ii,hs+j,hs+i) = 0;
-          state(idTH,dom.nz+hs+ii,hs+j,hs+i) = state(idTH,dom.nz+hs-1,hs+j,hs+i);
+          state(idRT,dom.nz+hs+ii,hs+j,hs+i) = state(idRT,dom.nz+hs-1,hs+j,hs+i);
         }
       }
     }
@@ -659,7 +659,7 @@ public :
           }
           for (int ii=0; ii<tord; ii++) {
             stateDTs(idR ,0,ii) += hyDensGLL     (k,ii);
-            stateDTs(idTH,0,ii) += hyDensThetaGLL(k,ii);
+            stateDTs(idRT,0,ii) += hyDensThetaGLL(k,ii);
             hyRHOT(ii) = hyDensThetaGLL(k,ii);
             hyRHO (ii) = hyDensGLL     (k,ii);
           }
@@ -705,26 +705,26 @@ public :
         stateLimits(idRV,0,0     ,j,i) = stateLimits(idRV,1,0     ,j,i);
         stateLimits(idRW,0,0     ,j,i) = 0;
         stateLimits(idRW,1,0     ,j,i) = 0;
-        stateLimits(idTH,0,0     ,j,i) = stateLimits(idTH,1,0     ,j,i);
+        stateLimits(idRT,0,0     ,j,i) = stateLimits(idRT,1,0     ,j,i);
 
         stateLimits(idR ,1,dom.nz,j,i) = stateLimits(idR ,0,dom.nz,j,i);
         stateLimits(idRU,1,dom.nz,j,i) = stateLimits(idRU,0,dom.nz,j,i);
         stateLimits(idRV,1,dom.nz,j,i) = stateLimits(idRV,0,dom.nz,j,i);
         stateLimits(idRW,0,dom.nz,j,i) = 0;
         stateLimits(idRW,1,dom.nz,j,i) = 0;
-        stateLimits(idTH,1,dom.nz,j,i) = stateLimits(idTH,0,dom.nz,j,i);
+        stateLimits(idRT,1,dom.nz,j,i) = stateLimits(idRT,0,dom.nz,j,i);
 
         fluxLimits(idR ,0,0     ,j,i) = fluxLimits(idR ,1,0     ,j,i);
         fluxLimits(idRU,0,0     ,j,i) = fluxLimits(idRU,1,0     ,j,i);
         fluxLimits(idRV,0,0     ,j,i) = fluxLimits(idRV,1,0     ,j,i);
         fluxLimits(idRW,0,0     ,j,i) = fluxLimits(idRW,1,0     ,j,i);
-        fluxLimits(idTH,0,0     ,j,i) = fluxLimits(idTH,1,0     ,j,i);
+        fluxLimits(idRT,0,0     ,j,i) = fluxLimits(idRT,1,0     ,j,i);
 
         fluxLimits(idR ,1,dom.nz,j,i) = fluxLimits(idR ,0,dom.nz,j,i);
         fluxLimits(idRU,1,dom.nz,j,i) = fluxLimits(idRU,0,dom.nz,j,i);
         fluxLimits(idRV,1,dom.nz,j,i) = fluxLimits(idRV,0,dom.nz,j,i);
         fluxLimits(idRW,1,dom.nz,j,i) = fluxLimits(idRW,0,dom.nz,j,i);
-        fluxLimits(idTH,1,dom.nz,j,i) = fluxLimits(idTH,0,dom.nz,j,i);
+        fluxLimits(idRT,1,dom.nz,j,i) = fluxLimits(idRT,0,dom.nz,j,i);
       }
     }
 

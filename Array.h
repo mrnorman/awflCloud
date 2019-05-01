@@ -31,7 +31,7 @@ template <class T> class Array {
   ulong totElems;
   T     *data;
 
-  inline _HOSTDEV void nullify() {
+  inline void nullify() {
     data = NULL;
     ndims = 0;
     totElems = 0;
@@ -47,47 +47,47 @@ template <class T> class Array {
   setup() functions to keep from deallocating data upon initialization, since
   you don't know what "data" will be when the object is created.
   */
-  _HOSTDEV Array() { nullify(); }
+  Array() { nullify(); }
   //Define the dimension ranges using an array of upper bounds, assuming lower bounds to be zero
-  _HOSTDEV Array(Array const &in) {
+  Array(Array const &in) {
     nullify();
     setup(in);
   }
-  _HOSTDEV Array(ulong const d1) {
+  Array(ulong const d1) {
     nullify();
     setup(d1);
   }
-  _HOSTDEV Array(ulong const d1, ulong const d2) {
+  Array(ulong const d1, ulong const d2) {
     nullify();
     setup(d1,d2);
   }
-  _HOSTDEV Array(ulong const d1, ulong const d2, ulong const d3) {
+  Array(ulong const d1, ulong const d2, ulong const d3) {
     nullify();
     setup(d1,d2,d3);
   }
-  _HOSTDEV Array(ulong const d1, ulong const d2, ulong const d3, ulong const d4) {
+  Array(ulong const d1, ulong const d2, ulong const d3, ulong const d4) {
     nullify();
     setup(d1,d2,d3,d4);
   }
-  _HOSTDEV Array(ulong const d1, ulong const d2, ulong const d3, ulong const d4, ulong const d5) {
+  Array(ulong const d1, ulong const d2, ulong const d3, ulong const d4, ulong const d5) {
     nullify();
     setup(d1,d2,d3,d4,d5);
   }
-  _HOSTDEV Array(ulong const d1, ulong const d2, ulong const d3, ulong const d4, ulong const d5, ulong const d6) {
+  Array(ulong const d1, ulong const d2, ulong const d3, ulong const d4, ulong const d5, ulong const d6) {
     nullify();
     setup(d1,d2,d3,d4,d5,d6);
   }
-  _HOSTDEV Array(ulong const d1, ulong const d2, ulong const d3, ulong const d4, ulong const d5, ulong const d6, ulong const d7) {
+  Array(ulong const d1, ulong const d2, ulong const d3, ulong const d4, ulong const d5, ulong const d6, ulong const d7) {
     nullify();
     setup(d1,d2,d3,d4,d5,d6,d7);
   }
-  _HOSTDEV Array(ulong const d1, ulong const d2, ulong const d3, ulong const d4, ulong const d5, ulong const d6, ulong const d7, ulong const d8) {
+  Array(ulong const d1, ulong const d2, ulong const d3, ulong const d4, ulong const d5, ulong const d6, ulong const d7, ulong const d8) {
     nullify();
     setup(d1,d2,d3,d4,d5,d6,d7,d8);
   }
 
   /*MOVE CONSTRUCTOR*/
-  _HOSTDEV Array(Array &&in) {
+  Array(Array &&in) {
     ndims    = in.ndims;
     totElems = in.totElems;
     for (int i=0; i < ndims; i++) {
@@ -97,7 +97,7 @@ template <class T> class Array {
     data = in.data;
     in.data = NULL;
   }
-  _HOSTDEV Array &operator=(Array &&in) {
+  Array &operator=(Array &&in) {
     ndims    = in.ndims;
     totElems = in.totElems;
     for (int i=0; i < ndims; i++) {
@@ -111,12 +111,12 @@ template <class T> class Array {
   /* DESTRUCTOR
   Make sure the internal arrays are allocated before freeing them
   */
-  _HOSTDEV ~Array() { finalize(); }
+  ~Array() { finalize(); }
 
   /* SETUP FUNCTIONS
   Initialize the array with the given dimensions
   */
-  inline _HOSTDEV void setup(Array const &in) {
+  inline void setup(Array const &in) {
     //If the buffer exists, and it's the right size, don't deallocate and reallocate
     if ( data != NULL && (this->totElems == in.totElems) )  {
       ndims = in.ndims;
@@ -145,25 +145,25 @@ template <class T> class Array {
       }
     }
   }
-  inline _HOSTDEV void setup(ulong const d1) {
+  inline void setup(ulong const d1) {
     ulong tmp[1];
     tmp[0] = d1;
     setup_arr((ulong) 1,tmp);
   }
-  inline _HOSTDEV void setup(ulong const d1, ulong const d2) {
+  inline void setup(ulong const d1, ulong const d2) {
     ulong tmp[2];
     tmp[0] = d1;
     tmp[1] = d2;
     setup_arr((ulong) 2,tmp);
   }
-  inline _HOSTDEV void setup(ulong const d1, ulong const d2, ulong const d3) {
+  inline void setup(ulong const d1, ulong const d2, ulong const d3) {
     ulong tmp[3];
     tmp[0] = d1;
     tmp[1] = d2;
     tmp[2] = d3;
     setup_arr((ulong) 3,tmp);
   }
-  inline _HOSTDEV void setup(ulong const d1, ulong const d2, ulong const d3, ulong const d4) {
+  inline void setup(ulong const d1, ulong const d2, ulong const d3, ulong const d4) {
     ulong tmp[4];
     tmp[0] = d1;
     tmp[1] = d2;
@@ -171,7 +171,7 @@ template <class T> class Array {
     tmp[3] = d4;
     setup_arr((ulong) 4,tmp);
   }
-  inline _HOSTDEV void setup(ulong const d1, ulong const d2, ulong const d3, ulong const d4, ulong const d5) {
+  inline void setup(ulong const d1, ulong const d2, ulong const d3, ulong const d4, ulong const d5) {
     ulong tmp[5];
     tmp[0] = d1;
     tmp[1] = d2;
@@ -180,7 +180,7 @@ template <class T> class Array {
     tmp[4] = d5;
     setup_arr((ulong) 5,tmp);
   }
-  inline _HOSTDEV void setup(ulong const d1, ulong const d2, ulong const d3, ulong const d4, ulong const d5, ulong const d6) {
+  inline void setup(ulong const d1, ulong const d2, ulong const d3, ulong const d4, ulong const d5, ulong const d6) {
     ulong tmp[6];
     tmp[0] = d1;
     tmp[1] = d2;
@@ -190,7 +190,7 @@ template <class T> class Array {
     tmp[5] = d6;
     setup_arr((ulong) 6,tmp);
   }
-  inline _HOSTDEV void setup(ulong const d1, ulong const d2, ulong const d3, ulong const d4, ulong const d5, ulong const d6, ulong const d7) {
+  inline void setup(ulong const d1, ulong const d2, ulong const d3, ulong const d4, ulong const d5, ulong const d6, ulong const d7) {
     ulong tmp[7];
     tmp[0] = d1;
     tmp[1] = d2;
@@ -201,7 +201,7 @@ template <class T> class Array {
     tmp[6] = d7;
     setup_arr((ulong) 7,tmp);
   }
-  inline _HOSTDEV void setup(ulong const d1, ulong const d2, ulong const d3, ulong const d4, ulong const d5, ulong const d6, ulong const d7, ulong const d8) {
+  inline void setup(ulong const d1, ulong const d2, ulong const d3, ulong const d4, ulong const d5, ulong const d6, ulong const d7, ulong const d8) {
     ulong tmp[8];
     tmp[0] = d1;
     tmp[1] = d2;
@@ -213,7 +213,7 @@ template <class T> class Array {
     tmp[7] = d8;
     setup_arr((ulong) 8,tmp);
   }
-  inline _HOSTDEV void setup_arr(ulong const ndims, ulong const dimSizes[]) {
+  inline void setup_arr(ulong const ndims, ulong const dimSizes[]) {
     //Only deallocate and allocate if the buffer isn't yet allocate or the dimensions don't match
     if ( data == NULL || (! this->dimsMatch(ndims,dimSizes)) ) {
       finalize();
@@ -235,7 +235,7 @@ template <class T> class Array {
     }
   }
 
-  inline _HOSTDEV void finalize() {
+  inline void finalize() {
     //Never "nullify()" until after the data is deallocated
     if (data != NULL) {
       #ifdef __NVCC__

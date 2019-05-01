@@ -15,7 +15,7 @@ protected:
   real outTimer;
   int ncid, numOut;
   int tDim, xDim, yDim, zDim;
-  int tVar, xVar, yVar, zVar, rVar, uVar, vVar, wVar, thVar, hyrVar, hyrtVar;
+  int tVar, xVar, yVar, zVar, rVar, uVar, vVar, wVar, thVar, hyrVar, hyrtVar, pVar;
 
 public:
 
@@ -54,6 +54,7 @@ public:
     ncwrap( ncmpi_def_var( ncid , "v"       , NC_FLOAT , 4 , dimids , &vVar  ) , __LINE__ );
     ncwrap( ncmpi_def_var( ncid , "w"       , NC_FLOAT , 4 , dimids , &wVar  ) , __LINE__ );
     ncwrap( ncmpi_def_var( ncid , "theta"   , NC_FLOAT , 4 , dimids , &thVar ) , __LINE__ );
+    ncwrap( ncmpi_def_var( ncid , "pressure", NC_FLOAT , 4 , dimids , &pVar  ) , __LINE__ );
     dimids[0] = zDim;
     ncwrap( ncmpi_def_var( ncid , "hyDens"      , NC_FLOAT , 1 , dimids , &hyrVar  ) , __LINE__ );
     ncwrap( ncmpi_def_var( ncid , "hyDensTheta" , NC_FLOAT , 1 , dimids , &hyrtVar ) , __LINE__ );
@@ -78,7 +79,7 @@ public:
     st[0] = 0;
     ct[0] = dom.nz_glob;
     ncwrap( ncmpi_begin_indep_data(ncid) , __LINE__ );
-    ncwrap( ncmpi_put_vara_float( ncid , zVar    , st , ct , zCoord                .get_data() ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_float( ncid , zVar    , st , ct , zCoord                  .get_data()      ) , __LINE__ );
     ncwrap( ncmpi_put_vara_float( ncid , hyrVar  , st , ct , &(state.hyDensCells     .get_data()[hs]) ) , __LINE__ );
     ncwrap( ncmpi_put_vara_float( ncid , hyrtVar , st , ct , &(state.hyDensThetaCells.get_data()[hs]) ) , __LINE__ );
     ncwrap( ncmpi_end_indep_data(ncid) , __LINE__ );
@@ -112,6 +113,7 @@ public:
     ncwrap( ncmpi_inq_varid( ncid , "v"       , &vVar  ) , __LINE__ );
     ncwrap( ncmpi_inq_varid( ncid , "w"       , &wVar  ) , __LINE__ );
     ncwrap( ncmpi_inq_varid( ncid , "theta"   , &thVar ) , __LINE__ );
+    ncwrap( ncmpi_inq_varid( ncid , "pressure", &pVar  ) , __LINE__ );
 
     writeState(state, dom, par);
 
@@ -172,13 +174,24 @@ public:
     for (int k=0; k<dom.nz; k++) {
       for (int j=0; j<dom.ny; j++) {
         for (int i=0; i<dom.nx; i++) {
-          data(k,j,i) = ( state.state(idTH,hs+k,hs+j,hs+i) + state.hyDensThetaCells(hs+k) ) /
+          data(k,j,i) = ( state.state(idRT,hs+k,hs+j,hs+i) + state.hyDensThetaCells(hs+k) ) /
                         ( state.state(idR ,hs+k,hs+j,hs+i) + state.hyDensCells     (hs+k) ) -
-                        state.hyDensThetaCells(k) / state.hyDensCells(k);
+                        state.hyDensThetaCells(hs+k) / state.hyDensCells(hs+k);
         }
       }
     }
     ncwrap( ncmpi_put_vara_float_all( ncid , thVar , st , ct , data.get_data() ) , __LINE__ );
+
+    // Write out perturbation pressure
+    for (int k=0; k<dom.nz; k++) {
+      for (int j=0; j<dom.ny; j++) {
+        for (int i=0; i<dom.nx; i++) {
+          data(k,j,i) = C0*mypow(state.state(idRT,hs+k,hs+j,hs+i)+state.hyDensThetaCells(hs+k),GAMMA) -
+                        C0*mypow(state.hyDensThetaCells(hs+k),GAMMA);
+        }
+      }
+    }
+    ncwrap( ncmpi_put_vara_float_all( ncid , pVar , st , ct , data.get_data() ) , __LINE__ );
   }
 
 
