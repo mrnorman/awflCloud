@@ -15,7 +15,7 @@ inline _YAKL real operator"" _fp( long double x ) {
 }
 
 #define ord  5
-#define tord 3
+#define tord 2
 int const hs = (ord-1)/2;
 
 int const numState = 5;
