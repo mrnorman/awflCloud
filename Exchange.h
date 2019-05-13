@@ -68,7 +68,7 @@ public:
     nUnpack = 0;
   }
 
-  inline void haloPackN_x(Domain &dom, Array<real> &a, int n) {
+  inline void haloPackN_x(Domain const &dom, Array<real> const &a, int const n) {
     for (int v=0; v<n; v++) {
       for (int k=0; k<dom.nz; k++) {
         for (int j=0; j<dom.ny; j++) {
@@ -83,7 +83,7 @@ public:
   }
 
 
-  inline void haloPackN_y(Domain &dom, Array<real> &a, int n) {
+  inline void haloPackN_y(Domain const &dom, Array<real> const &a, int const n) {
     for (int v=0; v<n; v++) {
       for (int k=0; k<dom.nz; k++) {
         for (int ii=0; ii<hs; ii++) {
@@ -98,7 +98,7 @@ public:
   }
 
 
-  inline void haloPack1_x(Domain &dom, Array<real> &a) {
+  inline void haloPack1_x(Domain const &dom, Array<real> const &a) {
     for (int k=0; k<dom.nz; k++) {
       for (int j=0; j<dom.ny; j++) {
         for (int ii=0; ii<hs; ii++) {
@@ -111,7 +111,7 @@ public:
   }
 
 
-  inline void haloPack1_y(Domain &dom, Array<real> &a) {
+  inline void haloPack1_y(Domain const &dom, Array<real> const &a) {
     for (int k=0; k<dom.nz; k++) {
       for (int ii=0; ii<hs; ii++) {
         for (int i=0; i<dom.nx; i++) {
@@ -124,7 +124,7 @@ public:
   }
 
 
-  inline void haloUnpackN_x(Domain &dom, Array<real> &a, int n) {
+  inline void haloUnpackN_x(Domain const &dom, Array<real> &a, int const n) {
     for (int v=0; v<n; v++) {
       for (int k=0; k<dom.nz; k++) {
         for (int j=0; j<dom.ny; j++) {
@@ -139,7 +139,7 @@ public:
   }
 
 
-  inline void haloUnpackN_y(Domain &dom, Array<real> &a, int n) {
+  inline void haloUnpackN_y(Domain const &dom, Array<real> &a, int const n) {
     for (int v=0; v<n; v++) {
       for (int k=0; k<dom.nz; k++) {
         for (int ii=0; ii<hs; ii++) {
@@ -154,7 +154,7 @@ public:
   }
 
 
-  inline void haloUnpack1_x(Domain &dom, Array<real> &a) {
+  inline void haloUnpack1_x(Domain const &dom, Array<real> &a) {
     for (int k=0; k<dom.nz; k++) {
       for (int j=0; j<dom.ny; j++) {
         for (int ii=0; ii<hs; ii++) {
@@ -167,7 +167,7 @@ public:
   }
 
 
-  inline void haloUnpack1_y(Domain &dom, Array<real> &a) {
+  inline void haloUnpack1_y(Domain const &dom, Array<real> &a) {
     for (int k=0; k<dom.nz; k++) {
       for (int ii=0; ii<hs; ii++) {
         for (int i=0; i<dom.nx; i++) {
@@ -180,7 +180,7 @@ public:
   }
 
 
-  inline void haloExchange_x(Domain &dom, Parallel &par) {
+  inline void haloExchange_x(Domain const &dom, Parallel const &par) {
     int ierr;
 
     //Pre-post the receives
@@ -197,7 +197,7 @@ public:
   }
 
 
-  inline void haloExchange_y(Domain &dom, Parallel &par) {
+  inline void haloExchange_y(Domain const &dom, Parallel const &par) {
     int ierr;
 
     //Pre-post the receives
@@ -214,7 +214,7 @@ public:
   }
 
 
-  inline void edgePackN_x(Domain &dom, Array<real> &a, int n) {
+  inline void edgePackN_x(Domain const &dom, Array<real> const &a, int const n) {
     for (int v=0; v<n; v++) {
       for (int k=0; k<dom.nz; k++) {
         for (int j=0; j<dom.ny; j++) {
@@ -227,7 +227,7 @@ public:
   }
 
 
-  inline void edgePackN_y(Domain &dom, Array<real> &a, int n) {
+  inline void edgePackN_y(Domain const &dom, Array<real> const &a, int const n) {
     for (int v=0; v<n; v++) {
       for (int k=0; k<dom.nz; k++) {
         for (int i=0; i<dom.nx; i++) {
@@ -240,7 +240,7 @@ public:
   }
 
 
-  inline void edgeUnpackN_x(Domain &dom, Array<real> &a, int n) {
+  inline void edgeUnpackN_x(Domain const &dom, Array<real> &a, int const n) {
     for (int v=0; v<n; v++) {
       for (int k=0; k<dom.nz; k++) {
         for (int j=0; j<dom.ny; j++) {
@@ -253,7 +253,7 @@ public:
   }
 
 
-  inline void edgeUnpackN_y(Domain &dom, Array<real> &a, int n) {
+  inline void edgeUnpackN_y(Domain const &dom, Array<real> &a, int const n) {
     for (int v=0; v<n; v++) {
       for (int k=0; k<dom.nz; k++) {
         for (int i=0; i<dom.nx; i++) {
@@ -266,7 +266,7 @@ public:
   }
 
 
-  inline void edgeExchange_x(Domain &dom, Parallel &par) {
+  inline void edgeExchange_x(Domain const &dom, Parallel const &par) {
     int ierr;
 
     //Pre-post the receives
@@ -283,7 +283,7 @@ public:
   }
 
 
-  inline void edgeExchange_y(Domain &dom, Parallel &par) {
+  inline void edgeExchange_y(Domain const &dom, Parallel const &par) {
     int ierr;
 
     //Pre-post the receives

@@ -2,12 +2,6 @@
 #ifndef _CONST_H_
 #define _CONST_H_
 
-#ifdef __NVCC__
-#define _HOSTDEV __host__ __device__
-#else
-#define _HOSTDEV
-#endif
-
 #include "math.h"
 
 typedef float         real;
@@ -16,7 +10,7 @@ typedef unsigned int  uint;
 
 #include "params.h"
 
-inline _HOSTDEV real operator"" _fp( long double x ) {
+inline _YAKL real operator"" _fp( long double x ) {
   return static_cast<real>(x);
 }
 
@@ -42,18 +36,18 @@ real const P0    = 1.0e5;
 real const C0    = 27.5629410929725921310572974482;
 real const GAMMA  = 1.40027894002789400278940027894;
 
-inline _HOSTDEV double mypow ( double const x , double const p ) { return pow (x,p); }
-inline _HOSTDEV float  mypow ( float  const x , float  const p ) { return powf(x,p); }
-inline _HOSTDEV double mysqrt( double const x ) { return sqrt (x); }
-inline _HOSTDEV float  mysqrt( float  const x ) { return sqrtf(x); }
-inline _HOSTDEV double myfabs( double const x ) { return fabs (x); }
-inline _HOSTDEV float  myfabs( float  const x ) { return fabsf(x); }
+inline _YAKL double mypow ( double const x , double const p ) { return pow (x,p); }
+inline _YAKL float  mypow ( float  const x , float  const p ) { return powf(x,p); }
+inline _YAKL double mysqrt( double const x ) { return sqrt (x); }
+inline _YAKL float  mysqrt( float  const x ) { return sqrtf(x); }
+inline _YAKL double myfabs( double const x ) { return fabs (x); }
+inline _YAKL float  myfabs( float  const x ) { return fabsf(x); }
 
-template <class T> inline _HOSTDEV T min( T const v1 , T const v2 ) {
+template <class T> inline _YAKL T min( T const v1 , T const v2 ) {
   if (v1 < v2) { return v1; }
   else         { return v2; }
 }
-template <class T> inline _HOSTDEV T max( T const v1 , T const v2 ) {
+template <class T> inline _YAKL T max( T const v1 , T const v2 ) {
   if (v1 > v2) { return v1; }
   else         { return v2; }
 }

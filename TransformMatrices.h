@@ -8,7 +8,7 @@ template <class FP> class TransformMatrices {
 
 public:
 
-inline _HOSTDEV void gll_to_coefs(SArray<FP,2,2> &rslt) {
+inline _YAKL void gll_to_coefs(SArray<FP,2,2> &rslt) {
     rslt(0,0)=0.50000000000000000000000000000000000000;
     rslt(0,1)=-1.0000000000000000000000000000000000000;
     rslt(1,0)=0.50000000000000000000000000000000000000;
@@ -16,19 +16,19 @@ inline _HOSTDEV void gll_to_coefs(SArray<FP,2,2> &rslt) {
 
 }
 
-inline _HOSTDEV void get_gll_points(SArray<FP,2> &rslt) {
+inline _YAKL void get_gll_points(SArray<FP,2> &rslt) {
     rslt(0)=-0.50000000000000000000000000000000000000;
     rslt(1)=0.50000000000000000000000000000000000000;
 
 }
 
-inline _HOSTDEV void get_gll_weights(SArray<FP,2> &rslt) {
+inline _YAKL void get_gll_weights(SArray<FP,2> &rslt) {
     rslt(0)=0.50000000000000000000000000000000000000;
     rslt(1)=0.50000000000000000000000000000000000000;
 
 }
 
-inline _HOSTDEV void coefs_to_gll(SArray<FP,2,2> &rslt) {
+inline _YAKL void coefs_to_gll(SArray<FP,2,2> &rslt) {
     rslt(0,0)=1.0000000000000000000000000000000000000;
     rslt(0,1)=1.0000000000000000000000000000000000000;
     rslt(1,0)=-0.50000000000000000000000000000000000000;
@@ -36,7 +36,7 @@ inline _HOSTDEV void coefs_to_gll(SArray<FP,2,2> &rslt) {
 
 }
 
-inline _HOSTDEV void coefs_to_deriv(SArray<FP,2,2> &rslt) {
+inline _YAKL void coefs_to_deriv(SArray<FP,2,2> &rslt) {
     rslt(0,0)=0.00000000000000000000000000000000000000;
     rslt(0,1)=0.00000000000000000000000000000000000000;
     rslt(1,0)=1.0000000000000000000000000000000000000;
@@ -44,14 +44,14 @@ inline _HOSTDEV void coefs_to_deriv(SArray<FP,2,2> &rslt) {
 
 }
 
-inline _HOSTDEV FP coefs_to_tv(SArray<FP,2> &a) {
+inline _YAKL FP coefs_to_tv(SArray<FP,2> &a) {
   FP rslt;
     rslt=1.0000000000000000000000000000000000000_fp*(a(1)*a(1));
 
   return rslt;
 }
 
-inline _HOSTDEV void gll_to_coefs(SArray<FP,3,3> &rslt) {
+inline _YAKL void gll_to_coefs(SArray<FP,3,3> &rslt) {
     rslt(0,0)=0.00000000000000000000000000000000000000;
     rslt(0,1)=-1.0000000000000000000000000000000000000;
     rslt(0,2)=2.0000000000000000000000000000000000000;
@@ -64,21 +64,21 @@ inline _HOSTDEV void gll_to_coefs(SArray<FP,3,3> &rslt) {
 
 }
 
-inline _HOSTDEV void get_gll_points(SArray<FP,3> &rslt) {
+inline _YAKL void get_gll_points(SArray<FP,3> &rslt) {
     rslt(0)=-0.50000000000000000000000000000000000000;
     rslt(1)=0.00000000000000000000000000000000000000;
     rslt(2)=0.50000000000000000000000000000000000000;
 
 }
 
-inline _HOSTDEV void get_gll_weights(SArray<FP,3> &rslt) {
+inline _YAKL void get_gll_weights(SArray<FP,3> &rslt) {
     rslt(0)=0.16666666666666666666666666666666666667;
     rslt(1)=0.66666666666666666666666666666666666667;
     rslt(2)=0.16666666666666666666666666666666666667;
 
 }
 
-inline _HOSTDEV void coefs_to_gll(SArray<FP,3,3> &rslt) {
+inline _YAKL void coefs_to_gll(SArray<FP,3,3> &rslt) {
     rslt(0,0)=1.0000000000000000000000000000000000000;
     rslt(0,1)=1.0000000000000000000000000000000000000;
     rslt(0,2)=1.0000000000000000000000000000000000000;
@@ -91,7 +91,7 @@ inline _HOSTDEV void coefs_to_gll(SArray<FP,3,3> &rslt) {
 
 }
 
-inline _HOSTDEV void coefs_to_deriv(SArray<FP,3,3> &rslt) {
+inline _YAKL void coefs_to_deriv(SArray<FP,3,3> &rslt) {
     rslt(0,0)=0.00000000000000000000000000000000000000;
     rslt(0,1)=0.00000000000000000000000000000000000000;
     rslt(0,2)=0.00000000000000000000000000000000000000;
@@ -104,14 +104,14 @@ inline _HOSTDEV void coefs_to_deriv(SArray<FP,3,3> &rslt) {
 
 }
 
-inline _HOSTDEV FP coefs_to_tv(SArray<FP,3> &a) {
+inline _YAKL FP coefs_to_tv(SArray<FP,3> &a) {
   FP rslt;
     rslt=1.0000000000000000000000000000000000000_fp*(a(1)*a(1))+4.3333333333333333333333333333333333333_fp*(a(2)*a(2));
 
   return rslt;
 }
 
-inline _HOSTDEV void sten_to_coefs(SArray<FP,3,3> &rslt) {
+inline _YAKL void sten_to_coefs(SArray<FP,3,3> &rslt) {
     rslt(0,0)=-0.041666666666666666666666666666666666667;
     rslt(0,1)=-0.50000000000000000000000000000000000000;
     rslt(0,2)=0.50000000000000000000000000000000000000;
@@ -124,7 +124,7 @@ inline _HOSTDEV void sten_to_coefs(SArray<FP,3,3> &rslt) {
 
 }
 
-inline _HOSTDEV void coefs_to_sten(SArray<FP,3,3> &rslt) {
+inline _YAKL void coefs_to_sten(SArray<FP,3,3> &rslt) {
     rslt(0,0)=1.0000000000000000000000000000000000000;
     rslt(0,1)=1.0000000000000000000000000000000000000;
     rslt(0,2)=1.0000000000000000000000000000000000000;
@@ -137,7 +137,7 @@ inline _HOSTDEV void coefs_to_sten(SArray<FP,3,3> &rslt) {
 
 }
 
-inline _HOSTDEV void sten_to_gll_lower(SArray<FP,3,3,3> &rslt) {
+inline _YAKL void sten_to_gll_lower(SArray<FP,3,3,3> &rslt) {
     rslt(0,0,0)=-0.041666666666666666666666666666666666667;
     rslt(0,0,1)=0;
     rslt(0,0,2)=0;
@@ -168,7 +168,7 @@ inline _HOSTDEV void sten_to_gll_lower(SArray<FP,3,3,3> &rslt) {
 
 }
 
-inline _HOSTDEV void coefs_to_gll_lower(SArray<FP,3,3,3> &rslt) {
+inline _YAKL void coefs_to_gll_lower(SArray<FP,3,3,3> &rslt) {
     rslt(0,0,0)=1;
     rslt(0,0,1)=0;
     rslt(0,0,2)=0;
@@ -199,7 +199,7 @@ inline _HOSTDEV void coefs_to_gll_lower(SArray<FP,3,3,3> &rslt) {
 
 }
 
-inline _HOSTDEV void weno_sten_to_coefs(SArray<FP,3,3,3> &rslt) {
+inline _YAKL void weno_sten_to_coefs(SArray<FP,3,3,3> &rslt) {
     rslt(0,0,0)=0.00000000000000000000000000000000000000;
     rslt(0,0,1)=-1.0000000000000000000000000000000000000;
     rslt(0,0,2)=0;
@@ -230,7 +230,7 @@ inline _HOSTDEV void weno_sten_to_coefs(SArray<FP,3,3,3> &rslt) {
 
 }
 
-inline _HOSTDEV void gll_to_coefs(SArray<FP,4,4> &rslt) {
+inline _YAKL void gll_to_coefs(SArray<FP,4,4> &rslt) {
     rslt(0,0)=-0.12500000000000000000000000000000000000;
     rslt(0,1)=0.25000000000000000000000000000000000002;
     rslt(0,2)=2.5000000000000000000000000000000000000;
@@ -250,7 +250,7 @@ inline _HOSTDEV void gll_to_coefs(SArray<FP,4,4> &rslt) {
 
 }
 
-inline _HOSTDEV void get_gll_points(SArray<FP,4> &rslt) {
+inline _YAKL void get_gll_points(SArray<FP,4> &rslt) {
     rslt(0)=-0.50000000000000000000000000000000000000;
     rslt(1)=-0.22360679774997896964091736687312762354;
     rslt(2)=0.22360679774997896964091736687312762354;
@@ -258,7 +258,7 @@ inline _HOSTDEV void get_gll_points(SArray<FP,4> &rslt) {
 
 }
 
-inline _HOSTDEV void get_gll_weights(SArray<FP,4> &rslt) {
+inline _YAKL void get_gll_weights(SArray<FP,4> &rslt) {
     rslt(0)=0.083333333333333333333333333333333333333;
     rslt(1)=0.41666666666666666666666666666666666667;
     rslt(2)=0.41666666666666666666666666666666666667;
@@ -266,7 +266,7 @@ inline _HOSTDEV void get_gll_weights(SArray<FP,4> &rslt) {
 
 }
 
-inline _HOSTDEV void coefs_to_gll(SArray<FP,4,4> &rslt) {
+inline _YAKL void coefs_to_gll(SArray<FP,4,4> &rslt) {
     rslt(0,0)=1.0000000000000000000000000000000000000;
     rslt(0,1)=1.0000000000000000000000000000000000000;
     rslt(0,2)=1.0000000000000000000000000000000000000;
@@ -286,7 +286,7 @@ inline _HOSTDEV void coefs_to_gll(SArray<FP,4,4> &rslt) {
 
 }
 
-inline _HOSTDEV void coefs_to_deriv(SArray<FP,4,4> &rslt) {
+inline _YAKL void coefs_to_deriv(SArray<FP,4,4> &rslt) {
     rslt(0,0)=0.00000000000000000000000000000000000000;
     rslt(0,1)=0.00000000000000000000000000000000000000;
     rslt(0,2)=0.00000000000000000000000000000000000000;
@@ -306,14 +306,14 @@ inline _HOSTDEV void coefs_to_deriv(SArray<FP,4,4> &rslt) {
 
 }
 
-inline _HOSTDEV FP coefs_to_tv(SArray<FP,4> &a) {
+inline _YAKL FP coefs_to_tv(SArray<FP,4> &a) {
   FP rslt;
     rslt=1.0000000000000000000000000000000000000_fp*(a(1)*a(1))+4.3333333333333333333333333333333333333_fp*(a(2)*a(2))+0.50000000000000000000000000000000000000_fp*a(1)*a(3)+39.000000000000000000000000000000000000_fp*(a(3)*a(3));
 
   return rslt;
 }
 
-inline _HOSTDEV void gll_to_coefs(SArray<FP,5,5> &rslt) {
+inline _YAKL void gll_to_coefs(SArray<FP,5,5> &rslt) {
     rslt(0,0)=0.00000000000000000000000000000000000000;
     rslt(0,1)=0.74999999999999999999999999999999999998;
     rslt(0,2)=-1.5000000000000000000000000000000000001;
@@ -342,7 +342,7 @@ inline _HOSTDEV void gll_to_coefs(SArray<FP,5,5> &rslt) {
 
 }
 
-inline _HOSTDEV void get_gll_points(SArray<FP,5> &rslt) {
+inline _YAKL void get_gll_points(SArray<FP,5> &rslt) {
     rslt(0)=-0.50000000000000000000000000000000000000;
     rslt(1)=-0.32732683535398857189914622812342917778;
     rslt(2)=0.00000000000000000000000000000000000000;
@@ -351,7 +351,7 @@ inline _HOSTDEV void get_gll_points(SArray<FP,5> &rslt) {
 
 }
 
-inline _HOSTDEV void get_gll_weights(SArray<FP,5> &rslt) {
+inline _YAKL void get_gll_weights(SArray<FP,5> &rslt) {
     rslt(0)=0.050000000000000000000000000000000000000;
     rslt(1)=0.27222222222222222222222222222222222222;
     rslt(2)=0.35555555555555555555555555555555555556;
@@ -360,7 +360,7 @@ inline _HOSTDEV void get_gll_weights(SArray<FP,5> &rslt) {
 
 }
 
-inline _HOSTDEV void coefs_to_gll(SArray<FP,5,5> &rslt) {
+inline _YAKL void coefs_to_gll(SArray<FP,5,5> &rslt) {
     rslt(0,0)=1.0000000000000000000000000000000000000;
     rslt(0,1)=1.0000000000000000000000000000000000000;
     rslt(0,2)=1.0000000000000000000000000000000000000;
@@ -389,7 +389,7 @@ inline _HOSTDEV void coefs_to_gll(SArray<FP,5,5> &rslt) {
 
 }
 
-inline _HOSTDEV void coefs_to_deriv(SArray<FP,5,5> &rslt) {
+inline _YAKL void coefs_to_deriv(SArray<FP,5,5> &rslt) {
     rslt(0,0)=0.00000000000000000000000000000000000000;
     rslt(0,1)=0.00000000000000000000000000000000000000;
     rslt(0,2)=0.00000000000000000000000000000000000000;
@@ -418,14 +418,14 @@ inline _HOSTDEV void coefs_to_deriv(SArray<FP,5,5> &rslt) {
 
 }
 
-inline _HOSTDEV FP coefs_to_tv(SArray<FP,5> &a) {
+inline _YAKL FP coefs_to_tv(SArray<FP,5> &a) {
   FP rslt;
     rslt=1.0000000000000000000000000000000000000_fp*(a(1)*a(1))+4.3333333333333333333333333333333333333_fp*(a(2)*a(2))+0.50000000000000000000000000000000000000_fp*a(1)*a(3)+39.112500000000000000000000000000000000_fp*(a(3)*a(3))+4.2000000000000000000000000000000000000_fp*a(2)*a(4)+625.80000000000000000000000000000000000_fp*(a(4)*a(4));
 
   return rslt;
 }
 
-inline _HOSTDEV void sten_to_coefs(SArray<FP,5,5> &rslt) {
+inline _YAKL void sten_to_coefs(SArray<FP,5,5> &rslt) {
     rslt(0,0)=0.0046875000000000000000000000000000000000;
     rslt(0,1)=0.10416666666666666666666666666666666667;
     rslt(0,2)=-0.062500000000000000000000000000000000000;
@@ -454,7 +454,7 @@ inline _HOSTDEV void sten_to_coefs(SArray<FP,5,5> &rslt) {
 
 }
 
-inline _HOSTDEV void coefs_to_sten(SArray<FP,5,5> &rslt) {
+inline _YAKL void coefs_to_sten(SArray<FP,5,5> &rslt) {
     rslt(0,0)=1.0000000000000000000000000000000000000;
     rslt(0,1)=1.0000000000000000000000000000000000000;
     rslt(0,2)=1.0000000000000000000000000000000000000;
@@ -483,7 +483,7 @@ inline _HOSTDEV void coefs_to_sten(SArray<FP,5,5> &rslt) {
 
 }
 
-inline _HOSTDEV void sten_to_gll_lower(SArray<FP,5,5,5> &rslt) {
+inline _YAKL void sten_to_gll_lower(SArray<FP,5,5,5> &rslt) {
     rslt(0,0,0)=0.0046875000000000000000000000000000000000;
     rslt(0,0,1)=0;
     rslt(0,0,2)=0;
@@ -612,7 +612,7 @@ inline _HOSTDEV void sten_to_gll_lower(SArray<FP,5,5,5> &rslt) {
 
 }
 
-inline _HOSTDEV void coefs_to_gll_lower(SArray<FP,5,5,5> &rslt) {
+inline _YAKL void coefs_to_gll_lower(SArray<FP,5,5,5> &rslt) {
     rslt(0,0,0)=1;
     rslt(0,0,1)=0;
     rslt(0,0,2)=0;
@@ -741,7 +741,7 @@ inline _HOSTDEV void coefs_to_gll_lower(SArray<FP,5,5,5> &rslt) {
 
 }
 
-inline _HOSTDEV void weno_sten_to_coefs(SArray<FP,5,5,5> &rslt) {
+inline _YAKL void weno_sten_to_coefs(SArray<FP,5,5,5> &rslt) {
     rslt(0,0,0)=-0.041666666666666666666666666666666666667;
     rslt(0,0,1)=0.50000000000000000000000000000000000000;
     rslt(0,0,2)=0.50000000000000000000000000000000000000;
@@ -845,7 +845,7 @@ inline _HOSTDEV void weno_sten_to_coefs(SArray<FP,5,5,5> &rslt) {
 
 }
 
-inline _HOSTDEV void gll_to_coefs(SArray<FP,6,6> &rslt) {
+inline _YAKL void gll_to_coefs(SArray<FP,6,6> &rslt) {
     rslt(0,0)=0.062500000000000000000000000000000000024;
     rslt(0,1)=-0.12499999999999999999999999999999999994;
     rslt(0,2)=-3.5000000000000000000000000000000000002;
@@ -885,7 +885,7 @@ inline _HOSTDEV void gll_to_coefs(SArray<FP,6,6> &rslt) {
 
 }
 
-inline _HOSTDEV void get_gll_points(SArray<FP,6> &rslt) {
+inline _YAKL void get_gll_points(SArray<FP,6> &rslt) {
     rslt(0)=-0.50000000000000000000000000000000000000;
     rslt(1)=-0.38252766196473234642550148697966907518;
     rslt(2)=-0.14261575824032254815707549702043953596;
@@ -895,7 +895,7 @@ inline _HOSTDEV void get_gll_points(SArray<FP,6> &rslt) {
 
 }
 
-inline _HOSTDEV void get_gll_weights(SArray<FP,6> &rslt) {
+inline _YAKL void get_gll_weights(SArray<FP,6> &rslt) {
     rslt(0)=0.033333333333333333333333333333333333333;
     rslt(1)=0.18923747814892349015830640410601232624;
     rslt(2)=0.27742918851774317650836026256065434043;
@@ -905,7 +905,7 @@ inline _HOSTDEV void get_gll_weights(SArray<FP,6> &rslt) {
 
 }
 
-inline _HOSTDEV void coefs_to_gll(SArray<FP,6,6> &rslt) {
+inline _YAKL void coefs_to_gll(SArray<FP,6,6> &rslt) {
     rslt(0,0)=1.0000000000000000000000000000000000000;
     rslt(0,1)=1.0000000000000000000000000000000000000;
     rslt(0,2)=1.0000000000000000000000000000000000000;
@@ -945,7 +945,7 @@ inline _HOSTDEV void coefs_to_gll(SArray<FP,6,6> &rslt) {
 
 }
 
-inline _HOSTDEV void coefs_to_deriv(SArray<FP,6,6> &rslt) {
+inline _YAKL void coefs_to_deriv(SArray<FP,6,6> &rslt) {
     rslt(0,0)=0.00000000000000000000000000000000000000;
     rslt(0,1)=0.00000000000000000000000000000000000000;
     rslt(0,2)=0.00000000000000000000000000000000000000;
@@ -985,14 +985,14 @@ inline _HOSTDEV void coefs_to_deriv(SArray<FP,6,6> &rslt) {
 
 }
 
-inline _HOSTDEV FP coefs_to_tv(SArray<FP,6> &a) {
+inline _YAKL FP coefs_to_tv(SArray<FP,6> &a) {
   FP rslt;
     rslt=1.0000000000000000000000000000000000000_fp*(a(1)*a(1))+4.3333333333333333333333333333333333333_fp*(a(2)*a(2))+0.50000000000000000000000000000000000000_fp*a(1)*a(3)+39.112500000000000000000000000000000000_fp*(a(3)*a(3))+4.2000000000000000000000000000000000000_fp*a(2)*a(4)+625.80000000000000000000000000000000000_fp*(a(4)*a(4))+0.12500000000000000000000000000000000000_fp*a(1)*a(5)+63.000000000000000000000000000000000000_fp*a(3)*a(5)+15645.000000000000000000000000000000000_fp*(a(5)*a(5));
 
   return rslt;
 }
 
-inline _HOSTDEV void gll_to_coefs(SArray<FP,7,7> &rslt) {
+inline _YAKL void gll_to_coefs(SArray<FP,7,7> &rslt) {
     rslt(0,0)=6.0611427464274199629637977700522042756e-39;
     rslt(0,1)=-0.62499999999999999999999999999999999999;
     rslt(0,2)=1.2499999999999999999999999999999999997;
@@ -1045,7 +1045,7 @@ inline _HOSTDEV void gll_to_coefs(SArray<FP,7,7> &rslt) {
 
 }
 
-inline _HOSTDEV void get_gll_points(SArray<FP,7> &rslt) {
+inline _YAKL void get_gll_points(SArray<FP,7> &rslt) {
     rslt(0)=-0.50000000000000000000000000000000000000;
     rslt(1)=-0.41511194813928346493601610698373256979;
     rslt(2)=-0.23442439673535710690188594095438316470;
@@ -1056,7 +1056,7 @@ inline _HOSTDEV void get_gll_points(SArray<FP,7> &rslt) {
 
 }
 
-inline _HOSTDEV void get_gll_weights(SArray<FP,7> &rslt) {
+inline _YAKL void get_gll_weights(SArray<FP,7> &rslt) {
     rslt(0)=0.023809523809523809523809523809523809524;
     rslt(1)=0.13841302368078297400535020314503314675;
     rslt(2)=0.21587269060493131170893551114068113897;
@@ -1067,7 +1067,7 @@ inline _HOSTDEV void get_gll_weights(SArray<FP,7> &rslt) {
 
 }
 
-inline _HOSTDEV void coefs_to_gll(SArray<FP,7,7> &rslt) {
+inline _YAKL void coefs_to_gll(SArray<FP,7,7> &rslt) {
     rslt(0,0)=1.0000000000000000000000000000000000000;
     rslt(0,1)=1.0000000000000000000000000000000000000;
     rslt(0,2)=1.0000000000000000000000000000000000000;
@@ -1120,7 +1120,7 @@ inline _HOSTDEV void coefs_to_gll(SArray<FP,7,7> &rslt) {
 
 }
 
-inline _HOSTDEV void coefs_to_deriv(SArray<FP,7,7> &rslt) {
+inline _YAKL void coefs_to_deriv(SArray<FP,7,7> &rslt) {
     rslt(0,0)=0.00000000000000000000000000000000000000;
     rslt(0,1)=0.00000000000000000000000000000000000000;
     rslt(0,2)=0.00000000000000000000000000000000000000;
@@ -1173,14 +1173,14 @@ inline _HOSTDEV void coefs_to_deriv(SArray<FP,7,7> &rslt) {
 
 }
 
-inline _HOSTDEV FP coefs_to_tv(SArray<FP,7> &a) {
+inline _YAKL FP coefs_to_tv(SArray<FP,7> &a) {
   FP rslt;
     rslt=1.0000000000000000000000000000000000000_fp*(a(1)*a(1))+4.3333333333333333333333333333333333333_fp*(a(2)*a(2))+0.50000000000000000000000000000000000000_fp*a(1)*a(3)+39.112500000000000000000000000000000000_fp*(a(3)*a(3))+4.2000000000000000000000000000000000000_fp*a(2)*a(4)+625.83571428571428571428571428571428571_fp*(a(4)*a(4))+0.12500000000000000000000000000000000000_fp*a(1)*a(5)+63.066964285714285714285714285714285714_fp*a(3)*a(5)+15645.892857142857142857142857142857143_fp*(a(5)*a(5))+1.5535714285714285714285714285714285714_fp*a(2)*a(6)+1513.6071428571428571428571428571428571_fp*a(4)*a(6)+563252.14285714285714285714285714285714_fp*(a(6)*a(6));
 
   return rslt;
 }
 
-inline _HOSTDEV void sten_to_coefs(SArray<FP,7,7> &rslt) {
+inline _YAKL void sten_to_coefs(SArray<FP,7,7> &rslt) {
     rslt(0,0)=-0.00069754464285714285714285714285714285714;
     rslt(0,1)=-0.022482638888888888888888888888888888889;
     rslt(0,2)=0.0096354166666666666666666666666666666667;
@@ -1233,7 +1233,7 @@ inline _HOSTDEV void sten_to_coefs(SArray<FP,7,7> &rslt) {
 
 }
 
-inline _HOSTDEV void coefs_to_sten(SArray<FP,7,7> &rslt) {
+inline _YAKL void coefs_to_sten(SArray<FP,7,7> &rslt) {
     rslt(0,0)=1.0000000000000000000000000000000000000;
     rslt(0,1)=1.0000000000000000000000000000000000000;
     rslt(0,2)=1.0000000000000000000000000000000000000;
@@ -1286,7 +1286,7 @@ inline _HOSTDEV void coefs_to_sten(SArray<FP,7,7> &rslt) {
 
 }
 
-inline _HOSTDEV void sten_to_gll_lower(SArray<FP,7,7,7> &rslt) {
+inline _YAKL void sten_to_gll_lower(SArray<FP,7,7,7> &rslt) {
     rslt(0,0,0)=-0.00069754464285714285714285714285714285714;
     rslt(0,0,1)=0;
     rslt(0,0,2)=0;
@@ -1633,7 +1633,7 @@ inline _HOSTDEV void sten_to_gll_lower(SArray<FP,7,7,7> &rslt) {
 
 }
 
-inline _HOSTDEV void coefs_to_gll_lower(SArray<FP,7,7,7> &rslt) {
+inline _YAKL void coefs_to_gll_lower(SArray<FP,7,7,7> &rslt) {
     rslt(0,0,0)=1;
     rslt(0,0,1)=0;
     rslt(0,0,2)=0;
@@ -1980,7 +1980,7 @@ inline _HOSTDEV void coefs_to_gll_lower(SArray<FP,7,7,7> &rslt) {
 
 }
 
-inline _HOSTDEV void weno_sten_to_coefs(SArray<FP,7,7,7> &rslt) {
+inline _YAKL void weno_sten_to_coefs(SArray<FP,7,7,7> &rslt) {
     rslt(0,0,0)=0.041666666666666666666666666666666666667;
     rslt(0,0,1)=-0.29166666666666666666666666666666666667;
     rslt(0,0,2)=-0.50000000000000000000000000000000000000;
@@ -2229,7 +2229,7 @@ inline _HOSTDEV void weno_sten_to_coefs(SArray<FP,7,7,7> &rslt) {
 
 }
 
-inline _HOSTDEV void gll_to_coefs(SArray<FP,8,8> &rslt) {
+inline _YAKL void gll_to_coefs(SArray<FP,8,8> &rslt) {
     rslt(0,0)=-0.039062500000000000000000000000000000062;
     rslt(0,1)=0.078125000000000000000000000000000000274;
     rslt(0,2)=4.2187500000000000000000000000000000019;
@@ -2297,7 +2297,7 @@ inline _HOSTDEV void gll_to_coefs(SArray<FP,8,8> &rslt) {
 
 }
 
-inline _HOSTDEV void get_gll_points(SArray<FP,8> &rslt) {
+inline _YAKL void get_gll_points(SArray<FP,8> &rslt) {
     rslt(0)=-0.50000000000000000000000000000000000000;
     rslt(1)=-0.43587007425480330766872288061033171905;
     rslt(2)=-0.29585009071657115107225536569897659497;
@@ -2309,7 +2309,7 @@ inline _HOSTDEV void get_gll_points(SArray<FP,8> &rslt) {
 
 }
 
-inline _HOSTDEV void get_gll_weights(SArray<FP,8> &rslt) {
+inline _YAKL void get_gll_weights(SArray<FP,8> &rslt) {
     rslt(0)=0.017857142857142857142857142857142857143;
     rslt(1)=0.10535211357175301969149603288787816223;
     rslt(2)=0.17056134624175218238212033855387408589;
@@ -2321,7 +2321,7 @@ inline _HOSTDEV void get_gll_weights(SArray<FP,8> &rslt) {
 
 }
 
-inline _HOSTDEV void coefs_to_gll(SArray<FP,8,8> &rslt) {
+inline _YAKL void coefs_to_gll(SArray<FP,8,8> &rslt) {
     rslt(0,0)=1.0000000000000000000000000000000000000;
     rslt(0,1)=1.0000000000000000000000000000000000000;
     rslt(0,2)=1.0000000000000000000000000000000000000;
@@ -2389,7 +2389,7 @@ inline _HOSTDEV void coefs_to_gll(SArray<FP,8,8> &rslt) {
 
 }
 
-inline _HOSTDEV void coefs_to_deriv(SArray<FP,8,8> &rslt) {
+inline _YAKL void coefs_to_deriv(SArray<FP,8,8> &rslt) {
     rslt(0,0)=0.00000000000000000000000000000000000000;
     rslt(0,1)=0.00000000000000000000000000000000000000;
     rslt(0,2)=0.00000000000000000000000000000000000000;
@@ -2457,14 +2457,14 @@ inline _HOSTDEV void coefs_to_deriv(SArray<FP,8,8> &rslt) {
 
 }
 
-inline _HOSTDEV FP coefs_to_tv(SArray<FP,8> &a) {
+inline _YAKL FP coefs_to_tv(SArray<FP,8> &a) {
   FP rslt;
     rslt=1.0000000000000000000000000000000000000_fp*(a(1)*a(1))+4.3333333333333333333333333333333333333_fp*(a(2)*a(2))+0.50000000000000000000000000000000000000_fp*a(1)*a(3)+39.112500000000000000000000000000000000_fp*(a(3)*a(3))+4.2000000000000000000000000000000000000_fp*a(2)*a(4)+625.83571428571428571428571428571428571_fp*(a(4)*a(4))+0.12500000000000000000000000000000000000_fp*a(1)*a(5)+63.066964285714285714285714285714285714_fp*a(3)*a(5)+15645.892857142857142857142857142857143_fp*(a(5)*a(5))+1.5535714285714285714285714285714285714_fp*a(2)*a(6)+1513.6071428571428571428571428571428571_fp*a(4)*a(6)+563252.14285714285714285714285714285714_fp*(a(6)*a(6))+0.031250000000000000000000000000000000000_fp*a(1)*a(7)+32.625000000000000000000000000000000000_fp*a(3)*a(7)+52976.250000000000000000000000000000000_fp*a(5)*a(7)+2.7599355000000000000000000000000000000e7_fp*(a(7)*a(7));
 
   return rslt;
 }
 
-inline _HOSTDEV void gll_to_coefs(SArray<FP,9,9> &rslt) {
+inline _YAKL void gll_to_coefs(SArray<FP,9,9> &rslt) {
     rslt(0,0)=-3.2831189876481858132720571254449439768e-38;
     rslt(0,1)=0.54687499999999999999999999999999999946;
     rslt(0,2)=-1.0937500000000000000000000000000000079;
@@ -2549,7 +2549,7 @@ inline _HOSTDEV void gll_to_coefs(SArray<FP,9,9> &rslt) {
 
 }
 
-inline _HOSTDEV void get_gll_points(SArray<FP,9> &rslt) {
+inline _YAKL void get_gll_points(SArray<FP,9> &rslt) {
     rslt(0)=-0.50000000000000000000000000000000000000;
     rslt(1)=-0.44987899770573007865617262220916897903;
     rslt(2)=-0.33859313975536887672294271354567122536;
@@ -2562,7 +2562,7 @@ inline _HOSTDEV void get_gll_points(SArray<FP,9> &rslt) {
 
 }
 
-inline _HOSTDEV void get_gll_weights(SArray<FP,9> &rslt) {
+inline _YAKL void get_gll_weights(SArray<FP,9> &rslt) {
     rslt(0)=0.013888888888888888888888888888888888889;
     rslt(1)=0.082747680780402762523169860014604152919;
     rslt(2)=0.13726935625008086764035280928968636297;
@@ -2575,7 +2575,7 @@ inline _HOSTDEV void get_gll_weights(SArray<FP,9> &rslt) {
 
 }
 
-inline _HOSTDEV void coefs_to_gll(SArray<FP,9,9> &rslt) {
+inline _YAKL void coefs_to_gll(SArray<FP,9,9> &rslt) {
     rslt(0,0)=1.0000000000000000000000000000000000000;
     rslt(0,1)=1.0000000000000000000000000000000000000;
     rslt(0,2)=1.0000000000000000000000000000000000000;
@@ -2660,7 +2660,7 @@ inline _HOSTDEV void coefs_to_gll(SArray<FP,9,9> &rslt) {
 
 }
 
-inline _HOSTDEV void coefs_to_deriv(SArray<FP,9,9> &rslt) {
+inline _YAKL void coefs_to_deriv(SArray<FP,9,9> &rslt) {
     rslt(0,0)=0.00000000000000000000000000000000000000;
     rslt(0,1)=0.00000000000000000000000000000000000000;
     rslt(0,2)=0.00000000000000000000000000000000000000;
@@ -2745,14 +2745,14 @@ inline _HOSTDEV void coefs_to_deriv(SArray<FP,9,9> &rslt) {
 
 }
 
-inline _HOSTDEV FP coefs_to_tv(SArray<FP,9> &a) {
+inline _YAKL FP coefs_to_tv(SArray<FP,9> &a) {
   FP rslt;
     rslt=1.0000000000000000000000000000000000000_fp*(a(1)*a(1))+4.3333333333333333333333333333333333333_fp*(a(2)*a(2))+0.50000000000000000000000000000000000000_fp*a(1)*a(3)+39.112500000000000000000000000000000000_fp*(a(3)*a(3))+4.2000000000000000000000000000000000000_fp*a(2)*a(4)+625.83571428571428571428571428571428571_fp*(a(4)*a(4))+0.12500000000000000000000000000000000000_fp*a(1)*a(5)+63.066964285714285714285714285714285714_fp*a(3)*a(5)+15645.903707837301587301587301587301587_fp*(a(5)*a(5))+1.5535714285714285714285714285714285714_fp*a(2)*a(6)+1513.6279761904761904761904761904761905_fp*a(4)*a(6)+563252.53348214285714285714285714285714_fp*(a(6)*a(6))+0.031250000000000000000000000000000000000_fp*a(1)*a(7)+32.643229166666666666666666666666666667_fp*a(3)*a(7)+52976.979166666666666666666666666666667_fp*a(5)*a(7)+2.7599374140625000000000000000000000000e7_fp*(a(7)*a(7))+0.51388888888888888888888888888888888889_fp*a(2)*a(8)+1044.5833333333333333333333333333333333_fp*a(4)*a(8)+2.5428950000000000000000000000000000000e6_fp*a(6)*a(8)+1.7663599450000000000000000000000000000e9_fp*(a(8)*a(8));
 
   return rslt;
 }
 
-inline _HOSTDEV void sten_to_coefs(SArray<FP,9,9> &rslt) {
+inline _YAKL void sten_to_coefs(SArray<FP,9,9> &rslt) {
     rslt(0,0)=0.00011867947048611111111111111111111111111;
     rslt(0,1)=0.0050052703373015873015873015873015873016;
     rslt(0,2)=-0.0016684234457671957671957671957671957672;
@@ -2837,7 +2837,7 @@ inline _HOSTDEV void sten_to_coefs(SArray<FP,9,9> &rslt) {
 
 }
 
-inline _HOSTDEV void coefs_to_sten(SArray<FP,9,9> &rslt) {
+inline _YAKL void coefs_to_sten(SArray<FP,9,9> &rslt) {
     rslt(0,0)=1.0000000000000000000000000000000000000;
     rslt(0,1)=1.0000000000000000000000000000000000000;
     rslt(0,2)=1.0000000000000000000000000000000000000;
@@ -2922,7 +2922,7 @@ inline _HOSTDEV void coefs_to_sten(SArray<FP,9,9> &rslt) {
 
 }
 
-inline _HOSTDEV void sten_to_gll_lower(SArray<FP,9,9,9> &rslt) {
+inline _YAKL void sten_to_gll_lower(SArray<FP,9,9,9> &rslt) {
     rslt(0,0,0)=0.00011867947048611111111111111111111111111;
     rslt(0,0,1)=0;
     rslt(0,0,2)=0;
@@ -3655,7 +3655,7 @@ inline _HOSTDEV void sten_to_gll_lower(SArray<FP,9,9,9> &rslt) {
 
 }
 
-inline _HOSTDEV void coefs_to_gll_lower(SArray<FP,9,9,9> &rslt) {
+inline _YAKL void coefs_to_gll_lower(SArray<FP,9,9,9> &rslt) {
     rslt(0,0,0)=1;
     rslt(0,0,1)=0;
     rslt(0,0,2)=0;
@@ -4388,7 +4388,7 @@ inline _HOSTDEV void coefs_to_gll_lower(SArray<FP,9,9,9> &rslt) {
 
 }
 
-inline _HOSTDEV void weno_sten_to_coefs(SArray<FP,9,9,9> &rslt) {
+inline _YAKL void weno_sten_to_coefs(SArray<FP,9,9,9> &rslt) {
     rslt(0,0,0)=-0.036979166666666666666666666666666666667;
     rslt(0,0,1)=0.18750000000000000000000000000000000000;
     rslt(0,0,2)=0.43750000000000000000000000000000000000;
@@ -4878,7 +4878,7 @@ inline _HOSTDEV void weno_sten_to_coefs(SArray<FP,9,9,9> &rslt) {
 
 }
 
-inline _HOSTDEV void gll_to_coefs(SArray<FP,10,10> &rslt) {
+inline _YAKL void gll_to_coefs(SArray<FP,10,10> &rslt) {
     rslt(0,0)=0.027343749999999999999999999999999999827;
     rslt(0,1)=-0.054687499999999999999999999999999994559;
     rslt(0,2)=-4.8125000000000000000000000000000000319;
@@ -4982,7 +4982,7 @@ inline _HOSTDEV void gll_to_coefs(SArray<FP,10,10> &rslt) {
 
 }
 
-inline _HOSTDEV void get_gll_points(SArray<FP,10> &rslt) {
+inline _YAKL void get_gll_points(SArray<FP,10> &rslt) {
     rslt(0)=-0.50000000000000000000000000000000000000;
     rslt(1)=-0.45976695408322940691446633041116906708;
     rslt(2)=-0.36938693255275253750155308742991536251;
@@ -4996,7 +4996,7 @@ inline _HOSTDEV void get_gll_points(SArray<FP,10> &rslt) {
 
 }
 
-inline _HOSTDEV void get_gll_weights(SArray<FP,10> &rslt) {
+inline _YAKL void get_gll_weights(SArray<FP,10> &rslt) {
     rslt(0)=0.011111111111111111111111111111111111111;
     rslt(1)=0.066652995425535055563113585377696449054;
     rslt(2)=0.11244467103156322605972891086552392138;
@@ -5010,7 +5010,7 @@ inline _HOSTDEV void get_gll_weights(SArray<FP,10> &rslt) {
 
 }
 
-inline _HOSTDEV void coefs_to_gll(SArray<FP,10,10> &rslt) {
+inline _YAKL void coefs_to_gll(SArray<FP,10,10> &rslt) {
     rslt(0,0)=1.0000000000000000000000000000000000000;
     rslt(0,1)=1.0000000000000000000000000000000000000;
     rslt(0,2)=1.0000000000000000000000000000000000000;
@@ -5114,7 +5114,7 @@ inline _HOSTDEV void coefs_to_gll(SArray<FP,10,10> &rslt) {
 
 }
 
-inline _HOSTDEV void coefs_to_deriv(SArray<FP,10,10> &rslt) {
+inline _YAKL void coefs_to_deriv(SArray<FP,10,10> &rslt) {
     rslt(0,0)=0.00000000000000000000000000000000000000;
     rslt(0,1)=0.00000000000000000000000000000000000000;
     rslt(0,2)=0.00000000000000000000000000000000000000;
@@ -5218,7 +5218,7 @@ inline _HOSTDEV void coefs_to_deriv(SArray<FP,10,10> &rslt) {
 
 }
 
-inline _HOSTDEV FP coefs_to_tv(SArray<FP,10> &a) {
+inline _YAKL FP coefs_to_tv(SArray<FP,10> &a) {
   FP rslt;
     rslt=1.0000000000000000000000000000000000000*(a(1)*a(1))+4.3333333333333333333333333333333333333*(a(2)*a(2))+0.50000000000000000000000000000000000000*a(1)*a(3)+39.112500000000000000000000000000000000*(a(3)*a(3))+4.2000000000000000000000000000000000000*a(2)*a(4)+625.83571428571428571428571428571428571*(a(4)*a(4))+0.12500000000000000000000000000000000000*a(1)*a(5)+63.066964285714285714285714285714285714*a(3)*a(5)+15645.903707837301587301587301587301587*(a(5)*a(5))+1.5535714285714285714285714285714285714*a(2)*a(6)+1513.6279761904761904761904761904761905*a(4)*a(6)+563252.53348214285714285714285714285714*(a(6)*a(6))+0.031250000000000000000000000000000000000*a(1)*a(7)+32.643229166666666666666666666666666667*a(3)*a(7)+52976.979166666666666666666666666666667*a(5)*a(7)+2.7599374140625000000000000000000000000e7*(a(7)*a(7))+0.51388888888888888888888888888888888889*a(2)*a(8)+1044.5833333333333333333333333333333333*a(4)*a(8)+2.5428950000000000000000000000000000000e6*a(6)*a(8)+1.7663599450000000000000000000000000000e9*(a(8)*a(8))+0.0078125000000000000000000000000000000000*a(1)*a(9)+13.875000000000000000000000000000000000*a(3)*a(9)+47006.250000000000000000000000000000000*a(5)*a(9)+1.6020238500000000000000000000000000000e8*a(7)*a(9)+1.4307515554500000000000000000000000000e11*(a(9)*a(9));
 

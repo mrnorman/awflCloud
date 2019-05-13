@@ -31,7 +31,7 @@ public :
   }
 
 
-  inline void stepForward(State &state, Domain &dom, Exchange &exch, Parallel &par) {
+  inline void stepForward(State &state, Domain &dom, Exchange &exch, Parallel const &par) {
     if (timeMethod == TIME_SSPRK3) {
       stepForwardSSPRK3(state, dom, exch, par);
     } else if (timeMethod == TIME_ADER) {
@@ -43,7 +43,7 @@ public :
   }
 
 
-  inline void stepForwardADER(State &state, Domain &dom, Exchange &exch, Parallel &par) {
+  inline void stepForwardADER(State &state, Domain &dom, Exchange &exch, Parallel const &par) {
     if (dsSwitch) {
       dsSwitch = 0;
       tend.compEulerTendADER_X(state.state, state.hyDensCells, state.hyDensThetaCells, dom, exch, par, tendArr);
@@ -76,7 +76,7 @@ public :
   }
 
 
-  inline void stepForwardSSPRK3(State &state, Domain &dom, Exchange &exch, Parallel &par) {
+  inline void stepForwardSSPRK3(State &state, Domain const &dom, Exchange &exch, Parallel const &par) {
     // Stage 1
     tend.compEulerTendSD_X(state.state, state.hyDensCells, state.hyDensThetaCells, dom, exch, par, tendArr   );
     if (!dom.run2d) {
@@ -106,9 +106,9 @@ public :
   }
 
 
-  inline void applyTendencies(Array<real> &state2, real const c0, Array<real> &state0,
-                                                   real const c1, Array<real> &state1,
-                                                   real const ct, Array<real> &tend, Domain &dom) {
+  inline void applyTendencies(Array<real> &state2, real const c0, Array<real> const &state0,
+                                                   real const c1, Array<real> const &state1,
+                                                   real const ct, Array<real> const &tend, Domain const &dom) {
     for (int l=0; l<numState; l++) {
       for (int k=0; k<dom.nz; k++) {
         for (int j=0; j<dom.ny; j++) {
@@ -121,7 +121,7 @@ public :
   }
 
 
-  inline void appendTendencies(Array<real> &tend, Array<real> &tendTmp, Domain &dom) {
+  inline void appendTendencies(Array<real> &tend, Array<real> const &tendTmp, Domain const &dom) {
     for (int l=0; l<numState; l++) {
       for (int k=0; k<dom.nz; k++) {
         for (int j=0; j<dom.ny; j++) {

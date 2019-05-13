@@ -33,7 +33,7 @@ class Tendencies {
 public :
 
 
-  inline void initialize(Domain &dom) {
+  inline void initialize(Domain const &dom) {
     fluxLimits .setup(numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
     stateLimits.setup(numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
     flux       .setup(numState  ,dom.nz+1,dom.ny+1,dom.nx+1);
@@ -69,7 +69,7 @@ public :
 
 
   // Transform ord stencil cell averages into tord GLL point values
-  inline _HOSTDEV void reconStencil(SArray<real,ord> &stencil, SArray<real,tord> &gll) {
+  inline _YAKL void reconStencil(SArray<real,ord> const &stencil, SArray<real,tord> &gll, int const doWeno) {
     SArray<real,ord> coefs;
     if (doWeno) {
       weno.compute_weno_coefs(wenoRecon,stencil,coefs);
@@ -88,8 +88,8 @@ public :
   }
 
 
-  inline void compEulerTendSD_X(Array<real> &state, Array<real> &hyDensCells, Array<real> &hyDensThetaCells,
-                                Domain &dom, Exchange &exch, Parallel &par, Array<real> &tend) {
+  inline void compEulerTendSD_X(Array<real> &state, Array<real> const &hyDensCells, Array<real> const &hyDensThetaCells,
+                                Domain const &dom, Exchange &exch, Parallel const &par, Array<real> &tend) {
 
     //Exchange halos in the x-direction
     exch.haloInit      ();
@@ -109,7 +109,7 @@ public :
             SArray<real,ord> stencil;
             SArray<real,tord> gllPts;
             for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,hs+k,hs+j,i+ii); }
-            reconStencil(stencil,gllPts);
+            reconStencil(stencil,gllPts,doWeno);
             for (int ii=0; ii<tord; ii++) { gllState(l,ii) = gllPts(ii); }
           }
           for (int ii=0; ii<tord; ii++) {
@@ -188,8 +188,8 @@ public :
   }
 
 
-  inline void compEulerTendSD_Y(Array<real> &state, Array<real> &hyDensCells, Array<real> &hyDensThetaCells,
-                                Domain &dom, Exchange &exch, Parallel &par, Array<real> &tend) {
+  inline void compEulerTendSD_Y(Array<real> &state, Array<real> const &hyDensCells, Array<real> const &hyDensThetaCells,
+                                Domain const &dom, Exchange &exch, Parallel const &par, Array<real> &tend) {
     //Exchange halos in the y-direction
     exch.haloInit      ();
     exch.haloPackN_y   (dom, state, numState);
@@ -208,7 +208,7 @@ public :
             SArray<real,ord> stencil;
             SArray<real,tord> gllPts;
             for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,hs+k,j+ii,hs+i); }
-            reconStencil(stencil,gllPts);
+            reconStencil(stencil,gllPts,doWeno);
             for (int ii=0; ii<tord; ii++) { gllState(l,ii) = gllPts(ii); }
           }
           for (int ii=0; ii<tord; ii++) {
@@ -287,8 +287,8 @@ public :
   }
 
 
-  inline void compEulerTendSD_Z(Array<real> &state, Array<real> &hyDensGLL, Array<real> &hyDensThetaGLL,
-                                Domain &dom, Exchange &exch, Parallel &par, Array<real> &tend) {
+  inline void compEulerTendSD_Z(Array<real> &state, Array<real> const &hyDensGLL, Array<real> const &hyDensThetaGLL,
+                                Domain const &dom, Exchange &exch, Parallel const &par, Array<real> &tend) {
     // Boundaries for the fluid state in the z-direction
     for (int j=0; j<dom.ny; j++) {
       for (int i=0; i<dom.nx; i++) {
@@ -320,7 +320,7 @@ public :
             SArray<real,ord> stencil;
             SArray<real,tord> gllPts;
             for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,k+ii,hs+j,hs+i); }
-            reconStencil(stencil,gllPts);
+            reconStencil(stencil,gllPts,doWeno);
             for (int ii=0; ii<tord; ii++) { gllState(l,ii) = gllPts(ii); }
           }
           for (int ii=0; ii<tord; ii++) {
@@ -426,7 +426,7 @@ public :
   }
 
 
-  inline void compEulerTendSD_S(Array<real> &state, Domain &dom, Array<real> &tend) {
+  inline void compEulerTendSD_S(Array<real> const &state, Domain const &dom, Array<real> &tend) {
     // Form the tendencies
     for (int k=0; k<dom.nz; k++) {
       for (int j=0; j<dom.ny; j++) {
@@ -442,8 +442,8 @@ public :
   }
 
 
-  inline void compEulerTendADER_X(Array<real> &state, Array<real> &hyDensCells, Array<real> &hyDensThetaCells,
-                                  Domain &dom, Exchange &exch, Parallel &par, Array<real> &tend) {
+  inline void compEulerTendADER_X(Array<real> &state, Array<real> const &hyDensCells, Array<real> const &hyDensThetaCells,
+                                  Domain const &dom, Exchange &exch, Parallel const &par, Array<real> &tend) {
     //Exchange halos in the x-direction
     exch.haloInit      ();
     exch.haloPackN_x   (dom, state, numState);
@@ -462,7 +462,7 @@ public :
             SArray<real,ord> stencil;
             SArray<real,tord> gllPts;
             for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,hs+k,hs+j,i+ii); }
-            reconStencil(stencil,gllPts);
+            reconStencil(stencil,gllPts,doWeno);
             for (int ii=0; ii<tord; ii++) { stateDTs(l,0,ii) = gllPts(ii); }
           }
           for (int ii=0; ii<tord; ii++) {
@@ -530,8 +530,8 @@ public :
   }
 
 
-  inline void compEulerTendADER_Y(Array<real> &state, Array<real> &hyDensCells, Array<real> &hyDensThetaCells,
-                                  Domain &dom, Exchange &exch, Parallel &par, Array<real> &tend) {
+  inline void compEulerTendADER_Y(Array<real> &state, Array<real> const &hyDensCells, Array<real> const &hyDensThetaCells,
+                                  Domain const &dom, Exchange &exch, Parallel const &par, Array<real> &tend) {
     //Exchange halos in the y-direction
     exch.haloInit      ();
     exch.haloPackN_y   (dom, state, numState);
@@ -550,7 +550,7 @@ public :
             SArray<real,ord> stencil;
             SArray<real,tord> gllPts;
             for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,hs+k,j+ii,hs+i); }
-            reconStencil(stencil,gllPts);
+            reconStencil(stencil,gllPts,doWeno);
             for (int ii=0; ii<tord; ii++) { stateDTs(l,0,ii) = gllPts(ii); }
           }
           for (int ii=0; ii<tord; ii++) {
@@ -618,8 +618,8 @@ public :
   }
 
 
-  inline void compEulerTendADER_Z(Array<real> &state, Array<real> &hyDensGLL, Array<real> &hyDensThetaGLL,
-                                  Domain &dom, Exchange &exch, Parallel &par, Array<real> &tend) {
+  inline void compEulerTendADER_Z(Array<real> &state, Array<real> const &hyDensGLL, Array<real> const &hyDensThetaGLL,
+                                  Domain const &dom, Exchange &exch, Parallel const &par, Array<real> &tend) {
     // Boundaries for the fluid state in the z-direction
     for (int j=0; j<dom.ny; j++) {
       for (int i=0; i<dom.nx; i++) {
@@ -654,7 +654,7 @@ public :
             SArray<real,ord> stencil;
             SArray<real,tord> gllPts;
             for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,k+ii,hs+j,hs+i); }
-            reconStencil(stencil,gllPts);
+            reconStencil(stencil,gllPts,doWeno);
             for (int ii=0; ii<tord; ii++) { stateDTs(l,0,ii) = gllPts(ii); }
           }
           for (int ii=0; ii<tord; ii++) {
