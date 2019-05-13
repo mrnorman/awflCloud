@@ -11,4 +11,6 @@ real outFreq;
 int  doWeno;
 int  timeMethod;
 
+yakl::Launcher launcher(yakl::targetCUDA);
+
 #endif

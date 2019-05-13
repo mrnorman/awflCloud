@@ -42,7 +42,7 @@ protected:
 public:
 
 
-  inline void allocate(Domain &dom) {
+  inline void initialize(Domain &dom) {
     haloSendBufS.setup(maxPack,dom.nz,hs,dom.nx);
     haloSendBufN.setup(maxPack,dom.nz,hs,dom.nx);
     haloSendBufW.setup(maxPack,dom.nz,dom.ny,hs);
@@ -69,16 +69,21 @@ public:
   }
 
   inline void haloPackN_x(Domain const &dom, Array<real> const &a, int const n) {
-    for (int v=0; v<n; v++) {
-      for (int k=0; k<dom.nz; k++) {
-        for (int j=0; j<dom.ny; j++) {
-          for (int ii=0; ii<hs; ii++) {
-            haloSendBufW(nPack+v,k,j,ii) = a(v,hs+k,hs+j,hs    +ii);
-            haloSendBufE(nPack+v,k,j,ii) = a(v,hs+k,hs+j,dom.nx+ii);
-          }
-        }
-      }
-    }
+    launcher.parallelFor( n*dom.nz*dom.ny*hs ,
+    [] _YAKL (int iGlob, Exchange &exch, Domain const &dom, Array<real> const &a, int const n) {
+      int v, k, j, ii;
+      // for (int v=0; v<n; v++) {
+      // for (int k=0; k<dom.nz; k++) {
+      // for (int j=0; j<dom.ny; j++) {
+      // for (int ii=0; ii<hs; ii++) {
+      yakl::unpackIndices(iGlob, n, dom.nz, dom.ny, hs, v, k, j, ii);
+      exch.haloSendBufW(exch.nPack+v,k,j,ii) = a(v,hs+k,hs+j,hs    +ii);
+      exch.haloSendBufE(exch.nPack+v,k,j,ii) = a(v,hs+k,hs+j,dom.nx+ii);
+      // }
+      // }
+      // }
+      // }
+    } , *this, dom , a , n ); 
     nPack = nPack + n;
   }
 
