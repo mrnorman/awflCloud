@@ -77,104 +77,99 @@ public:
         haloSendBufE(nPack+v,k,j,ii) = a(v,hs+k,hs+j,dom.nx+ii);
       } , dom , a , n );
     launcher.synchronizeSelf();
-  }
-
-
-  inline void haloPackN_y(Domain const &dom, Array<real> const &a, int const n) {
-    for (int v=0; v<n; v++) {
-      for (int k=0; k<dom.nz; k++) {
-        for (int ii=0; ii<hs; ii++) {
-          for (int i=0; i<dom.nx; i++) {
-            haloSendBufS(nPack+v,k,ii,i) = a(v,hs+k,hs    +ii,hs+i);
-            haloSendBufN(nPack+v,k,ii,i) = a(v,hs+k,dom.ny+ii,hs+i);
-          }
-        }
-      }
-    }
     nPack = nPack + n;
   }
 
 
-  inline void haloPack1_x(Domain const &dom, Array<real> const &a) {
-    for (int k=0; k<dom.nz; k++) {
-      for (int j=0; j<dom.ny; j++) {
-        for (int ii=0; ii<hs; ii++) {
-          haloSendBufW(nPack,k,j,ii) = a(hs+k,hs+j,hs    +ii);
-          haloSendBufE(nPack,k,j,ii) = a(hs+k,hs+j,dom.nx+ii);
-        }
-      }
-    }
-    nPack = nPack + 1;
+  inline void haloPackN_y(Domain const &dom, Array<real> const &a, int const n) {
+    launcher.parallelFor( n*dom.nz*hs*dom.nx , 
+      [this] _YAKL (int iGlob, Domain const &dom, Array<real> const &a, int const n) {
+        int v, k, ii, i;
+        yakl::unpackIndices(iGlob, n, dom.nz, hs, dom.nx, v, k, ii, i);
+        haloSendBufS(nPack+v,k,ii,i) = a(v,hs+k,hs    +ii,hs+i);
+        haloSendBufN(nPack+v,k,ii,i) = a(v,hs+k,dom.ny+ii,hs+i);
+      } , dom , a , n );
+    launcher.synchronizeSelf();
+    nPack = nPack + n;
   }
 
 
-  inline void haloPack1_y(Domain const &dom, Array<real> const &a) {
-    for (int k=0; k<dom.nz; k++) {
-      for (int ii=0; ii<hs; ii++) {
-        for (int i=0; i<dom.nx; i++) {
-          haloSendBufS(nPack,k,ii,i) = a(hs+k,hs    +ii,hs+i);
-          haloSendBufN(nPack,k,ii,i) = a(hs+k,dom.ny+ii,hs+i);
-        }
-      }
-    }
-    nPack = nPack + 1;
-  }
+  // inline void haloPack1_x(Domain const &dom, Array<real> const &a) {
+  //   for (int k=0; k<dom.nz; k++) {
+  //     for (int j=0; j<dom.ny; j++) {
+  //       for (int ii=0; ii<hs; ii++) {
+  //         haloSendBufW(nPack,k,j,ii) = a(hs+k,hs+j,hs    +ii);
+  //         haloSendBufE(nPack,k,j,ii) = a(hs+k,hs+j,dom.nx+ii);
+  //       }
+  //     }
+  //   }
+  //   nPack = nPack + 1;
+  // }
+
+
+  // inline void haloPack1_y(Domain const &dom, Array<real> const &a) {
+  //   for (int k=0; k<dom.nz; k++) {
+  //     for (int ii=0; ii<hs; ii++) {
+  //       for (int i=0; i<dom.nx; i++) {
+  //         haloSendBufS(nPack,k,ii,i) = a(hs+k,hs    +ii,hs+i);
+  //         haloSendBufN(nPack,k,ii,i) = a(hs+k,dom.ny+ii,hs+i);
+  //       }
+  //     }
+  //   }
+  //   nPack = nPack + 1;
+  // }
 
 
   inline void haloUnpackN_x(Domain const &dom, Array<real> &a, int const n) {
-    for (int v=0; v<n; v++) {
-      for (int k=0; k<dom.nz; k++) {
-        for (int j=0; j<dom.ny; j++) {
-          for (int ii=0; ii<hs; ii++) {
-            a(v,hs+k,hs+j,          ii) = haloRecvBufW(nUnpack+v,k,j,ii);
-            a(v,hs+k,hs+j,dom.nx+hs+ii) = haloRecvBufE(nUnpack+v,k,j,ii);
-          }
-        }
-      }
-    }
+    launcher.parallelFor( n*dom.nz*dom.ny*hs , 
+      [this] _YAKL (int iGlob, Domain const &dom, Array<real> &a, int const n) {
+        int v, k, j, ii;
+        yakl::unpackIndices(iGlob, n, dom.nz, dom.ny, hs, v, k, j, ii);
+        a(v,hs+k,hs+j,          ii) = haloRecvBufW(nUnpack+v,k,j,ii);
+        a(v,hs+k,hs+j,dom.nx+hs+ii) = haloRecvBufE(nUnpack+v,k,j,ii);
+      } , dom , a , n );
+    launcher.synchronizeSelf();
     nUnpack = nUnpack + n;
   }
 
 
   inline void haloUnpackN_y(Domain const &dom, Array<real> &a, int const n) {
-    for (int v=0; v<n; v++) {
-      for (int k=0; k<dom.nz; k++) {
-        for (int ii=0; ii<hs; ii++) {
-          for (int i=0; i<dom.nx; i++) {
-            a(v,hs+k,          ii,hs+i) = haloRecvBufS(nUnpack+v,k,ii,i);
-            a(v,hs+k,dom.ny+hs+ii,hs+i) = haloRecvBufN(nUnpack+v,k,ii,i);
-          }
-        }
-      }
-    }
+    launcher.parallelFor( n*dom.nz*hs*dom.nx , 
+      [this] _YAKL (int iGlob, Domain const &dom, Array<real> &a, int const n) {
+        int v, k, ii, i;
+        yakl::unpackIndices(iGlob, n, dom.nz, hs, dom.nx, v, k, ii, i);
+        a(v,hs+k,          ii,hs+i) = haloRecvBufS(nUnpack+v,k,ii,i);
+        a(v,hs+k,dom.ny+hs+ii,hs+i) = haloRecvBufN(nUnpack+v,k,ii,i);
+      } , dom , a , n );
+    launcher.synchronizeSelf();
     nUnpack = nUnpack + n;
   }
 
 
-  inline void haloUnpack1_x(Domain const &dom, Array<real> &a) {
-    for (int k=0; k<dom.nz; k++) {
-      for (int j=0; j<dom.ny; j++) {
-        for (int ii=0; ii<hs; ii++) {
-          a(hs+k,hs+j,          ii) = haloRecvBufW(nUnpack,k,j,ii);
-          a(hs+k,hs+j,dom.nx+hs+ii) = haloRecvBufE(nUnpack,k,j,ii);
-        }
-      }
-    }
-    nUnpack = nUnpack + 1;
-  }
+  // inline void haloUnpack1_x(Domain const &dom, Array<real> &a) {
+  //   for (int k=0; k<dom.nz; k++) {
+  //     for (int j=0; j<dom.ny; j++) {
+  //       for (int ii=0; ii<hs; ii++) {
+  //         a(hs+k,hs+j,          ii) = haloRecvBufW(nUnpack,k,j,ii);
+  //         a(hs+k,hs+j,dom.nx+hs+ii) = haloRecvBufE(nUnpack,k,j,ii);
+  //       }
+  //     }
+  //   }
+  //   nUnpack = nUnpack + 1;
+  // }
 
 
-  inline void haloUnpack1_y(Domain const &dom, Array<real> &a) {
-    for (int k=0; k<dom.nz; k++) {
-      for (int ii=0; ii<hs; ii++) {
-        for (int i=0; i<dom.nx; i++) {
-          a(hs+k,          ii,hs+i) = haloRecvBufS(nUnpack,k,ii,i);
-          a(hs+k,dom.ny+hs+ii,hs+i) = haloRecvBufN(nUnpack,k,ii,i);
-        }
-      }
-    }
-    nUnpack = nUnpack + 1;
-  }
+  // inline void haloUnpack1_y(Domain const &dom, Array<real> &a) {
+  //   for (int k=0; k<dom.nz; k++) {
+  //     for (int ii=0; ii<hs; ii++) {
+  //       for (int i=0; i<dom.nx; i++) {
+  //         a(hs+k,          ii,hs+i) = haloRecvBufS(nUnpack,k,ii,i);
+  //         a(hs+k,dom.ny+hs+ii,hs+i) = haloRecvBufN(nUnpack,k,ii,i);
+  //       }
+  //     }
+  //   }
+  //   nUnpack = nUnpack + 1;
+  // }
 
 
   inline void haloExchange_x(Domain const &dom, Parallel const &par) {
@@ -212,53 +207,53 @@ public:
 
 
   inline void edgePackN_x(Domain const &dom, Array<real> const &a, int const n) {
-    for (int v=0; v<n; v++) {
-      for (int k=0; k<dom.nz; k++) {
-        for (int j=0; j<dom.ny; j++) {
-          edgeSendBufW(nPack+v,k,j) = a(v,1,k,j,0     );
-          edgeSendBufE(nPack+v,k,j) = a(v,0,k,j,dom.nx);
-        }
-      }
-    }
+    launcher.parallelFor( n*dom.nz*dom.ny , 
+      [this] _YAKL (int iGlob, Domain const &dom, Array<real> const &a, int const n) {
+        int v, k, j;
+        yakl::unpackIndices(iGlob, n, dom.nz, dom.ny, v, k, j);
+        edgeSendBufW(nPack+v,k,j) = a(v,1,k,j,0     );
+        edgeSendBufE(nPack+v,k,j) = a(v,0,k,j,dom.nx);
+      } , dom , a , n );
+    launcher.synchronizeSelf();
     nPack = nPack + n;
   }
 
 
   inline void edgePackN_y(Domain const &dom, Array<real> const &a, int const n) {
-    for (int v=0; v<n; v++) {
-      for (int k=0; k<dom.nz; k++) {
-        for (int i=0; i<dom.nx; i++) {
-          edgeSendBufS(nPack+v,k,i) = a(v,1,k,0     ,i);
-          edgeSendBufN(nPack+v,k,i) = a(v,0,k,dom.ny,i);
-        }
-      }
-    }
+    launcher.parallelFor( n*dom.nz*dom.nx , 
+      [this] _YAKL (int iGlob, Domain const &dom, Array<real> const &a, int const n) {
+        int v, k, i;
+        yakl::unpackIndices(iGlob, n, dom.nz, dom.nx, v, k, i);
+        edgeSendBufS(nPack+v,k,i) = a(v,1,k,0     ,i);
+        edgeSendBufN(nPack+v,k,i) = a(v,0,k,dom.ny,i);
+      } , dom , a , n );
+    launcher.synchronizeSelf();
     nPack = nPack + n;
   }
 
 
   inline void edgeUnpackN_x(Domain const &dom, Array<real> &a, int const n) {
-    for (int v=0; v<n; v++) {
-      for (int k=0; k<dom.nz; k++) {
-        for (int j=0; j<dom.ny; j++) {
-          a(v,0,k,j,0     ) = edgeRecvBufW(nUnpack+v,k,j);
-          a(v,1,k,j,dom.nx) = edgeRecvBufE(nUnpack+v,k,j);
-        }
-      }
-    }
+    launcher.parallelFor( n*dom.nz*dom.ny , 
+      [this] _YAKL (int iGlob, Domain const &dom, Array<real> &a, int const n) {
+        int v, k, j;
+        yakl::unpackIndices(iGlob, n, dom.nz, dom.ny, v, k, j);
+        a(v,0,k,j,0     ) = edgeRecvBufW(nUnpack+v,k,j);
+        a(v,1,k,j,dom.nx) = edgeRecvBufE(nUnpack+v,k,j);
+      } , dom , a , n );
+    launcher.synchronizeSelf();
     nUnpack = nUnpack + n;
   }
 
 
   inline void edgeUnpackN_y(Domain const &dom, Array<real> &a, int const n) {
-    for (int v=0; v<n; v++) {
-      for (int k=0; k<dom.nz; k++) {
-        for (int i=0; i<dom.nx; i++) {
-          a(v,0,k,0     ,i) = edgeRecvBufS(nUnpack+v,k,i);
-          a(v,1,k,dom.ny,i) = edgeRecvBufN(nUnpack+v,k,i);
-        }
-      }
-    }
+    launcher.parallelFor( n*dom.nz*dom.nx , 
+      [this] _YAKL (int iGlob, Domain const &dom, Array<real> &a, int const n) {
+        int v, k, i;
+        yakl::unpackIndices(iGlob, n, dom.nz, dom.nx, v, k, i);
+        a(v,0,k,0     ,i) = edgeRecvBufS(nUnpack+v,k,i);
+        a(v,1,k,dom.ny,i) = edgeRecvBufN(nUnpack+v,k,i);
+      } , dom , a , n );
+    launcher.synchronizeSelf();
     nUnpack = nUnpack + n;
   }
 
