@@ -490,7 +490,7 @@ public :
       }
     } , state, hyDensCells, hyDensThetaCells, dom, exch, par, tend, doWeno );
 
-    launcher.synchronizeGlobal();
+    launcher.synchronizeSelf();
 
     //Reconcile the edge fluxes via MPI exchange.
     exch.haloInit      ();
