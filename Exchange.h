@@ -21,45 +21,45 @@ protected:
   int nPack;
   int nUnpack;
 
-  Array<real> haloSendBufS;
-  Array<real> haloSendBufN;
-  Array<real> haloSendBufW;
-  Array<real> haloSendBufE;
-  Array<real> haloRecvBufS;
-  Array<real> haloRecvBufN;
-  Array<real> haloRecvBufW;
-  Array<real> haloRecvBufE;
+  real4d haloSendBufS;
+  real4d haloSendBufN;
+  real4d haloSendBufW;
+  real4d haloSendBufE;
+  real4d haloRecvBufS;
+  real4d haloRecvBufN;
+  real4d haloRecvBufW;
+  real4d haloRecvBufE;
 
-  Array<real> edgeRecvBufE;
-  Array<real> edgeRecvBufW;
-  Array<real> edgeSendBufE;
-  Array<real> edgeSendBufW;
-  Array<real> edgeRecvBufN;
-  Array<real> edgeRecvBufS;
-  Array<real> edgeSendBufN;
-  Array<real> edgeSendBufS;
+  real3d edgeRecvBufE;
+  real3d edgeRecvBufW;
+  real3d edgeSendBufE;
+  real3d edgeSendBufW;
+  real3d edgeRecvBufN;
+  real3d edgeRecvBufS;
+  real3d edgeSendBufN;
+  real3d edgeSendBufS;
 
 public:
 
 
   inline void allocate(Domain &dom) {
-    haloSendBufS.setup(maxPack,dom.nz,hs,dom.nx);
-    haloSendBufN.setup(maxPack,dom.nz,hs,dom.nx);
-    haloSendBufW.setup(maxPack,dom.nz,dom.ny,hs);
-    haloSendBufE.setup(maxPack,dom.nz,dom.ny,hs);
-    haloRecvBufS.setup(maxPack,dom.nz,hs,dom.nx);
-    haloRecvBufN.setup(maxPack,dom.nz,hs,dom.nx);
-    haloRecvBufW.setup(maxPack,dom.nz,dom.ny,hs);
-    haloRecvBufE.setup(maxPack,dom.nz,dom.ny,hs);
+    haloSendBufS = real4d("haloSendBufS",maxPack,dom.nz,hs,dom.nx);
+    haloSendBufN = real4d("haloSendBufN",maxPack,dom.nz,hs,dom.nx);
+    haloSendBufW = real4d("haloSendBufW",maxPack,dom.nz,dom.ny,hs);
+    haloSendBufE = real4d("haloSendBufE",maxPack,dom.nz,dom.ny,hs);
+    haloRecvBufS = real4d("haloRecvBufS",maxPack,dom.nz,hs,dom.nx);
+    haloRecvBufN = real4d("haloRecvBufN",maxPack,dom.nz,hs,dom.nx);
+    haloRecvBufW = real4d("haloRecvBufW",maxPack,dom.nz,dom.ny,hs);
+    haloRecvBufE = real4d("haloRecvBufE",maxPack,dom.nz,dom.ny,hs);
 
-    edgeSendBufS.setup(maxPack,dom.nz,dom.nx);
-    edgeSendBufN.setup(maxPack,dom.nz,dom.nx);
-    edgeSendBufW.setup(maxPack,dom.nz,dom.ny);
-    edgeSendBufE.setup(maxPack,dom.nz,dom.ny);
-    edgeRecvBufS.setup(maxPack,dom.nz,dom.nx);
-    edgeRecvBufN.setup(maxPack,dom.nz,dom.nx);
-    edgeRecvBufW.setup(maxPack,dom.nz,dom.ny);
-    edgeRecvBufE.setup(maxPack,dom.nz,dom.ny);
+    edgeSendBufS = real3d("edgeSendBufS",maxPack,dom.nz,dom.nx);
+    edgeSendBufN = real3d("edgeSendBufN",maxPack,dom.nz,dom.nx);
+    edgeSendBufW = real3d("edgeSendBufW",maxPack,dom.nz,dom.ny);
+    edgeSendBufE = real3d("edgeSendBufE",maxPack,dom.nz,dom.ny);
+    edgeRecvBufS = real3d("edgeRecvBufS",maxPack,dom.nz,dom.nx);
+    edgeRecvBufN = real3d("edgeRecvBufN",maxPack,dom.nz,dom.nx);
+    edgeRecvBufW = real3d("edgeRecvBufW",maxPack,dom.nz,dom.ny);
+    edgeRecvBufE = real3d("edgeRecvBufE",maxPack,dom.nz,dom.ny);
   }
 
 
@@ -184,12 +184,12 @@ public:
     int ierr;
 
     //Pre-post the receives
-    ierr = MPI_Irecv( haloRecvBufW.get_data() , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,0) , 0 , MPI_COMM_WORLD , &rReq[0] );
-    ierr = MPI_Irecv( haloRecvBufE.get_data() , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,2) , 1 , MPI_COMM_WORLD , &rReq[1] );
+    ierr = MPI_Irecv( haloRecvBufW.data() , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,0) , 0 , MPI_COMM_WORLD , &rReq[0] );
+    ierr = MPI_Irecv( haloRecvBufE.data() , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,2) , 1 , MPI_COMM_WORLD , &rReq[1] );
 
     //Send the data
-    ierr = MPI_Isend( haloSendBufW.get_data() , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,0) , 1 , MPI_COMM_WORLD , &sReq[0] );
-    ierr = MPI_Isend( haloSendBufE.get_data() , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,2) , 0 , MPI_COMM_WORLD , &sReq[1] );
+    ierr = MPI_Isend( haloSendBufW.data() , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,0) , 1 , MPI_COMM_WORLD , &sReq[0] );
+    ierr = MPI_Isend( haloSendBufE.data() , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,2) , 0 , MPI_COMM_WORLD , &sReq[1] );
 
     //Wait for the sends and receives to finish
     ierr = MPI_Waitall(2, sReq, sStat);
@@ -201,12 +201,12 @@ public:
     int ierr;
 
     //Pre-post the receives
-    ierr = MPI_Irecv( haloRecvBufS.get_data() , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(0,1) , 0 , MPI_COMM_WORLD , &rReq[0] );
-    ierr = MPI_Irecv( haloRecvBufN.get_data() , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(2,1) , 1 , MPI_COMM_WORLD , &rReq[1] );
+    ierr = MPI_Irecv( haloRecvBufS.data() , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(0,1) , 0 , MPI_COMM_WORLD , &rReq[0] );
+    ierr = MPI_Irecv( haloRecvBufN.data() , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(2,1) , 1 , MPI_COMM_WORLD , &rReq[1] );
 
     //Send the data
-    ierr = MPI_Isend( haloSendBufS.get_data() , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(0,1) , 1 , MPI_COMM_WORLD , &sReq[0] );
-    ierr = MPI_Isend( haloSendBufN.get_data() , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(2,1) , 0 , MPI_COMM_WORLD , &sReq[1] );
+    ierr = MPI_Isend( haloSendBufS.data() , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(0,1) , 1 , MPI_COMM_WORLD , &sReq[0] );
+    ierr = MPI_Isend( haloSendBufN.data() , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(2,1) , 0 , MPI_COMM_WORLD , &sReq[1] );
 
     //Wait for the sends and receives to finish
     ierr = MPI_Waitall(2, sReq, sStat);
@@ -270,12 +270,12 @@ public:
     int ierr;
 
     //Pre-post the receives
-    ierr = MPI_Irecv( edgeRecvBufW.get_data() , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,0) , 0 , MPI_COMM_WORLD , &rReq[0] );
-    ierr = MPI_Irecv( edgeRecvBufE.get_data() , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,2) , 1 , MPI_COMM_WORLD , &rReq[1] );
+    ierr = MPI_Irecv( edgeRecvBufW.data() , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,0) , 0 , MPI_COMM_WORLD , &rReq[0] );
+    ierr = MPI_Irecv( edgeRecvBufE.data() , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,2) , 1 , MPI_COMM_WORLD , &rReq[1] );
 
     //Send the data
-    ierr = MPI_Isend( edgeSendBufW.get_data() , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,0) , 1 , MPI_COMM_WORLD , &sReq[0] );
-    ierr = MPI_Isend( edgeSendBufE.get_data() , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,2) , 0 , MPI_COMM_WORLD , &sReq[1] );
+    ierr = MPI_Isend( edgeSendBufW.data() , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,0) , 1 , MPI_COMM_WORLD , &sReq[0] );
+    ierr = MPI_Isend( edgeSendBufE.data() , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,2) , 0 , MPI_COMM_WORLD , &sReq[1] );
 
     //Wait for the sends and receives to finish
     ierr = MPI_Waitall(2, sReq, sStat);
@@ -287,12 +287,12 @@ public:
     int ierr;
 
     //Pre-post the receives
-    ierr = MPI_Irecv( edgeRecvBufS.get_data() , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(0,1) , 0 , MPI_COMM_WORLD , &rReq[0] );
-    ierr = MPI_Irecv( edgeRecvBufN.get_data() , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(2,1) , 1 , MPI_COMM_WORLD , &rReq[1] );
+    ierr = MPI_Irecv( edgeRecvBufS.data() , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(0,1) , 0 , MPI_COMM_WORLD , &rReq[0] );
+    ierr = MPI_Irecv( edgeRecvBufN.data() , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(2,1) , 1 , MPI_COMM_WORLD , &rReq[1] );
 
     //Send the data
-    ierr = MPI_Isend( edgeSendBufS.get_data() , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(0,1) , 1 , MPI_COMM_WORLD , &sReq[0] );
-    ierr = MPI_Isend( edgeSendBufN.get_data() , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(2,1) , 0 , MPI_COMM_WORLD , &sReq[1] );
+    ierr = MPI_Isend( edgeSendBufS.data() , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(0,1) , 1 , MPI_COMM_WORLD , &sReq[0] );
+    ierr = MPI_Isend( edgeSendBufN.data() , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(2,1) , 0 , MPI_COMM_WORLD , &sReq[1] );
 
     //Wait for the sends and receives to finish
     ierr = MPI_Waitall(2, sReq, sStat);
