@@ -182,6 +182,8 @@ public:
   inline void haloExchange_x(Domain const &dom, Parallel const &par) {
     int ierr;
 
+    Kokkos::fence();
+
     //Pre-post the receives
     ierr = MPI_Irecv( haloRecvBufW.data() , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,0) , 0 , MPI_COMM_WORLD , &rReq[0] );
     ierr = MPI_Irecv( haloRecvBufE.data() , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,2) , 1 , MPI_COMM_WORLD , &rReq[1] );
@@ -199,6 +201,8 @@ public:
   inline void haloExchange_y(Domain const &dom, Parallel const &par) {
     int ierr;
 
+    Kokkos::fence();
+
     //Pre-post the receives
     ierr = MPI_Irecv( haloRecvBufS.data() , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(0,1) , 0 , MPI_COMM_WORLD , &rReq[0] );
     ierr = MPI_Irecv( haloRecvBufN.data() , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(2,1) , 1 , MPI_COMM_WORLD , &rReq[1] );
@@ -214,59 +218,65 @@ public:
 
 
   inline void edgePackN_x(Domain const &dom, real5d const &a, int const n) {
-    for (int v=0; v<n; v++) {
-      for (int k=0; k<dom.nz; k++) {
-        for (int j=0; j<dom.ny; j++) {
-          edgeSendBufW(nPack+v,k,j) = a(v,1,k,j,0     );
-          edgeSendBufE(nPack+v,k,j) = a(v,0,k,j,dom.nx);
-        }
-      }
-    }
+    // for (int v=0; v<n; v++) {
+    //   for (int k=0; k<dom.nz; k++) {
+    //     for (int j=0; j<dom.ny; j++) {
+    Kokkos::parallel_for( n*dom.nz*dom.ny , KOKKOS_LAMBDA (int iGlob) {
+      int v, k, j;
+      unpackIndices(iGlob,n,dom.nz,dom.ny,v,k,j);
+      edgeSendBufW(nPack+v,k,j) = a(v,1,k,j,0     );
+      edgeSendBufE(nPack+v,k,j) = a(v,0,k,j,dom.nx);
+    });
     nPack = nPack + n;
   }
 
 
   inline void edgePackN_y(Domain const &dom, real5d const &a, int const n) {
-    for (int v=0; v<n; v++) {
-      for (int k=0; k<dom.nz; k++) {
-        for (int i=0; i<dom.nx; i++) {
-          edgeSendBufS(nPack+v,k,i) = a(v,1,k,0     ,i);
-          edgeSendBufN(nPack+v,k,i) = a(v,0,k,dom.ny,i);
-        }
-      }
-    }
+    // for (int v=0; v<n; v++) {
+    //   for (int k=0; k<dom.nz; k++) {
+    //     for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( n*dom.nz*dom.nx , KOKKOS_LAMBDA (int iGlob) {
+      int v, k, i;
+      unpackIndices(iGlob,n,dom.nz,dom.nx,v,k,i);
+      edgeSendBufS(nPack+v,k,i) = a(v,1,k,0     ,i);
+      edgeSendBufN(nPack+v,k,i) = a(v,0,k,dom.ny,i);
+    });
     nPack = nPack + n;
   }
 
 
   inline void edgeUnpackN_x(Domain const &dom, real5d &a, int const n) {
-    for (int v=0; v<n; v++) {
-      for (int k=0; k<dom.nz; k++) {
-        for (int j=0; j<dom.ny; j++) {
-          a(v,0,k,j,0     ) = edgeRecvBufW(nUnpack+v,k,j);
-          a(v,1,k,j,dom.nx) = edgeRecvBufE(nUnpack+v,k,j);
-        }
-      }
-    }
+    // for (int v=0; v<n; v++) {
+    //   for (int k=0; k<dom.nz; k++) {
+    //     for (int j=0; j<dom.ny; j++) {
+    Kokkos::parallel_for( n*dom.nz*dom.ny , KOKKOS_LAMBDA (int iGlob) {
+      int v, k, j;
+      unpackIndices(iGlob,n,dom.nz,dom.ny,v,k,j);
+      a(v,0,k,j,0     ) = edgeRecvBufW(nUnpack+v,k,j);
+      a(v,1,k,j,dom.nx) = edgeRecvBufE(nUnpack+v,k,j);
+    });
     nUnpack = nUnpack + n;
   }
 
 
   inline void edgeUnpackN_y(Domain const &dom, real5d &a, int const n) {
-    for (int v=0; v<n; v++) {
-      for (int k=0; k<dom.nz; k++) {
-        for (int i=0; i<dom.nx; i++) {
-          a(v,0,k,0     ,i) = edgeRecvBufS(nUnpack+v,k,i);
-          a(v,1,k,dom.ny,i) = edgeRecvBufN(nUnpack+v,k,i);
-        }
-      }
-    }
+    // for (int v=0; v<n; v++) {
+    //   for (int k=0; k<dom.nz; k++) {
+    //     for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( n*dom.nz*dom.nx , KOKKOS_LAMBDA (int iGlob) {
+      int v, k, i;
+      unpackIndices(iGlob,n,dom.nz,dom.nx,v,k,i);
+      a(v,0,k,0     ,i) = edgeRecvBufS(nUnpack+v,k,i);
+      a(v,1,k,dom.ny,i) = edgeRecvBufN(nUnpack+v,k,i);
+    });
     nUnpack = nUnpack + n;
   }
 
 
   inline void edgeExchange_x(Domain const &dom, Parallel const &par) {
     int ierr;
+
+    Kokkos::fence();
 
     //Pre-post the receives
     ierr = MPI_Irecv( edgeRecvBufW.data() , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,0) , 0 , MPI_COMM_WORLD , &rReq[0] );
@@ -284,6 +294,8 @@ public:
 
   inline void edgeExchange_y(Domain const &dom, Parallel const &par) {
     int ierr;
+
+    Kokkos::fence();
 
     //Pre-post the receives
     ierr = MPI_Irecv( edgeRecvBufS.data() , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(0,1) , 0 , MPI_COMM_WORLD , &rReq[0] );
