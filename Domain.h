@@ -18,6 +18,8 @@ public:
 
   int run2d;
 
+  int doWeno;
+
   real xlen;
   real ylen;
   real zlen;

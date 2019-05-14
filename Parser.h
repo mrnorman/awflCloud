@@ -33,7 +33,7 @@ public:
     par.nproc_x   = -999;
     par.nproc_y   = -999;
     outFreq       = -999;
-    doWeno        = -999;
+    dom.doWeno    = -999;
     timeMethod    = -999;
 
     // Read in colon-separated key: value file line by line
@@ -67,7 +67,7 @@ public:
         else if ( !strcmp( "parNx"     , key.c_str() ) ) { ssVal >> par.nproc_x  ; }
         else if ( !strcmp( "parNy"     , key.c_str() ) ) { ssVal >> par.nproc_y  ; }
         else if ( !strcmp( "outFreq"   , key.c_str() ) ) { ssVal >> outFreq      ; }
-        else if ( !strcmp( "doWeno"    , key.c_str() ) ) { ssVal >> doWeno       ; }
+        else if ( !strcmp( "doWeno"    , key.c_str() ) ) { ssVal >> dom.doWeno   ; }
         else if ( !strcmp( "timeMethod", key.c_str() ) ) { ssVal >> strTimeMethod; handleTimeMethod(strTimeMethod,fNameIn); }
         else {
           std::cout << "Error: key " << key << " not understood in file " << fNameIn << "\n";
@@ -88,7 +88,7 @@ public:
     if (par.nproc_x   == -999) { std::cout << "Error: key " << "parNx"     << " not set."; exit(-1); }
     if (par.nproc_y   == -999) { std::cout << "Error: key " << "parNy"     << " not set."; exit(-1); }
     if (outFreq       == -999) { std::cout << "Error: key " << "outFreq"   << " not set."; exit(-1); }
-    if (doWeno        == -999) { std::cout << "Error: key " << "doWeno"    << " not set."; exit(-1); }
+    if (dom.doWeno    == -999) { std::cout << "Error: key " << "doWeno"    << " not set."; exit(-1); }
 
     // Print out the values
     if (par.masterproc) {
@@ -103,7 +103,7 @@ public:
       std::cout << "parNx: "      << par.nproc_x   << "\n";
       std::cout << "parNy: "      << par.nproc_y   << "\n";
       std::cout << "outFreq: "    << outFreq       << "\n";
-      std::cout << "doWeno: "     << doWeno        << "\n";
+      std::cout << "doWeno: "     << dom.doWeno    << "\n";
       std::cout << "timeMethod: " << timeMethod    << "\n";
     }
 

@@ -41,7 +41,7 @@ public :
     SArray<real,ord,ord,ord> to_gll_tmp;
 
     // Setup the matrix to transform a stencil of ord cell averages into tord GLL points
-    if (doWeno) {
+    if (dom.doWeno) {
       trans.coefs_to_gll_lower( to_gll_tmp );
     } else {
       trans.sten_to_gll_lower( to_gll_tmp );
@@ -111,7 +111,7 @@ public :
         SArray<real,ord> stencil;
         SArray<real,tord> gllPts;
         for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,hs+k,hs+j,i+ii); }
-        reconStencil(stencil,gllPts,doWeno);
+        reconStencil(stencil,gllPts,dom.doWeno);
         for (int ii=0; ii<tord; ii++) { gllState(l,ii) = gllPts(ii); }
       }
       for (int ii=0; ii<tord; ii++) {
@@ -212,7 +212,7 @@ public :
         SArray<real,ord> stencil;
         SArray<real,tord> gllPts;
         for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,hs+k,j+ii,hs+i); }
-        reconStencil(stencil,gllPts,doWeno);
+        reconStencil(stencil,gllPts,dom.doWeno);
         for (int ii=0; ii<tord; ii++) { gllState(l,ii) = gllPts(ii); }
       }
       for (int ii=0; ii<tord; ii++) {
@@ -327,7 +327,7 @@ public :
         SArray<real,ord> stencil;
         SArray<real,tord> gllPts;
         for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,k+ii,hs+j,hs+i); }
-        reconStencil(stencil,gllPts,doWeno);
+        reconStencil(stencil,gllPts,dom.doWeno);
         for (int ii=0; ii<tord; ii++) { gllState(l,ii) = gllPts(ii); }
       }
       for (int ii=0; ii<tord; ii++) {
@@ -474,7 +474,7 @@ public :
         SArray<real,ord> stencil;
         SArray<real,tord> gllPts;
         for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,hs+k,hs+j,i+ii); }
-        reconStencil(stencil,gllPts,doWeno);
+        reconStencil(stencil,gllPts,dom.doWeno);
         for (int ii=0; ii<tord; ii++) { stateDTs(l,0,ii) = gllPts(ii); }
       }
       for (int ii=0; ii<tord; ii++) {
@@ -564,7 +564,7 @@ public :
         SArray<real,ord> stencil;
         SArray<real,tord> gllPts;
         for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,hs+k,j+ii,hs+i); }
-        reconStencil(stencil,gllPts,doWeno);
+        reconStencil(stencil,gllPts,dom.doWeno);
         for (int ii=0; ii<tord; ii++) { stateDTs(l,0,ii) = gllPts(ii); }
       }
       for (int ii=0; ii<tord; ii++) {
@@ -671,7 +671,7 @@ public :
         SArray<real,ord> stencil;
         SArray<real,tord> gllPts;
         for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,k+ii,hs+j,hs+i); }
-        reconStencil(stencil,gllPts,doWeno);
+        reconStencil(stencil,gllPts,dom.doWeno);
         for (int ii=0; ii<tord; ii++) { stateDTs(l,0,ii) = gllPts(ii); }
       }
       for (int ii=0; ii<tord; ii++) {
