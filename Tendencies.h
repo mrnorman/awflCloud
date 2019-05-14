@@ -9,7 +9,7 @@
 #include "Domain.h"
 #include "Exchange.h"
 #include "WenoLimiter.h"
-#include "AderDT.h"
+#include "ader.h"
 #include "TransformMatrices.h"
 
 class Tendencies {
@@ -24,7 +24,6 @@ class Tendencies {
   SArray<real,ord,tord> to_gll;
   WenoLimiter<real> weno;
   SArray<real,ord,ord,ord> wenoRecon;
-  AderDT ader;
   SArray<real,tord,tord> aderDerivX;
   SArray<real,tord,tord> aderDerivY;
   SArray<real,tord,tord> aderDerivZ;
@@ -483,9 +482,9 @@ public :
       }
 
       // Compute DTs of the state and flux, and collapse down into a time average
-      ader.diffTransformEulerX( stateDTs , fluxDTs , aderDerivX );
-      ader.timeAvg( stateDTs , dom );
-      ader.timeAvg( fluxDTs  , dom );
+      diffTransformEulerX( stateDTs , fluxDTs , aderDerivX );
+      timeAvg( stateDTs , dom );
+      timeAvg( fluxDTs  , dom );
 
       // Store state and flux limits into a globally indexed array
       for (int l=0; l<numState; l++) {
@@ -573,9 +572,9 @@ public :
       }
 
       // Compute DTs of the state and flux, and collapse down into a time average
-      ader.diffTransformEulerY( stateDTs , fluxDTs , aderDerivY );
-      ader.timeAvg( stateDTs , dom );
-      ader.timeAvg( fluxDTs  , dom );
+      diffTransformEulerY( stateDTs , fluxDTs , aderDerivY );
+      timeAvg( stateDTs , dom );
+      timeAvg( fluxDTs  , dom );
 
       // Store state and flux limits into a globally indexed array
       for (int l=0; l<numState; l++) {
@@ -686,10 +685,10 @@ public :
       if (k == dom.nz-1) { stateDTs(idRW,0,tord-1) = 0; }
 
       // Compute DTs of the state and flux, and collapse down into a time average
-      ader.diffTransformEulerZ( stateDTs , fluxDTs , sourceDTs , aderDerivZ , hyRHOT, hyRHO );
-      ader.timeAvg( stateDTs  , dom );
-      ader.timeAvg( fluxDTs   , dom );
-      ader.timeAvg( sourceDTs , dom );
+      diffTransformEulerZ( stateDTs , fluxDTs , sourceDTs , aderDerivZ , hyRHOT, hyRHO );
+      timeAvg( stateDTs  , dom );
+      timeAvg( fluxDTs   , dom );
+      timeAvg( sourceDTs , dom );
 
       // Boundary conditions
       if (k == 0       ) { stateDTs(idRW,0,0     ) = 0; }
