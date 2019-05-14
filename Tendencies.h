@@ -7,7 +7,7 @@
 #include "SArray.h"
 #include "Riemann.h"
 #include "Domain.h"
-#include "Exchange.h"
+#include "exchange.h"
 #include "WenoLimiter.h"
 #include "ader.h"
 #include "TransformMatrices.h"
@@ -87,13 +87,13 @@ public :
 
 
   inline void compEulerTendSD_X(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
-                                Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+                                Domain const &dom, Parallel const &par, real4d &tend) {
 
     //Exchange halos in the x-direction
-    exch.haloInit      ();
-    exch.haloPackN_x   (dom, state, numState);
-    exch.haloExchange_x(dom, par);
-    exch.haloUnpackN_x (dom, state, numState);
+    exchange::haloInit      ();
+    exchange::haloPackN_x   (dom, state, numState);
+    exchange::haloExchange_x(dom, par);
+    exchange::haloUnpackN_x (dom, state, numState);
 
     // Reconstruct to tord GLL points in the x-direction
     // for (int k=0; k<dom.nz; k++) {
@@ -148,12 +148,12 @@ public :
     });
 
     //Reconcile the edge fluxes via MPI exchange.
-    exch.haloInit      ();
-    exch.edgePackN_x   (dom, stateLimits, numState);
-    exch.edgePackN_x   (dom, fluxLimits , numState);
-    exch.edgeExchange_x(dom, par);
-    exch.edgeUnpackN_x (dom, stateLimits, numState);
-    exch.edgeUnpackN_x (dom, fluxLimits , numState);
+    exchange::haloInit      ();
+    exchange::edgePackN_x   (dom, stateLimits, numState);
+    exchange::edgePackN_x   (dom, fluxLimits , numState);
+    exchange::edgeExchange_x(dom, par);
+    exchange::edgeUnpackN_x (dom, stateLimits, numState);
+    exchange::edgeUnpackN_x (dom, fluxLimits , numState);
 
     // Riemann solver
     // for (int k=0; k<dom.nz; k++) {
@@ -189,12 +189,12 @@ public :
 
 
   inline void compEulerTendSD_Y(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
-                                Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+                                Domain const &dom, Parallel const &par, real4d &tend) {
     //Exchange halos in the y-direction
-    exch.haloInit      ();
-    exch.haloPackN_y   (dom, state, numState);
-    exch.haloExchange_y(dom, par);
-    exch.haloUnpackN_y (dom, state, numState);
+    exchange::haloInit      ();
+    exchange::haloPackN_y   (dom, state, numState);
+    exchange::haloExchange_y(dom, par);
+    exchange::haloUnpackN_y (dom, state, numState);
 
     // Reconstruct to tord GLL points in the x-direction
     // for (int k=0; k<dom.nz; k++) {
@@ -249,12 +249,12 @@ public :
     });
 
     //Reconcile the edge fluxes via MPI exchange.
-    exch.haloInit      ();
-    exch.edgePackN_y   (dom, stateLimits, numState);
-    exch.edgePackN_y   (dom, fluxLimits , numState);
-    exch.edgeExchange_y(dom, par);
-    exch.edgeUnpackN_y (dom, stateLimits, numState);
-    exch.edgeUnpackN_y (dom, fluxLimits , numState);
+    exchange::haloInit      ();
+    exchange::edgePackN_y   (dom, stateLimits, numState);
+    exchange::edgePackN_y   (dom, fluxLimits , numState);
+    exchange::edgeExchange_y(dom, par);
+    exchange::edgeUnpackN_y (dom, stateLimits, numState);
+    exchange::edgeUnpackN_y (dom, fluxLimits , numState);
 
     // Local lax-friedrichs fluxes
     // for (int k=0; k<dom.nz; k++) {
@@ -290,7 +290,7 @@ public :
 
 
   inline void compEulerTendSD_Z(real4d &state, real2d const &hyDensGLL, real2d const &hyDensThetaGLL,
-                                Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+                                Domain const &dom, Parallel const &par, real4d &tend) {
     // Boundaries for the fluid state in the z-direction
     // for (int j=0; j<dom.ny; j++) {
     //   for (int i=0; i<dom.nx; i++) {
@@ -451,12 +451,12 @@ public :
 
 
   inline void compEulerTendADER_X(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
-                                  Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+                                  Domain const &dom, Parallel const &par, real4d &tend) {
     //Exchange halos in the x-direction
-    exch.haloInit      ();
-    exch.haloPackN_x   (dom, state, numState);
-    exch.haloExchange_x(dom, par);
-    exch.haloUnpackN_x (dom, state, numState);
+    exchange::haloInit      ();
+    exchange::haloPackN_x   (dom, state, numState);
+    exchange::haloExchange_x(dom, par);
+    exchange::haloUnpackN_x (dom, state, numState);
 
     // Reconstruct to tord GLL points in the x-direction
     // for (int k=0; k<dom.nz; k++) {
@@ -500,12 +500,12 @@ public :
     });
 
     //Reconcile the edge fluxes via MPI exchange.
-    exch.haloInit      ();
-    exch.edgePackN_x   (dom, stateLimits, numState);
-    exch.edgePackN_x   (dom, fluxLimits , numState);
-    exch.edgeExchange_x(dom, par);
-    exch.edgeUnpackN_x (dom, stateLimits, numState);
-    exch.edgeUnpackN_x (dom, fluxLimits , numState);
+    exchange::haloInit      ();
+    exchange::edgePackN_x   (dom, stateLimits, numState);
+    exchange::edgePackN_x   (dom, fluxLimits , numState);
+    exchange::edgeExchange_x(dom, par);
+    exchange::edgeUnpackN_x (dom, stateLimits, numState);
+    exchange::edgeUnpackN_x (dom, fluxLimits , numState);
 
     // Riemann solver
     // for (int k=0; k<dom.nz; k++) {
@@ -541,12 +541,12 @@ public :
 
 
   inline void compEulerTendADER_Y(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
-                                  Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+                                  Domain const &dom, Parallel const &par, real4d &tend) {
     //Exchange halos in the y-direction
-    exch.haloInit      ();
-    exch.haloPackN_y   (dom, state, numState);
-    exch.haloExchange_y(dom, par);
-    exch.haloUnpackN_y (dom, state, numState);
+    exchange::haloInit      ();
+    exchange::haloPackN_y   (dom, state, numState);
+    exchange::haloExchange_y(dom, par);
+    exchange::haloUnpackN_y (dom, state, numState);
 
     // Reconstruct to tord GLL points in the x-direction
     // for (int k=0; k<dom.nz; k++) {
@@ -590,12 +590,12 @@ public :
     });
 
     //Reconcile the edge fluxes via MPI exchange.
-    exch.haloInit      ();
-    exch.edgePackN_y   (dom, stateLimits, numState);
-    exch.edgePackN_y   (dom, fluxLimits , numState);
-    exch.edgeExchange_y(dom, par);
-    exch.edgeUnpackN_y (dom, stateLimits, numState);
-    exch.edgeUnpackN_y (dom, fluxLimits , numState);
+    exchange::haloInit      ();
+    exchange::edgePackN_y   (dom, stateLimits, numState);
+    exchange::edgePackN_y   (dom, fluxLimits , numState);
+    exchange::edgeExchange_y(dom, par);
+    exchange::edgeUnpackN_y (dom, stateLimits, numState);
+    exchange::edgeUnpackN_y (dom, fluxLimits , numState);
 
     // Local lax-friedrichs fluxes
     // for (int k=0; k<dom.nz; k++) {
@@ -631,7 +631,7 @@ public :
 
 
   inline void compEulerTendADER_Z(real4d &state, real2d const &hyDensGLL, real2d const &hyDensThetaGLL,
-                                  Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+                                  Domain const &dom, Parallel const &par, real4d &tend) {
     // Boundaries for the fluid state in the z-direction
     // for (int j=0; j<dom.ny; j++) {
     //   for (int i=0; i<dom.nx; i++) {

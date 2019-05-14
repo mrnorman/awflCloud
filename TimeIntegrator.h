@@ -30,11 +30,11 @@ public :
   }
 
 
-  inline void stepForward(State &state, Domain &dom, Exchange &exch, Parallel const &par) {
+  inline void stepForward(State &state, Domain &dom, Parallel const &par) {
     if (timeMethod == TIME_SSPRK3) {
-      stepForwardSSPRK3(state, dom, exch, par);
+      stepForwardSSPRK3(state, dom, par);
     } else if (timeMethod == TIME_ADER) {
-      stepForwardADER(state, dom, exch, par);
+      stepForwardADER(state, dom, par);
     } else {
       std::cout << "Error: Unrecognized timeMethod\n";
       exit(-1);
@@ -42,64 +42,64 @@ public :
   }
 
 
-  inline void stepForwardADER(State &state, Domain &dom, Exchange &exch, Parallel const &par) {
+  inline void stepForwardADER(State &state, Domain &dom, Parallel const &par) {
     if (dsSwitch) {
       dsSwitch = 0;
-      tend.compEulerTendADER_X(state.state, state.hyDensCells, state.hyDensThetaCells, dom, exch, par, tendArr);
+      tend.compEulerTendADER_X(state.state, state.hyDensCells, state.hyDensThetaCells, dom, par, tendArr);
       applyTendencies( state.state , 1._fp , state.state , 0._fp , state.state , 1._fp , tendArr, dom);
       if (!dom.run2d) {
-        tend.compEulerTendADER_Y(state.state, state.hyDensCells, state.hyDensThetaCells, dom, exch, par, tendArr);
+        tend.compEulerTendADER_Y(state.state, state.hyDensCells, state.hyDensThetaCells, dom, par, tendArr);
         applyTendencies( state.state , 1._fp , state.state , 0._fp , state.state , 1._fp , tendArr, dom);
       }
       dom.dt /= 2;
-      tend.compEulerTendADER_Z(state.state, state.hyDensGLL, state.hyDensThetaGLL, dom, exch, par, tendArr);
+      tend.compEulerTendADER_Z(state.state, state.hyDensGLL, state.hyDensThetaGLL, dom, par, tendArr);
       applyTendencies( state.state , 1._fp , state.state , 0._fp , state.state , 1._fp , tendArr, dom);
-      tend.compEulerTendADER_Z(state.state, state.hyDensGLL, state.hyDensThetaGLL, dom, exch, par, tendArr);
+      tend.compEulerTendADER_Z(state.state, state.hyDensGLL, state.hyDensThetaGLL, dom, par, tendArr);
       applyTendencies( state.state , 1._fp , state.state , 0._fp , state.state , 1._fp , tendArr, dom);
       dom.dt *= 2;
     } else {
       dsSwitch = 1;
       dom.dt /= 2;
-      tend.compEulerTendADER_Z(state.state, state.hyDensGLL, state.hyDensThetaGLL, dom, exch, par, tendArr);
+      tend.compEulerTendADER_Z(state.state, state.hyDensGLL, state.hyDensThetaGLL, dom, par, tendArr);
       applyTendencies( state.state , 1._fp , state.state , 0._fp , state.state , 1._fp , tendArr, dom);
-      tend.compEulerTendADER_Z(state.state, state.hyDensGLL, state.hyDensThetaGLL, dom, exch, par, tendArr);
+      tend.compEulerTendADER_Z(state.state, state.hyDensGLL, state.hyDensThetaGLL, dom, par, tendArr);
       applyTendencies( state.state , 1._fp , state.state , 0._fp , state.state , 1._fp , tendArr, dom);
       dom.dt *= 2;
       if (!dom.run2d) {
-        tend.compEulerTendADER_Y(state.state, state.hyDensCells, state.hyDensThetaCells, dom, exch, par, tendArr);
+        tend.compEulerTendADER_Y(state.state, state.hyDensCells, state.hyDensThetaCells, dom, par, tendArr);
         applyTendencies( state.state , 1._fp , state.state , 0._fp , state.state , 1._fp , tendArr, dom);
       }
-      tend.compEulerTendADER_X(state.state, state.hyDensCells, state.hyDensThetaCells, dom, exch, par, tendArr);
+      tend.compEulerTendADER_X(state.state, state.hyDensCells, state.hyDensThetaCells, dom, par, tendArr);
       applyTendencies( state.state , 1._fp , state.state , 0._fp , state.state , 1._fp , tendArr, dom);
     }
   }
 
 
-  inline void stepForwardSSPRK3(State &state, Domain const &dom, Exchange &exch, Parallel const &par) {
+  inline void stepForwardSSPRK3(State &state, Domain const &dom, Parallel const &par) {
     // Stage 1
-    tend.compEulerTendSD_X(state.state, state.hyDensCells, state.hyDensThetaCells, dom, exch, par, tendArr   );
+    tend.compEulerTendSD_X(state.state, state.hyDensCells, state.hyDensThetaCells, dom, par, tendArr   );
     if (!dom.run2d) {
-      tend.compEulerTendSD_Y(state.state, state.hyDensCells, state.hyDensThetaCells, dom, exch, par, tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
+      tend.compEulerTendSD_Y(state.state, state.hyDensCells, state.hyDensThetaCells, dom, par, tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
     }
-    tend.compEulerTendSD_Z(state.state, state.hyDensGLL, state.hyDensThetaGLL, dom, exch, par, tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
+    tend.compEulerTendSD_Z(state.state, state.hyDensGLL, state.hyDensThetaGLL, dom, par, tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
     tend.compEulerTendSD_S(state.state,                                        dom,            tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
     applyTendencies( stateTmp , 1._fp , state.state , 0._fp , stateTmp , 1._fp , tendArr, dom);
 
     // Stage 2
-    tend.compEulerTendSD_X(stateTmp, state.hyDensCells, state.hyDensThetaCells, dom, exch, par, tendArr   );
+    tend.compEulerTendSD_X(stateTmp, state.hyDensCells, state.hyDensThetaCells, dom, par, tendArr   );
     if (!dom.run2d) {
-      tend.compEulerTendSD_Y(stateTmp, state.hyDensCells, state.hyDensThetaCells, dom, exch, par, tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
+      tend.compEulerTendSD_Y(stateTmp, state.hyDensCells, state.hyDensThetaCells, dom, par, tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
     }
-    tend.compEulerTendSD_Z(stateTmp, state.hyDensGLL, state.hyDensThetaGLL, dom, exch, par, tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
+    tend.compEulerTendSD_Z(stateTmp, state.hyDensGLL, state.hyDensThetaGLL, dom, par, tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
     tend.compEulerTendSD_S(stateTmp,                                        dom,            tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
     applyTendencies( stateTmp , 0.75_fp , state.state , 0.25_fp , stateTmp , 0.25_fp , tendArr, dom);
 
     // Stage 3
-    tend.compEulerTendSD_X(stateTmp, state.hyDensCells, state.hyDensThetaCells, dom, exch, par, tendArr   );
+    tend.compEulerTendSD_X(stateTmp, state.hyDensCells, state.hyDensThetaCells, dom, par, tendArr   );
     if (!dom.run2d) {
-      tend.compEulerTendSD_Y(stateTmp, state.hyDensCells, state.hyDensThetaCells, dom, exch, par, tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
+      tend.compEulerTendSD_Y(stateTmp, state.hyDensCells, state.hyDensThetaCells, dom, par, tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
     }
-    tend.compEulerTendSD_Z(stateTmp, state.hyDensGLL, state.hyDensThetaGLL, dom, exch, par, tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
+    tend.compEulerTendSD_Z(stateTmp, state.hyDensGLL, state.hyDensThetaGLL, dom, par, tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
     tend.compEulerTendSD_S(stateTmp,                                        dom,            tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
     applyTendencies( state.state , 1._fp/3._fp , state.state , 2._fp/3._fp , stateTmp , 2._fp/3._fp , tendArr , dom);
   }

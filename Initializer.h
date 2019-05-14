@@ -4,7 +4,7 @@
 
 #include "const.h"
 #include "Hydrostasis.h"
-#include "Exchange.h"
+#include "exchange.h"
 #include "TransformMatrices.h"
 #include "TimeIntegrator.h"
 #include "Indexing.h"
@@ -29,7 +29,7 @@ public:
     }
   }
 
-  void initialize(State &state, Domain &dom, Parallel &par, Exchange &exch, TimeIntegrator &tint) {
+  void initialize(State &state, Domain &dom, Parallel &par, TimeIntegrator &tint) {
     int ierr;
     SArray<real,ord> gllOrdPoints;
     SArray<real,ord> gllOrdWeights;
@@ -110,7 +110,7 @@ public:
     tint.initialize(dom);
 
     // Allocate the MPI exchange buffers
-    exch.allocate(dom);
+    exchange::allocate(dom);
 
     // Allocate the fluid state variable
     state.state = real4d( "state" , numState , dom.nz+2*hs , dom.ny+2*hs , dom.nx+2*hs );
