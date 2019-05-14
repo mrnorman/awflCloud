@@ -143,17 +143,17 @@ public:
         state.hyPressureCells (hs+k) += gllOrdWeights(kk) * mypow( r*t , GAMMA );
       }
     });
-    Kokkos::fence();
 
     // Enforce vertical boundaries
-    for (int ii=0; ii<hs; ii++) {
+    // for (int ii=0; ii<hs; ii++) {
+    Kokkos::parallel_for( hs , KOKKOS_LAMBDA (int const ii) {
       state.hyDensCells     (ii) = state.hyDensCells     (hs);
       state.hyDensThetaCells(ii) = state.hyDensThetaCells(hs);
       state.hyPressureCells (ii) = state.hyPressureCells (hs);
       state.hyDensCells     (dom.nz+hs+ii) = state.hyDensCells     (dom.nz+hs-1);
       state.hyDensThetaCells(dom.nz+hs+ii) = state.hyDensThetaCells(dom.nz+hs-1);
       state.hyPressureCells (dom.nz+hs+ii) = state.hyPressureCells (dom.nz+hs-1);
-    }
+    });
 
     // Initialize the hydrostatic background state for GLL points
     // Perform ord-point GLL quadrature for the cell averages
@@ -238,6 +238,8 @@ public:
       unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       dt = min(dt,dt3d(k,j,i));
     } , Kokkos::Min<real>(dom.dt) );
+
+    Kokkos::fence();
 
     real dtloc = dom.dt;
     ierr = MPI_Allreduce(&dtloc, &dom.dt, 1, MPI_REAL , MPI_MIN, MPI_COMM_WORLD);

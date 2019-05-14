@@ -108,28 +108,28 @@ public :
   inline void applyTendencies(real4d &state2, real const c0, real4d const &state0,
                                               real const c1, real4d const &state1,
                                               real const ct, real4d const &tend, Domain const &dom) {
-    for (int l=0; l<numState; l++) {
-      for (int k=0; k<dom.nz; k++) {
-        for (int j=0; j<dom.ny; j++) {
-          for (int i=0; i<dom.nx; i++) {
-            state2(l,hs+k,hs+j,hs+i) = c0 * state0(l,hs+k,hs+j,hs+i) + c1 * state1(l,hs+k,hs+j,hs+i) + ct * dom.dt * tend(l,k,j,i);
-          }
-        }
-      }
-    }
+    // for (int l=0; l<numState; l++) {
+    //   for (int k=0; k<dom.nz; k++) {
+    //     for (int j=0; j<dom.ny; j++) {
+    //       for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( numState*dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int l, k, j, i;
+      unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
+      state2(l,hs+k,hs+j,hs+i) = c0 * state0(l,hs+k,hs+j,hs+i) + c1 * state1(l,hs+k,hs+j,hs+i) + ct * dom.dt * tend(l,k,j,i);
+    });
   }
 
 
   inline void appendTendencies(real4d &tend, real4d const &tendTmp, Domain const &dom) {
-    for (int l=0; l<numState; l++) {
-      for (int k=0; k<dom.nz; k++) {
-        for (int j=0; j<dom.ny; j++) {
-          for (int i=0; i<dom.nx; i++) {
-            tend(l,k,j,i) += tendTmp(l,k,j,i);
-          }
-        }
-      }
-    }
+    // for (int l=0; l<numState; l++) {
+    //   for (int k=0; k<dom.nz; k++) {
+    //     for (int j=0; j<dom.ny; j++) {
+    //       for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( numState*dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int l, k, j, i;
+      unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
+      tend(l,k,j,i) += tendTmp(l,k,j,i);
+    });
   }
 
 };

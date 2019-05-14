@@ -75,6 +75,7 @@ public:
     Kokkos::parallel_for( dom.nz , KOKKOS_LAMBDA (int const k) {
       zCoord(k) = (             k + 0.5_fp ) * dom.dz;
     });
+    Kokkos::fence();
 
     // Write out x, y, and z coordinates
     st[0] = par.i_beg;
@@ -93,11 +94,13 @@ public:
     Kokkos::parallel_for( dom.nz , KOKKOS_LAMBDA (int const k) {
       zCoord(k) = state.hyDensCells     (hs+k);
     });
+    Kokkos::fence();
     ncwrap( ncmpi_put_vara_float( ncid , hyrVar  , st , ct , zCoord.data() ) , __LINE__ );
     // for (int k=0; k<dom.nz; k++) {
     Kokkos::parallel_for( dom.nz , KOKKOS_LAMBDA (int const k) {
       zCoord(k) = state.hyDensThetaCells(hs+k);
     });
+    Kokkos::fence();
     ncwrap( ncmpi_put_vara_float( ncid , hyrtVar , st , ct , zCoord.data() ) , __LINE__ );
     ncwrap( ncmpi_end_indep_data(ncid) , __LINE__ );
 
@@ -153,6 +156,7 @@ public:
       unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       data(k,j,i) = state.state(idR,hs+k,hs+j,hs+i);
     });
+    Kokkos::fence();
     ncwrap( ncmpi_put_vara_float_all( ncid , rVar , st , ct , data.data() ) , __LINE__ );
 
     // Write out u wind
@@ -164,6 +168,7 @@ public:
       unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       data(k,j,i) = state.state(idRU,hs+k,hs+j,hs+i) / ( state.state(idR,hs+k,hs+j,hs+i) + state.hyDensCells(hs+k) );
     });
+    Kokkos::fence();
     ncwrap( ncmpi_put_vara_float_all( ncid , uVar , st , ct , data.data() ) , __LINE__ );
 
     // Write out v wind
@@ -175,6 +180,7 @@ public:
       unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       data(k,j,i) = state.state(idRV,hs+k,hs+j,hs+i) / ( state.state(idR,hs+k,hs+j,hs+i) + state.hyDensCells(hs+k) );
     });
+    Kokkos::fence();
     ncwrap( ncmpi_put_vara_float_all( ncid , vVar , st , ct , data.data() ) , __LINE__ );
 
     // Write out w wind
@@ -186,6 +192,7 @@ public:
       unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       data(k,j,i) = state.state(idRW,hs+k,hs+j,hs+i) / ( state.state(idR,hs+k,hs+j,hs+i) + state.hyDensCells(hs+k) );
     });
+    Kokkos::fence();
     ncwrap( ncmpi_put_vara_float_all( ncid , wVar , st , ct , data.data() ) , __LINE__ );
 
     // Write out potential temperature perturbations
@@ -199,6 +206,7 @@ public:
                     ( state.state(idR ,hs+k,hs+j,hs+i) + state.hyDensCells     (hs+k) ) -
                     state.hyDensThetaCells(hs+k) / state.hyDensCells(hs+k);
     });
+    Kokkos::fence();
     ncwrap( ncmpi_put_vara_float_all( ncid , thVar , st , ct , data.data() ) , __LINE__ );
 
     // Write out perturbation pressure
@@ -211,6 +219,7 @@ public:
       data(k,j,i) = C0*mypow(state.state(idRT,hs+k,hs+j,hs+i)+state.hyDensThetaCells(hs+k),GAMMA) -
                     C0*mypow(state.hyDensThetaCells(hs+k),GAMMA);
     });
+    Kokkos::fence();
     ncwrap( ncmpi_put_vara_float_all( ncid , pVar , st , ct , data.data() ) , __LINE__ );
   }
 
