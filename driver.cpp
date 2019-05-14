@@ -10,7 +10,7 @@
 #include "Initializer.h"
 #include "TimeIntegrator.h"
 #include "FileIO.h"
-#include "exchange.h"
+#include "Exchange.h"
 #include <Kokkos_Core.hpp>
 
 int main(int argc, char** argv) {
@@ -24,6 +24,7 @@ int main(int argc, char** argv) {
     Parser         parser;
     Initializer    init;
     FileIO         io;
+    Exchange       exch;
     TimeIntegrator tint;
 
 
@@ -36,14 +37,14 @@ int main(int argc, char** argv) {
     parser.readParamsFile(inFile, dom, par, io);
 
     // Initialize the model
-    init.initialize(state, dom, par, tint);
+    init.initialize(state, dom, par, exch, tint);
 
     // Output the initial model state
     io.outputInit(state, dom, par);
 
     while (dom.etime < dom.simLength) {
       if (dom.etime + dom.dt > dom.simLength) { dom.dt = dom.simLength - dom.etime; }
-      tint.stepForward(state, dom, par);
+      tint.stepForward(state, dom, exch, par);
       dom.etime += dom.dt;
       if (par.masterproc) {std::cout << dom.etime << "\n";}
       io.output(state, dom, par);

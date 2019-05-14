@@ -5,7 +5,9 @@
 #include "const.h"
 #include "mpi.h"
 
-namespace exchange {
+class Exchange {
+
+protected:
 
   int const maxPack = numState*2;
 
@@ -35,6 +37,8 @@ namespace exchange {
   real3d edgeRecvBufS;
   real3d edgeSendBufN;
   real3d edgeSendBufS;
+
+public:
 
 
   inline void allocate(Domain &dom) {
@@ -306,6 +310,6 @@ namespace exchange {
     ierr = MPI_Waitall(2, rReq, rStat);
   }
 
-}
+};
 
 #endif
