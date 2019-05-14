@@ -453,7 +453,7 @@ public :
 
     launcher.parallelFor( dom.nz*dom.ny*dom.nx ,
       [this] _YAKL (int iGlob, Array<real> const &state, Array<real> const &hyDensCells, Array<real> const &hyDensThetaCells,
-                           Domain const &dom, Array<real> &stateLimits, Array<real> &fluxLimits, int const doWeno) {
+                               Domain const &dom, Array<real> &stateLimits, Array<real> &fluxLimits, int const doWeno) {
         int k, j, i;
         yakl::unpackIndices(iGlob, dom.nz, dom.ny, dom.nx, k, j, i);
 
@@ -501,31 +501,34 @@ public :
     exch.edgeUnpackN_x (dom, fluxLimits , numState);
 
     // Riemann solver
-    launcher.parallelFor( dom.nz*dom.ny*(dom.nx+1) ,
-      [] _YAKL (int iGlob, Array<real> const &stateLimits, Array<real> const &fluxLimits, Domain const &dom, Riemann &riem, Array<real> &flux) {
-        int k, j, i;
-        yakl::unpackIndices(iGlob, dom.nz, dom.ny, dom.nx+1, k, j, i);
-        SArray<real,numState> s1, s2, f1, f2, upw;
-        for (int l=0; l<numState; l++) {
-          s1(l) = stateLimits(l,0,k,j,i);
-          s2(l) = stateLimits(l,1,k,j,i);
-          f1(l) = fluxLimits (l,0,k,j,i);
-          f2(l) = fluxLimits (l,1,k,j,i);
+    for (int k=0; k<dom.nz; k++) {
+      for (int j=0; j<dom.ny; j++) {
+        for (int i=0; i<dom.nx+1; i++) {
+          SArray<real,numState> s1, s2, f1, f2, upw;
+          for (int l=0; l<numState; l++) {
+            s1(l) = stateLimits(l,0,k,j,i);
+            s2(l) = stateLimits(l,1,k,j,i);
+            f1(l) = fluxLimits (l,0,k,j,i);
+            f2(l) = fluxLimits (l,1,k,j,i);
+          }
+          riem.riemannX(s1, s2, f1, f2, upw);
+          for (int l=0; l<numState; l++) {
+            flux(l,k,j,i) = upw(l);
+          }
         }
-        riem.riemannX(s1, s2, f1, f2, upw);
-        for (int l=0; l<numState; l++) {
-          flux(l,k,j,i) = upw(l);
-        }
-      } , stateLimits , fluxLimits , dom , riem , flux );
+      }
+    }
 
     // Form the tendencies
-    launcher.parallelFor( numState*dom.nz*dom.ny*dom.nx ,
-      [] _YAKL (int iGlob, Array<real> const &flux, Domain const &dom, Array<real> &tend) {
-        int l, k, j, i;
-        yakl::unpackIndices(iGlob, numState, dom.nz, dom.ny, dom.nx, l, k, j, i);
-        tend(l,k,j,i) = - ( flux(l,k,j,i+1) - flux(l,k,j,i) ) / dom.dx;
-      } , flux , dom , tend );
-    launcher.synchronizeSelf();
+    for (int l=0; l<numState; l++) {
+      for (int k=0; k<dom.nz; k++) {
+        for (int j=0; j<dom.ny; j++) {
+          for (int i=0; i<dom.nx; i++) {
+            tend(l,k,j,i) = - ( flux(l,k,j,i+1) - flux(l,k,j,i) ) / dom.dx;
+          }
+        }
+      }
+    }
   }
 
 
@@ -534,84 +537,86 @@ public :
     //Exchange halos in the y-direction
     exch.haloInit      ();
     exch.haloPackN_y   (dom, state, numState);
-    launcher.synchronizeSelf();
     exch.haloExchange_y(dom, par);
     exch.haloUnpackN_y (dom, state, numState);
 
     // Reconstruct to tord GLL points in the x-direction
-    launcher.parallelFor( dom.nz*dom.ny*dom.nx ,
-      [this] _YAKL (int iGlob, Array<real> const &state, Array<real> const &hyDensCells, Array<real> const &hyDensThetaCells,
-                           Domain const &dom, Array<real> &stateLimits, Array<real> &fluxLimits, int const doWeno) {
-        int k, j, i;
-        yakl::unpackIndices(iGlob, dom.nz, dom.ny, dom.nx, k, j, i);
-        SArray<real,numState,tord,tord> stateDTs;  // GLL state values
-        SArray<real,numState,tord,tord> fluxDTs;   // GLL flux values
+    for (int k=0; k<dom.nz; k++) {
+      for (int j=0; j<dom.ny; j++) {
+        for (int i=0; i<dom.nx; i++) {
+          SArray<real,numState,tord,tord> stateDTs;  // GLL state values
+          SArray<real,numState,tord,tord> fluxDTs;   // GLL flux values
 
-        // Compute GLL points from cell averages
-        for (int l=0; l<numState; l++) {
-          SArray<real,ord> stencil;
-          SArray<real,tord> gllPts;
-          for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,hs+k,j+ii,hs+i); }
-          reconStencil(stencil,gllPts,doWeno);
-          for (int ii=0; ii<tord; ii++) { stateDTs(l,0,ii) = gllPts(ii); }
+          // Compute GLL points from cell averages
+          for (int l=0; l<numState; l++) {
+            SArray<real,ord> stencil;
+            SArray<real,tord> gllPts;
+            for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,hs+k,j+ii,hs+i); }
+            reconStencil(stencil,gllPts,doWeno);
+            for (int ii=0; ii<tord; ii++) { stateDTs(l,0,ii) = gllPts(ii); }
+          }
+          for (int ii=0; ii<tord; ii++) {
+            stateDTs(idR ,0,ii) += hyDensCells     (hs+k);
+            stateDTs(idRT,0,ii) += hyDensThetaCells(hs+k);
+          }
+
+          // Compute DTs of the state and flux, and collapse down into a time average
+          ader.diffTransformEulerY( stateDTs , fluxDTs , aderDerivY );
+          ader.timeAvg( stateDTs , dom );
+          ader.timeAvg( fluxDTs  , dom );
+
+          // Store state and flux limits into a globally indexed array
+          for (int l=0; l<numState; l++) {
+            // Store the left cell edge state and flux estimates
+            stateLimits(l,1,k,j  ,i) = stateDTs(l,0,0);
+            fluxLimits (l,1,k,j  ,i) = fluxDTs (l,0,0);
+
+            // Store the Right cell edge state and flux estimates
+            stateLimits(l,0,k,j+1,i) = stateDTs(l,0,tord-1);
+            fluxLimits (l,0,k,j+1,i) = fluxDTs (l,0,tord-1);
+          }
+
         }
-        for (int ii=0; ii<tord; ii++) {
-          stateDTs(idR ,0,ii) += hyDensCells     (hs+k);
-          stateDTs(idRT,0,ii) += hyDensThetaCells(hs+k);
-        }
-
-        // Compute DTs of the state and flux, and collapse down into a time average
-        ader.diffTransformEulerY( stateDTs , fluxDTs , aderDerivY );
-        ader.timeAvg( stateDTs , dom );
-        ader.timeAvg( fluxDTs  , dom );
-
-        // Store state and flux limits into a globally indexed array
-        for (int l=0; l<numState; l++) {
-          // Store the left cell edge state and flux estimates
-          stateLimits(l,1,k,j  ,i) = stateDTs(l,0,0);
-          fluxLimits (l,1,k,j  ,i) = fluxDTs (l,0,0);
-
-          // Store the Right cell edge state and flux estimates
-          stateLimits(l,0,k,j+1,i) = stateDTs(l,0,tord-1);
-          fluxLimits (l,0,k,j+1,i) = fluxDTs (l,0,tord-1);
-        }
-      } , state , hyDensCells , hyDensThetaCells , dom , stateLimits , fluxLimits , doWeno );
+      }
+    }
 
     //Reconcile the edge fluxes via MPI exchange.
     exch.haloInit      ();
     exch.edgePackN_y   (dom, stateLimits, numState);
     exch.edgePackN_y   (dom, fluxLimits , numState);
-    launcher.synchronizeSelf();
     exch.edgeExchange_y(dom, par);
     exch.edgeUnpackN_y (dom, stateLimits, numState);
     exch.edgeUnpackN_y (dom, fluxLimits , numState);
 
     // Local lax-friedrichs fluxes
-    launcher.parallelFor( dom.nz*(dom.ny+1)*dom.nx ,
-      [] _YAKL (int iGlob, Array<real> const &stateLimits, Array<real> const &fluxLimits, Domain const &dom, Riemann &riem, Array<real> &flux) {
-        int k, j, i;
-        yakl::unpackIndices(iGlob, dom.nz, dom.ny+1, dom.nx, k, j, i);
-        SArray<real,numState> s1, s2, f1, f2, upw;
-        for (int l=0; l<numState; l++) {
-          s1(l) = stateLimits(l,0,k,j,i);
-          s2(l) = stateLimits(l,1,k,j,i);
-          f1(l) = fluxLimits (l,0,k,j,i);
-          f2(l) = fluxLimits (l,1,k,j,i);
+    for (int k=0; k<dom.nz; k++) {
+      for (int j=0; j<dom.ny+1; j++) {
+        for (int i=0; i<dom.nx; i++) {
+          SArray<real,numState> s1, s2, f1, f2, upw;
+          for (int l=0; l<numState; l++) {
+            s1(l) = stateLimits(l,0,k,j,i);
+            s2(l) = stateLimits(l,1,k,j,i);
+            f1(l) = fluxLimits (l,0,k,j,i);
+            f2(l) = fluxLimits (l,1,k,j,i);
+          }
+          riem.riemannY(s1, s2, f1, f2, upw);
+          for (int l=0; l<numState; l++) {
+            flux(l,k,j,i) = upw(l);
+          }
         }
-        riem.riemannY(s1, s2, f1, f2, upw);
-        for (int l=0; l<numState; l++) {
-          flux(l,k,j,i) = upw(l);
-        }
-      } , stateLimits , fluxLimits , dom , riem , flux );
+      }
+    }
 
     // Form the tendencies
-    launcher.parallelFor( numState*dom.nz*dom.ny*dom.nx ,
-      [] _YAKL (int iGlob, Array<real> const &flux, Domain const &dom, Array<real> &tend) {
-        int l, k, j, i;
-        yakl::unpackIndices(iGlob, numState, dom.nz, dom.ny, dom.nx, l, k, j, i);
-        tend(l,k,j,i) = - ( flux(l,k,j+1,i) - flux(l,k,j,i) ) / dom.dy;
-      } , flux , dom , tend );
-    launcher.synchronizeSelf();
+    for (int l=0; l<numState; l++) {
+      for (int k=0; k<dom.nz; k++) {
+        for (int j=0; j<dom.ny; j++) {
+          for (int i=0; i<dom.nx; i++) {
+            tend(l,k,j,i) = - ( flux(l,k,j+1,i) - flux(l,k,j,i) ) / dom.dy;
+          }
+        }
+      }
+    }
   }
 
 
