@@ -65,7 +65,6 @@ public:
     //Determine my number of grid cells
     dom.nx = par.i_end - par.i_beg + 1;
     dom.ny = par.j_end - par.j_beg + 1;
-    par.neigh = int2d("neigh",3,3);
     for (int j = 0; j < 3; j++) {
       for (int i = 0; i < 3; i++) {
         int pxloc = par.px+i-1;

@@ -3,6 +3,7 @@
 #define _PARALLEL_H_
 
 #include "const.h"
+#include "SArray.h"
 
 class Parallel {
 
@@ -19,7 +20,7 @@ public:
   ulong i_end;
   ulong j_end;
   int masterproc;
-  int2d neigh;
+  SArray<real,3,3> neigh;
 };
 
 #endif
