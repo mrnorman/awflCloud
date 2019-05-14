@@ -11,9 +11,9 @@
 
 class TimeIntegrator {
 
-  Array<real> stateTmp;
-  Array<real> tendArr;
-  Array<real> tendArrTmp;
+  real4d stateTmp;
+  real4d tendArr;
+  real4d tendArrTmp;
   Tendencies tend;
   int dsSwitch;
 
@@ -22,10 +22,10 @@ public :
 
   inline void initialize(Domain &dom) {
     if (timeMethod == TIME_SSPRK3) {
-      stateTmp  .setup(numState,dom.nz+2*hs,dom.ny+2*hs,dom.nx+2*hs);
-      tendArrTmp.setup(numState,dom.nz,dom.ny,dom.nx);
+      stateTmp   = real4d("stateTmp"  ,numState,dom.nz+2*hs,dom.ny+2*hs,dom.nx+2*hs);
+      tendArrTmp = real4d("tendArrTmp",numState,dom.nz,dom.ny,dom.nx);
     }
-    tendArr.setup(numState,dom.nz,dom.ny,dom.nx);
+    tendArr = real4d("tendArr",numState,dom.nz,dom.ny,dom.nx);
     tend.initialize(dom);
     dsSwitch = 1;
   }
@@ -106,9 +106,9 @@ public :
   }
 
 
-  inline void applyTendencies(Array<real> &state2, real const c0, Array<real> const &state0,
-                                                   real const c1, Array<real> const &state1,
-                                                   real const ct, Array<real> const &tend, Domain const &dom) {
+  inline void applyTendencies(real4d &state2, real const c0, real4d const &state0,
+                                              real const c1, real4d const &state1,
+                                              real const ct, real4d const &tend, Domain const &dom) {
     for (int l=0; l<numState; l++) {
       for (int k=0; k<dom.nz; k++) {
         for (int j=0; j<dom.ny; j++) {
@@ -121,7 +121,7 @@ public :
   }
 
 
-  inline void appendTendencies(Array<real> &tend, Array<real> const &tendTmp, Domain const &dom) {
+  inline void appendTendencies(real4d &tend, real4d const &tendTmp, Domain const &dom) {
     for (int l=0; l<numState; l++) {
       for (int k=0; k<dom.nz; k++) {
         for (int j=0; j<dom.ny; j++) {

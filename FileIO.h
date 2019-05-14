@@ -79,9 +79,11 @@ public:
     st[0] = 0;
     ct[0] = dom.nz_glob;
     ncwrap( ncmpi_begin_indep_data(ncid) , __LINE__ );
-    ncwrap( ncmpi_put_vara_float( ncid , zVar    , st , ct , zCoord                  .get_data()      ) , __LINE__ );
-    ncwrap( ncmpi_put_vara_float( ncid , hyrVar  , st , ct , &(state.hyDensCells     .get_data()[hs]) ) , __LINE__ );
-    ncwrap( ncmpi_put_vara_float( ncid , hyrtVar , st , ct , &(state.hyDensThetaCells.get_data()[hs]) ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_float( ncid , zVar    , st , ct , zCoord.get_data() ) , __LINE__ );
+    for (int k=0; k<dom.nz; k++) { zCoord(k) = state.hyDensCells     (hs+k); }
+    ncwrap( ncmpi_put_vara_float( ncid , hyrVar  , st , ct , zCoord.get_data() ) , __LINE__ );
+    for (int k=0; k<dom.nz; k++) { zCoord(k) = state.hyDensThetaCells(hs+k); }
+    ncwrap( ncmpi_put_vara_float( ncid , hyrtVar , st , ct , zCoord.get_data() ) , __LINE__ );
     ncwrap( ncmpi_end_indep_data(ncid) , __LINE__ );
 
     writeState(state, dom, par);

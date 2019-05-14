@@ -68,7 +68,7 @@ public:
     nUnpack = 0;
   }
 
-  inline void haloPackN_x(Domain const &dom, Array<real> const &a, int const n) {
+  inline void haloPackN_x(Domain const &dom, real4d const &a, int const n) {
     for (int v=0; v<n; v++) {
       for (int k=0; k<dom.nz; k++) {
         for (int j=0; j<dom.ny; j++) {
@@ -83,7 +83,7 @@ public:
   }
 
 
-  inline void haloPackN_y(Domain const &dom, Array<real> const &a, int const n) {
+  inline void haloPackN_y(Domain const &dom, real4d const &a, int const n) {
     for (int v=0; v<n; v++) {
       for (int k=0; k<dom.nz; k++) {
         for (int ii=0; ii<hs; ii++) {
@@ -98,7 +98,7 @@ public:
   }
 
 
-  inline void haloPack1_x(Domain const &dom, Array<real> const &a) {
+  inline void haloPack1_x(Domain const &dom, real3d const &a) {
     for (int k=0; k<dom.nz; k++) {
       for (int j=0; j<dom.ny; j++) {
         for (int ii=0; ii<hs; ii++) {
@@ -111,7 +111,7 @@ public:
   }
 
 
-  inline void haloPack1_y(Domain const &dom, Array<real> const &a) {
+  inline void haloPack1_y(Domain const &dom, real3d const &a) {
     for (int k=0; k<dom.nz; k++) {
       for (int ii=0; ii<hs; ii++) {
         for (int i=0; i<dom.nx; i++) {
@@ -124,7 +124,7 @@ public:
   }
 
 
-  inline void haloUnpackN_x(Domain const &dom, Array<real> &a, int const n) {
+  inline void haloUnpackN_x(Domain const &dom, real4d &a, int const n) {
     for (int v=0; v<n; v++) {
       for (int k=0; k<dom.nz; k++) {
         for (int j=0; j<dom.ny; j++) {
@@ -139,7 +139,7 @@ public:
   }
 
 
-  inline void haloUnpackN_y(Domain const &dom, Array<real> &a, int const n) {
+  inline void haloUnpackN_y(Domain const &dom, real4d &a, int const n) {
     for (int v=0; v<n; v++) {
       for (int k=0; k<dom.nz; k++) {
         for (int ii=0; ii<hs; ii++) {
@@ -154,7 +154,7 @@ public:
   }
 
 
-  inline void haloUnpack1_x(Domain const &dom, Array<real> &a) {
+  inline void haloUnpack1_x(Domain const &dom, real3d &a) {
     for (int k=0; k<dom.nz; k++) {
       for (int j=0; j<dom.ny; j++) {
         for (int ii=0; ii<hs; ii++) {
@@ -167,7 +167,7 @@ public:
   }
 
 
-  inline void haloUnpack1_y(Domain const &dom, Array<real> &a) {
+  inline void haloUnpack1_y(Domain const &dom, real3d &a) {
     for (int k=0; k<dom.nz; k++) {
       for (int ii=0; ii<hs; ii++) {
         for (int i=0; i<dom.nx; i++) {

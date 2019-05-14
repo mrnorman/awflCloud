@@ -88,8 +88,8 @@ public :
   }
 
 
-  inline void compEulerTendSD_X(Array<real> &state, Array<real> const &hyDensCells, Array<real> const &hyDensThetaCells,
-                                Domain const &dom, Exchange &exch, Parallel const &par, Array<real> &tend) {
+  inline void compEulerTendSD_X(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
+                                Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
 
     //Exchange halos in the x-direction
     exch.haloInit      ();
@@ -188,8 +188,8 @@ public :
   }
 
 
-  inline void compEulerTendSD_Y(Array<real> &state, Array<real> const &hyDensCells, Array<real> const &hyDensThetaCells,
-                                Domain const &dom, Exchange &exch, Parallel const &par, Array<real> &tend) {
+  inline void compEulerTendSD_Y(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
+                                Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
     //Exchange halos in the y-direction
     exch.haloInit      ();
     exch.haloPackN_y   (dom, state, numState);
@@ -287,8 +287,8 @@ public :
   }
 
 
-  inline void compEulerTendSD_Z(Array<real> &state, Array<real> const &hyDensGLL, Array<real> const &hyDensThetaGLL,
-                                Domain const &dom, Exchange &exch, Parallel const &par, Array<real> &tend) {
+  inline void compEulerTendSD_Z(real4d &state, real2d const &hyDensGLL, real2d const &hyDensThetaGLL,
+                                Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
     // Boundaries for the fluid state in the z-direction
     for (int j=0; j<dom.ny; j++) {
       for (int i=0; i<dom.nx; i++) {
@@ -426,7 +426,7 @@ public :
   }
 
 
-  inline void compEulerTendSD_S(Array<real> const &state, Domain const &dom, Array<real> &tend) {
+  inline void compEulerTendSD_S(real4d const &state, Domain const &dom, real4d &tend) {
     // Form the tendencies
     for (int k=0; k<dom.nz; k++) {
       for (int j=0; j<dom.ny; j++) {
@@ -442,8 +442,8 @@ public :
   }
 
 
-  inline void compEulerTendADER_X(Array<real> &state, Array<real> const &hyDensCells, Array<real> const &hyDensThetaCells,
-                                  Domain const &dom, Exchange &exch, Parallel const &par, Array<real> &tend) {
+  inline void compEulerTendADER_X(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
+                                  Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
     //Exchange halos in the x-direction
     exch.haloInit      ();
     exch.haloPackN_x   (dom, state, numState);
@@ -530,8 +530,8 @@ public :
   }
 
 
-  inline void compEulerTendADER_Y(Array<real> &state, Array<real> const &hyDensCells, Array<real> const &hyDensThetaCells,
-                                  Domain const &dom, Exchange &exch, Parallel const &par, Array<real> &tend) {
+  inline void compEulerTendADER_Y(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
+                                  Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
     //Exchange halos in the y-direction
     exch.haloInit      ();
     exch.haloPackN_y   (dom, state, numState);
@@ -618,8 +618,8 @@ public :
   }
 
 
-  inline void compEulerTendADER_Z(Array<real> &state, Array<real> const &hyDensGLL, Array<real> const &hyDensThetaGLL,
-                                  Domain const &dom, Exchange &exch, Parallel const &par, Array<real> &tend) {
+  inline void compEulerTendADER_Z(real4d &state, real2d const &hyDensGLL, real2d const &hyDensThetaGLL,
+                                  Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
     // Boundaries for the fluid state in the z-direction
     for (int j=0; j<dom.ny; j++) {
       for (int i=0; i<dom.nx; i++) {

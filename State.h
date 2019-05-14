@@ -11,17 +11,17 @@ class State {
 public:
 
   // Fluid state
-  Array<real> state;
+  real4d state;
 
   // Hydrostatic background state cell averages (no halos)
-  Array<real> hyDensCells;
-  Array<real> hyDensThetaCells;
-  Array<real> hyPressureCells;
+  real1d hyDensCells;
+  real1d hyDensThetaCells;
+  real1d hyPressureCells;
 
   // Hydrostatic background state at tord GLL points within cells (no halos)
-  Array<real> hyDensGLL;
-  Array<real> hyDensThetaGLL;
-  Array<real> hyPressureGLL;
+  real2d hyDensGLL;
+  real2d hyDensThetaGLL;
+  real2d hyPressureGLL;
 
 };
 

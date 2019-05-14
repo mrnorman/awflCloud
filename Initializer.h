@@ -113,15 +113,15 @@ public:
     exch.allocate(dom);
 
     // Allocate the fluid state variable
-    state.state.setup( numState , dom.nz+2*hs , dom.ny+2*hs , dom.nx+2*hs );
+    state.state = real4d( "state" , numState , dom.nz+2*hs , dom.ny+2*hs , dom.nx+2*hs );
 
-    state.hyDensCells     .setup( dom.nz+2*hs );
-    state.hyDensThetaCells.setup( dom.nz+2*hs );
-    state.hyPressureCells .setup( dom.nz+2*hs );
+    state.hyDensCells      = real1d( "hyCellsR"  , dom.nz+2*hs );
+    state.hyDensThetaCells = real1d( "hyCellsRT" , dom.nz+2*hs );
+    state.hyPressureCells  = real1d( "hyCellsp"  , dom.nz+2*hs );
 
-    state.hyDensGLL     .setup( dom.nz , tord );
-    state.hyDensThetaGLL.setup( dom.nz , tord );
-    state.hyPressureGLL .setup( dom.nz , tord );
+    state.hyDensGLL      = real2d( "hyGLLR"  , dom.nz , tord );
+    state.hyDensThetaGLL = real2d( "hyGLLRT" , dom.nz , tord );
+    state.hyPressureGLL  = real2d( "hyGLLp"  , dom.nz , tord );
 
     Hydrostasis hydro;
 
@@ -242,8 +242,8 @@ public:
 
 
   inline _HOSTDEV real ellipsoid_linear(real const x   , real const y   , real const z ,
-                                     real const x0  , real const y0  , real const z0,
-                                     real const xrad, real const yrad, real const zrad, real const amp) {
+                                        real const x0  , real const y0  , real const z0,
+                                        real const xrad, real const yrad, real const zrad, real const amp) {
     real xn = (x-x0)/xrad;
     real yn = (y-y0)/yrad;
     real zn = (z-z0)/zrad;
