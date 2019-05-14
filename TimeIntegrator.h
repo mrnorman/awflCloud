@@ -109,26 +109,28 @@ public :
   inline void applyTendencies(Array<real> &state2, real const c0, Array<real> const &state0,
                                                    real const c1, Array<real> const &state1,
                                                    real const ct, Array<real> const &tend, Domain const &dom) {
-    launcher.parallelFor( numState*dom.nz*dom.ny*dom.nx ,
-      [] _YAKL (int iGlob, Array<real> &state2, real const c0, Array<real> const &state0,
-                                                real const c1, Array<real> const &state1,
-                                                real const ct, Array<real> const &tend, Domain const &dom) {
-        int l, k, j, i;
-        yakl::unpackIndices(iGlob, numState, dom.nz, dom.ny, dom.nx, l, k, j, i);
-        state2(l,hs+k,hs+j,hs+i) = c0 * state0(l,hs+k,hs+j,hs+i) + c1 * state1(l,hs+k,hs+j,hs+i) + ct * dom.dt * tend(l,k,j,i);
-      } , state2 , c0 , state0 , c1 , state1 , ct , tend , dom );
-    launcher.synchronizeSelf();
+    for (int l=0; l<numState; l++) {
+      for (int k=0; k<dom.nz; k++) {
+        for (int j=0; j<dom.ny; j++) {
+          for (int i=0; i<dom.nx; i++) {
+            state2(l,hs+k,hs+j,hs+i) = c0 * state0(l,hs+k,hs+j,hs+i) + c1 * state1(l,hs+k,hs+j,hs+i) + ct * dom.dt * tend(l,k,j,i);
+          }
+        }
+      }
+    }
   }
 
 
   inline void appendTendencies(Array<real> &tend, Array<real> const &tendTmp, Domain const &dom) {
-    launcher.parallelFor( numState*dom.nz*dom.ny*dom.nx ,
-      [] _YAKL (int iGlob, Array<real> &tend, Array<real> const &tendTmp, Domain const &dom) {
-        int l, k, j, i;
-        yakl::unpackIndices(iGlob, numState, dom.nz, dom.ny, dom.nx, l, k, j, i);
-        tend(l,k,j,i) += tendTmp(l,k,j,i);
-      } , tend , tendTmp , dom );
-    launcher.synchronizeSelf();
+    for (int l=0; l<numState; l++) {
+      for (int k=0; k<dom.nz; k++) {
+        for (int j=0; j<dom.ny; j++) {
+          for (int i=0; i<dom.nx; i++) {
+            tend(l,k,j,i) += tendTmp(l,k,j,i);
+          }
+        }
+      }
+    }
   }
 
 };

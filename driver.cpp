@@ -43,7 +43,6 @@ int main(int argc, char** argv) {
     tint.stepForward(state, dom, exch, par);
     dom.etime += dom.dt;
     if (par.masterproc) {std::cout << dom.etime << "\n";}
-    launcher.synchronizeSelf();
     io.output(state, dom, par);
   }
 

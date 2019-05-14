@@ -172,36 +172,36 @@ public:
     }
 
     // Initialize the state
-    launcher.parallelFor( dom.nz*dom.ny*dom.nx ,
-      [this] _YAKL (int iGlob, Array<real> &state, SArray<real,ord> const &gllOrdPoints, SArray<real,ord> const &gllOrdWeights, Domain const &dom, Parallel const &par, Hydrostasis &hydro) {
-        int k, j, i;
-        yakl::unpackIndices(iGlob, dom.nz, dom.ny, dom.nx, k, j, i);
-        // Initialize the state to zero
-        for (int l=0; l<numState; l++) {
-          state(l,hs+k,hs+j,hs+i) = 0;
-        }
-        // Perform ord-point GLL quadrature for the cell averages
-        for (int kk=0; kk<ord; kk++) {
-          for (int jj=0; jj<ord; jj++) {
-            for (int ii=0; ii<ord; ii++) {
-              real xloc = (par.i_beg + i + 0.5_fp)*dom.dx + gllOrdPoints(ii)*dom.dx;
-              real yloc = (par.j_beg + j + 0.5_fp)*dom.dy + gllOrdPoints(jj)*dom.dy;
-              real zloc = (k + 0.5_fp)*dom.dz + gllOrdPoints(kk)*dom.dz;
-              real const t0 = 300._fp;
-              real r, t;
+    for (int k=0; k<dom.nz; k++) {
+      for (int j=0; j<dom.ny; j++) {
+        for (int i=0; i<dom.nx; i++) {
+          // Initialize the state to zero
+          for (int l=0; l<numState; l++) {
+            state.state(l,hs+k,hs+j,hs+i) = 0;
+          }
+          // Perform ord-point GLL quadrature for the cell averages
+          for (int kk=0; kk<ord; kk++) {
+            for (int jj=0; jj<ord; jj++) {
+              for (int ii=0; ii<ord; ii++) {
+                real xloc = (par.i_beg + i + 0.5_fp)*dom.dx + gllOrdPoints(ii)*dom.dx;
+                real yloc = (par.j_beg + j + 0.5_fp)*dom.dy + gllOrdPoints(jj)*dom.dy;
+                real zloc = (k + 0.5_fp)*dom.dz + gllOrdPoints(kk)*dom.dz;
+                real const t0 = 300._fp;
+                real r, t;
 
-              if (dom.run2d) yloc = dom.ylen/2;
+                if (dom.run2d) yloc = dom.ylen/2;
 
-              hydro.hydroConstTheta( t0 , zloc , r );
-              t = ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, 2000, 2000, 2000, 2000, 2);
+                hydro.hydroConstTheta( t0 , zloc , r );
+                t = ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, 2000, 2000, 2000, 2000, 2);
 
-              real wt = gllOrdWeights(ii)*gllOrdWeights(jj)*gllOrdWeights(kk);
-              state(idRT,hs+k,hs+j,hs+i) += wt * r*t;
+                real wt = gllOrdWeights(ii)*gllOrdWeights(jj)*gllOrdWeights(kk);
+                state.state(idRT,hs+k,hs+j,hs+i) += wt * r*t;
+              }
             }
           }
         }
-      } , state.state , gllOrdPoints , gllOrdWeights , dom , par , hydro );
-    launcher.synchronizeSelf();
+      }
+    }
 
     dom.dt = 1.e12_fp;
     // Compute the time step based on the CFL value
