@@ -123,13 +123,13 @@ namespace yakl {
       Launcher() {
         target = 0;
         vectorSize = 0;
-        init(targetCPUSerial,128);
+        Launcher(targetCPUSerial,128);
       }
 
       Launcher(uint targetIn) {
         target = 0;
         vectorSize = 0;
-        init(targetIn,128);
+        Launcher(target,128);
       }
 
       Launcher(uint targetIn, uint vectorSizeIn) {
@@ -166,7 +166,6 @@ namespace yakl {
       }
 
       template <class F, class... Args> inline void parallelFor(ulong const nIter, F &f, Args&&... args) {
-        std::cout << "Got here 1\n";
         if        (target == targetCUDA) {
           #ifdef __NVCC__
             parallelForCUDA <<< (uint) nIter/vectorSize+1 , vectorSize , 0 , myStream >>> ( nIter , f , args... );
