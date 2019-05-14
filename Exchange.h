@@ -5,6 +5,7 @@
 #include "const.h"
 #include "mpi.h"
 
+
 class Exchange {
 
 protected:
@@ -67,11 +68,11 @@ public:
     nUnpack = 0;
   }
 
+
   inline void haloPackN_x(Domain const &dom, real4d const &a, int const n) {
-    // for (int v=0; v<n; v++) {
-    //   for (int k=0; k<dom.nz; k++) {
-    //     for (int j=0; j<dom.ny; j++) {
-    //       for (int ii=0; ii<hs; ii++) {
+    haloPackN_x_ext(dom,a,n,haloSendBufW,haloSendBufE,nPack);
+  }
+  inline void haloPackN_x_ext(Domain const &dom, real4d const &a, int const n, real4d &haloSendBufW, real4d &haloSendBufE, int &nPack) {
     Kokkos::parallel_for( n*dom.nz*dom.ny*hs , KOKKOS_LAMBDA (int iGlob) {
       int v, k, j, ii;
       unpackIndices(iGlob,n,dom.nz,dom.ny,hs,v,k,j,ii);
@@ -83,10 +84,9 @@ public:
 
 
   inline void haloPackN_y(Domain const &dom, real4d const &a, int const n) {
-    // for (int v=0; v<n; v++) {
-    //   for (int k=0; k<dom.nz; k++) {
-    //     for (int ii=0; ii<hs; ii++) {
-    //       for (int i=0; i<dom.nx; i++) {
+    haloPackN_y_ext(dom,a,n,haloSendBufS,haloSendBufN,nPack);
+  }
+  inline void haloPackN_y_ext(Domain const &dom, real4d const &a, int const n, real4d &haloSendBufS, real4d &haloSendBufN, int &nPack) {
     Kokkos::parallel_for( n*dom.nz*hs*dom.nx , KOKKOS_LAMBDA (int iGlob) {
       int v, k, ii, i;
       unpackIndices(iGlob,n,dom.nz,hs,dom.nx,v,k,ii,i);
@@ -97,37 +97,10 @@ public:
   }
 
 
-  // inline void haloPack1_x(Domain const &dom, real3d const &a) {
-  //   for (int k=0; k<dom.nz; k++) {
-  //     for (int j=0; j<dom.ny; j++) {
-  //       for (int ii=0; ii<hs; ii++) {
-  //         haloSendBufW(nPack,k,j,ii) = a(hs+k,hs+j,hs    +ii);
-  //         haloSendBufE(nPack,k,j,ii) = a(hs+k,hs+j,dom.nx+ii);
-  //       }
-  //     }
-  //   }
-  //   nPack = nPack + 1;
-  // }
-
-
-  // inline void haloPack1_y(Domain const &dom, real3d const &a) {
-  //   for (int k=0; k<dom.nz; k++) {
-  //     for (int ii=0; ii<hs; ii++) {
-  //       for (int i=0; i<dom.nx; i++) {
-  //         haloSendBufS(nPack,k,ii,i) = a(hs+k,hs    +ii,hs+i);
-  //         haloSendBufN(nPack,k,ii,i) = a(hs+k,dom.ny+ii,hs+i);
-  //       }
-  //     }
-  //   }
-  //   nPack = nPack + 1;
-  // }
-
-
   inline void haloUnpackN_x(Domain const &dom, real4d &a, int const n) {
-    // for (int v=0; v<n; v++) {
-    //   for (int k=0; k<dom.nz; k++) {
-    //     for (int j=0; j<dom.ny; j++) {
-    //       for (int ii=0; ii<hs; ii++) {
+    haloUnpackN_x_ext(dom, a, n, haloRecvBufW, haloRecvBufE, nUnpack);
+  }
+  inline void haloUnpackN_x_ext(Domain const &dom, real4d &a, int const n, real4d const &haloRecvBufW, real4d const &haloRecvBufE, int &nUnpack) {
     Kokkos::parallel_for( n*dom.nz*dom.ny*hs , KOKKOS_LAMBDA (int iGlob) {
       int v, k, j, ii;
       unpackIndices(iGlob,n,dom.nz,dom.ny,hs,v,k,j,ii);
@@ -139,10 +112,9 @@ public:
 
 
   inline void haloUnpackN_y(Domain const &dom, real4d &a, int const n) {
-    // for (int v=0; v<n; v++) {
-    //   for (int k=0; k<dom.nz; k++) {
-    //     for (int ii=0; ii<hs; ii++) {
-    //       for (int i=0; i<dom.nx; i++) {
+    haloUnpackN_y_ext(dom, a, n, haloRecvBufS, haloRecvBufN, nUnpack);
+  }
+  inline void haloUnpackN_y_ext(Domain const &dom, real4d &a, int const n, real4d const &haloRecvBufS, real4d const &haloRecvBufN, int &nUnpack) {
     Kokkos::parallel_for( n*dom.nz*hs*dom.nx , KOKKOS_LAMBDA (int iGlob) {
       int v, k, ii, i;
       unpackIndices(iGlob,n,dom.nz,hs,dom.nx,v,k,ii,i);
@@ -151,32 +123,6 @@ public:
     });
     nUnpack = nUnpack + n;
   }
-
-
-  // inline void haloUnpack1_x(Domain const &dom, real3d &a) {
-  //   for (int k=0; k<dom.nz; k++) {
-  //     for (int j=0; j<dom.ny; j++) {
-  //       for (int ii=0; ii<hs; ii++) {
-  //         a(hs+k,hs+j,          ii) = haloRecvBufW(nUnpack,k,j,ii);
-  //         a(hs+k,hs+j,dom.nx+hs+ii) = haloRecvBufE(nUnpack,k,j,ii);
-  //       }
-  //     }
-  //   }
-  //   nUnpack = nUnpack + 1;
-  // }
-
-
-  // inline void haloUnpack1_y(Domain const &dom, real3d &a) {
-  //   for (int k=0; k<dom.nz; k++) {
-  //     for (int ii=0; ii<hs; ii++) {
-  //       for (int i=0; i<dom.nx; i++) {
-  //         a(hs+k,          ii,hs+i) = haloRecvBufS(nUnpack,k,ii,i);
-  //         a(hs+k,dom.ny+hs+ii,hs+i) = haloRecvBufN(nUnpack,k,ii,i);
-  //       }
-  //     }
-  //   }
-  //   nUnpack = nUnpack + 1;
-  // }
 
 
   inline void haloExchange_x(Domain const &dom, Parallel const &par) {

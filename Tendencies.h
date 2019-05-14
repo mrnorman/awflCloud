@@ -454,10 +454,13 @@ public :
   inline void compEulerTendADER_X(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
                                   Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
     //Exchange halos in the x-direction
+    Kokkos::fence(); std::cout << "got here 1\n";
     exch.haloInit      ();
     exch.haloPackN_x   (dom, state, numState);
     exch.haloExchange_x(dom, par);
     exch.haloUnpackN_x (dom, state, numState);
+    Kokkos::fence(); std::cout << "got here 2\n";
+    exit(0);
 
     // Reconstruct to tord GLL points in the x-direction
     // for (int k=0; k<dom.nz; k++) {

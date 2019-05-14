@@ -124,7 +124,7 @@ public:
 
     // Initialize the hydrostatic background state for cell averages
     // for (int k=0; k<dom.nz; k++) {
-    Kokkos::parallel_for( dom.nz , KOKKOS_LAMBDA (int const k) {
+    Kokkos::parallel_for( "initHydroCells" , dom.nz , KOKKOS_LAMBDA (int const k) {
       state.hyDensCells     (hs+k) = 0;
       state.hyDensThetaCells(hs+k) = 0;
       state.hyPressureCells (hs+k) = 0;
@@ -145,7 +145,7 @@ public:
 
     // Enforce vertical boundaries
     // for (int ii=0; ii<hs; ii++) {
-    Kokkos::parallel_for( hs , KOKKOS_LAMBDA (int const ii) {
+    Kokkos::parallel_for( "boundariesHydroCells" , hs , KOKKOS_LAMBDA (int const ii) {
       state.hyDensCells     (ii) = state.hyDensCells     (hs);
       state.hyDensThetaCells(ii) = state.hyDensThetaCells(hs);
       state.hyPressureCells (ii) = state.hyPressureCells (hs);
@@ -158,7 +158,7 @@ public:
     // Perform ord-point GLL quadrature for the cell averages
     // for (int k=0; k<dom.nz; k++) {
     //   for (int kk=0; kk<tord; kk++) {
-    Kokkos::parallel_for( dom.nz*tord , KOKKOS_LAMBDA (int const iGlob) {
+    Kokkos::parallel_for( "initHydroGLL" , dom.nz*tord , KOKKOS_LAMBDA (int const iGlob) {
       int k, kk;
       unpackIndices(iGlob,dom.nz,tord,k,kk);
       real zloc = (k + 0.5_fp)*dom.dz + gllTordPoints(kk)*dom.dz;
@@ -177,7 +177,7 @@ public:
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    Kokkos::parallel_for( "InitFluidState" , dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
       int k, j, i;
       unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       // Initialize the state to zero
@@ -211,7 +211,7 @@ public:
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    Kokkos::parallel_for( "Compute_dt3d" , dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
       int k, j, i;
       unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       // Grab state variables
@@ -232,7 +232,7 @@ public:
     });
 
     dom.dt = 1.e12_fp;
-    Kokkos::parallel_reduce( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob, real &dt) {
+    Kokkos::parallel_reduce( "ReduceTimeStep" , dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob, real &dt) {
       int k, j, i;
       unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       dt = min(dt,dt3d(k,j,i));
