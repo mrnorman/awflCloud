@@ -3,7 +3,6 @@
 #define _FILEIO_H_
 
 #include "const.h"
-#include "Array.h"
 #include "State.h"
 #include "pnetcdf.h"
 #include "mpi.h"
@@ -22,9 +21,9 @@ public:
   void outputInit(State &state, Domain const &dom, Parallel const &par) {
     int dimids[4];
     MPI_Offset st[1], ct[1];
-    Array<real> xCoord(dom.nx);
-    Array<real> yCoord(dom.ny);
-    Array<real> zCoord(dom.nz);
+    real1d xCoord("xCoord",dom.nx);
+    real1d yCoord("yCoord",dom.ny);
+    real1d zCoord("zCoord",dom.nz);
 
     numOut = 0;
 
@@ -70,20 +69,20 @@ public:
     // Write out x, y, and z coordinates
     st[0] = par.i_beg;
     ct[0] = dom.nx;
-    ncwrap( ncmpi_put_vara_float_all( ncid , xVar , st , ct , xCoord.get_data() ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_float_all( ncid , xVar , st , ct , xCoord.data() ) , __LINE__ );
     st[0] = par.j_beg;
     ct[0] = dom.ny;
-    ncwrap( ncmpi_put_vara_float_all( ncid , yVar , st , ct , yCoord.get_data() ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_float_all( ncid , yVar , st , ct , yCoord.data() ) , __LINE__ );
 
     // Write out the hydrostatic background states and z coordinates
     st[0] = 0;
     ct[0] = dom.nz_glob;
     ncwrap( ncmpi_begin_indep_data(ncid) , __LINE__ );
-    ncwrap( ncmpi_put_vara_float( ncid , zVar    , st , ct , zCoord.get_data() ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_float( ncid , zVar    , st , ct , zCoord.data() ) , __LINE__ );
     for (int k=0; k<dom.nz; k++) { zCoord(k) = state.hyDensCells     (hs+k); }
-    ncwrap( ncmpi_put_vara_float( ncid , hyrVar  , st , ct , zCoord.get_data() ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_float( ncid , hyrVar  , st , ct , zCoord.data() ) , __LINE__ );
     for (int k=0; k<dom.nz; k++) { zCoord(k) = state.hyDensThetaCells(hs+k); }
-    ncwrap( ncmpi_put_vara_float( ncid , hyrtVar , st , ct , zCoord.get_data() ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_float( ncid , hyrtVar , st , ct , zCoord.data() ) , __LINE__ );
     ncwrap( ncmpi_end_indep_data(ncid) , __LINE__ );
 
     writeState(state, dom, par);
@@ -97,9 +96,6 @@ public:
   void output(State &state, Domain const &dom, Parallel const &par) {
     int dimids[4];
     MPI_Offset st[1], ct[1];
-    Array<real> xCoord(dom.nx);
-    Array<real> yCoord(dom.ny);
-    Array<real> zCoord(dom.nz);
 
     outTimer += dom.dt;
     if (outTimer < outFreq) {
@@ -126,7 +122,7 @@ public:
 
 
   void writeState(State &state, Domain const &dom, Parallel const &par) {
-    Array<real> data(dom.nz,dom.ny,dom.nx);
+    real3d data("data",dom.nz,dom.ny,dom.nx);
     MPI_Offset st[4], ct[4];
 
     st[0] = numOut; st[1] = 0     ; st[2] = par.j_beg; st[3] = par.i_beg;
@@ -140,7 +136,7 @@ public:
         }
       }
     }
-    ncwrap( ncmpi_put_vara_float_all( ncid , rVar , st , ct , data.get_data() ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_float_all( ncid , rVar , st , ct , data.data() ) , __LINE__ );
 
     // Write out u wind
     for (int k=0; k<dom.nz; k++) {
@@ -150,7 +146,7 @@ public:
         }
       }
     }
-    ncwrap( ncmpi_put_vara_float_all( ncid , uVar , st , ct , data.get_data() ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_float_all( ncid , uVar , st , ct , data.data() ) , __LINE__ );
 
     // Write out v wind
     for (int k=0; k<dom.nz; k++) {
@@ -160,7 +156,7 @@ public:
         }
       }
     }
-    ncwrap( ncmpi_put_vara_float_all( ncid , vVar , st , ct , data.get_data() ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_float_all( ncid , vVar , st , ct , data.data() ) , __LINE__ );
 
     // Write out w wind
     for (int k=0; k<dom.nz; k++) {
@@ -170,7 +166,7 @@ public:
         }
       }
     }
-    ncwrap( ncmpi_put_vara_float_all( ncid , wVar , st , ct , data.get_data() ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_float_all( ncid , wVar , st , ct , data.data() ) , __LINE__ );
 
     // Write out potential temperature perturbations
     for (int k=0; k<dom.nz; k++) {
@@ -182,7 +178,7 @@ public:
         }
       }
     }
-    ncwrap( ncmpi_put_vara_float_all( ncid , thVar , st , ct , data.get_data() ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_float_all( ncid , thVar , st , ct , data.data() ) , __LINE__ );
 
     // Write out perturbation pressure
     for (int k=0; k<dom.nz; k++) {
@@ -193,7 +189,7 @@ public:
         }
       }
     }
-    ncwrap( ncmpi_put_vara_float_all( ncid , pVar , st , ct , data.get_data() ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_float_all( ncid , pVar , st , ct , data.data() ) , __LINE__ );
   }
 
 

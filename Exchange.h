@@ -3,7 +3,6 @@
 #define _EXCHANGE_H_
 
 #include "const.h"
-#include "Array.h"
 #include "mpi.h"
 
 class Exchange {

@@ -22,3 +22,7 @@ clean:
 
 realclean: clean
 	rm -f KokkosCore_config.h KokkosCore_config.tmp libkokkos.a
+
+distclean: clean
+	rm -f KokkosCore_config.h KokkosCore_config.tmp libkokkos.a
+

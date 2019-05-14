@@ -10,7 +10,6 @@
 #include "Initializer.h"
 #include "TimeIntegrator.h"
 #include "FileIO.h"
-#include "Array.h"
 #include "Exchange.h"
 #include <Kokkos_Core.hpp>
 
