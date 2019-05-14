@@ -4,9 +4,7 @@
 
 #include "const.h"
 
-class Hydrostasis {
-
-public:
+namespace hydro {
 
   /*
     Computes the hydrostatic density (r) at the given constant
@@ -19,6 +17,6 @@ public:
     r = rt / t0;
   }
 
-};
+}
 
 #endif

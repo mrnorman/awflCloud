@@ -24,13 +24,14 @@ protected:
 public :
 
   _HOSTDEV SArray() { }
-  _HOSTDEV SArray(SArray &&in) {
-    for (int i=0; i < D0*D1*D2*D3; i++) { data[i] = in.data[i]; }
-  }
-  _HOSTDEV SArray &operator=(SArray &&in) {
-    for (int i=0; i < D0*D1*D2*D3; i++) { data[i] = in.data[i]; }
-    return *this;
-  }
+  // KOKKOS DOESN'T LIKE THESE
+  // _HOSTDEV SArray(SArray &&in) {
+  //   for (int i=0; i < D0*D1*D2*D3; i++) { data[i] = in.data[i]; }
+  // }
+  // _HOSTDEV SArray &operator=(SArray &&in) {
+  //   for (int i=0; i < D0*D1*D2*D3; i++) { data[i] = in.data[i]; }
+  //   return *this;
+  // }
   _HOSTDEV ~SArray() { }
 
   inline _HOSTDEV T &operator()(ulong const i0)       {

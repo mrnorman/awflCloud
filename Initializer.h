@@ -7,6 +7,7 @@
 #include "Exchange.h"
 #include "TransformMatrices.h"
 #include "TimeIntegrator.h"
+#include "Indexing.h"
 #include "mpi.h"
 
 
@@ -122,10 +123,9 @@ public:
     state.hyDensThetaGLL = real2d( "hyGLLRT" , dom.nz , tord );
     state.hyPressureGLL  = real2d( "hyGLLp"  , dom.nz , tord );
 
-    Hydrostasis hydro;
-
     // Initialize the hydrostatic background state for cell averages
-    for (int k=0; k<dom.nz; k++) {
+    // for (int k=0; k<dom.nz; k++) {
+    Kokkos::parallel_for( dom.nz , KOKKOS_LAMBDA (int const k) {
       state.hyDensCells     (hs+k) = 0;
       state.hyDensThetaCells(hs+k) = 0;
       state.hyPressureCells (hs+k) = 0;
@@ -135,14 +135,15 @@ public:
         real const t0 = 300._fp;
         real r, t;
 
-        hydro.hydroConstTheta( t0 , zloc , r );
+        hydro::hydroConstTheta( t0 , zloc , r );
         t = t0;
 
         state.hyDensCells     (hs+k) += gllOrdWeights(kk) * r;
         state.hyDensThetaCells(hs+k) += gllOrdWeights(kk) * r*t;
         state.hyPressureCells (hs+k) += gllOrdWeights(kk) * mypow( r*t , GAMMA );
       }
-    }
+    });
+    Kokkos::fence();
 
     // Enforce vertical boundaries
     for (int ii=0; ii<hs; ii++) {
@@ -155,80 +156,91 @@ public:
     }
 
     // Initialize the hydrostatic background state for GLL points
-    for (int k=0; k<dom.nz; k++) {
-      // Perform ord-point GLL quadrature for the cell averages
-      for (int kk=0; kk<tord; kk++) {
-        real zloc = (k + 0.5_fp)*dom.dz + gllTordPoints(kk)*dom.dz;
-        real const t0 = 300._fp;
-        real r, t;
+    // Perform ord-point GLL quadrature for the cell averages
+    // for (int k=0; k<dom.nz; k++) {
+    //   for (int kk=0; kk<tord; kk++) {
+    Kokkos::parallel_for( dom.nz*tord , KOKKOS_LAMBDA (int const iGlob) {
+      int k, kk;
+      unpackIndices(iGlob,dom.nz,tord,k,kk);
+      real zloc = (k + 0.5_fp)*dom.dz + gllTordPoints(kk)*dom.dz;
+      real const t0 = 300._fp;
+      real r, t;
 
-        hydro.hydroConstTheta( t0 , zloc , r );
-        t = t0;
+      hydro::hydroConstTheta( t0 , zloc , r );
+      t = t0;
 
-        state.hyDensGLL     (k,kk) = r;
-        state.hyDensThetaGLL(k,kk) = r*t;
-        state.hyPressureGLL (k,kk) = mypow( r*t , GAMMA );
-      }
-    }
+      state.hyDensGLL     (k,kk) = r;
+      state.hyDensThetaGLL(k,kk) = r*t;
+      state.hyPressureGLL (k,kk) = mypow( r*t , GAMMA );
+    });
 
     // Initialize the state
-    for (int k=0; k<dom.nz; k++) {
-      for (int j=0; j<dom.ny; j++) {
-        for (int i=0; i<dom.nx; i++) {
-          // Initialize the state to zero
-          for (int l=0; l<numState; l++) {
-            state.state(l,hs+k,hs+j,hs+i) = 0;
-          }
-          // Perform ord-point GLL quadrature for the cell averages
-          for (int kk=0; kk<ord; kk++) {
-            for (int jj=0; jj<ord; jj++) {
-              for (int ii=0; ii<ord; ii++) {
-                real xloc = (par.i_beg + i + 0.5_fp)*dom.dx + gllOrdPoints(ii)*dom.dx;
-                real yloc = (par.j_beg + j + 0.5_fp)*dom.dy + gllOrdPoints(jj)*dom.dy;
-                real zloc = (k + 0.5_fp)*dom.dz + gllOrdPoints(kk)*dom.dz;
-                real const t0 = 300._fp;
-                real r, t;
+    // for (int k=0; k<dom.nz; k++) {
+    //   for (int j=0; j<dom.ny; j++) {
+    //     for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      // Initialize the state to zero
+      for (int l=0; l<numState; l++) {
+        state.state(l,hs+k,hs+j,hs+i) = 0;
+      }
+      // Perform ord-point GLL quadrature for the cell averages
+      for (int kk=0; kk<ord; kk++) {
+        for (int jj=0; jj<ord; jj++) {
+          for (int ii=0; ii<ord; ii++) {
+            real xloc = (par.i_beg + i + 0.5_fp)*dom.dx + gllOrdPoints(ii)*dom.dx;
+            real yloc = (par.j_beg + j + 0.5_fp)*dom.dy + gllOrdPoints(jj)*dom.dy;
+            real zloc = (k + 0.5_fp)*dom.dz + gllOrdPoints(kk)*dom.dz;
+            real const t0 = 300._fp;
+            real r, t;
 
-                if (dom.run2d) yloc = dom.ylen/2;
+            if (dom.run2d) yloc = dom.ylen/2;
 
-                hydro.hydroConstTheta( t0 , zloc , r );
-                t = ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, 2000, 2000, 2000, 2000, 2);
+            hydro::hydroConstTheta( t0 , zloc , r );
+            t = ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, 2000, 2000, 2000, 2000, 2);
 
-                real wt = gllOrdWeights(ii)*gllOrdWeights(jj)*gllOrdWeights(kk);
-                state.state(idRT,hs+k,hs+j,hs+i) += wt * r*t;
-              }
-            }
+            real wt = gllOrdWeights(ii)*gllOrdWeights(jj)*gllOrdWeights(kk);
+            state.state(idRT,hs+k,hs+j,hs+i) += wt * r*t;
           }
         }
       }
-    }
+    });
+
+    real3d dt3d("dt3d",dom.nz,dom.ny,dom.nx);
+    // Compute the time step based on the CFL value
+    // for (int k=0; k<dom.nz; k++) {
+    //   for (int j=0; j<dom.ny; j++) {
+    //     for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      // Grab state variables
+      real r = state.state(idR ,hs+k,hs+j,hs+i) + state.hyDensCells(hs+k);
+      real u = state.state(idRU,hs+k,hs+j,hs+i) / r;
+      real v = state.state(idRV,hs+k,hs+j,hs+i) / r;
+      real w = state.state(idRW,hs+k,hs+j,hs+i) / r;
+      real t = ( state.state(idRT,hs+k,hs+j,hs+i) + state.hyDensThetaCells(hs+k) ) / r;
+      real p = C0 * mypow( r*t , GAMMA );
+      real cs = mysqrt( GAMMA * p / r );
+
+      // Compute the max wave
+      real maxWave = max( max( myfabs(u) , myfabs(v)) , myfabs(w)) + cs;
+
+      // Compute the time step
+      real mindx = min( min(dom.dx,dom.dy) , dom.dz);
+      dt3d(k,j,i) = dom.cfl * mindx / maxWave;
+    });
 
     dom.dt = 1.e12_fp;
-    // Compute the time step based on the CFL value
-    for (int k=0; k<dom.nz; k++) {
-      for (int j=0; j<dom.ny; j++) {
-        for (int i=0; i<dom.nx; i++) {
-          // Grab state variables
-          real r = state.state(idR ,hs+k,hs+j,hs+i) + state.hyDensCells(hs+k);
-          real u = state.state(idRU,hs+k,hs+j,hs+i) / r;
-          real v = state.state(idRV,hs+k,hs+j,hs+i) / r;
-          real w = state.state(idRW,hs+k,hs+j,hs+i) / r;
-          real t = ( state.state(idRT,hs+k,hs+j,hs+i) + state.hyDensThetaCells(hs+k) ) / r;
-          real p = C0 * mypow( r*t , GAMMA );
-          real cs = mysqrt( GAMMA * p / r );
-
-          // Compute the max wave
-          real maxWave = max( max( myfabs(u) , myfabs(v)) , myfabs(w)) + cs;
-
-          // Compute the time step
-          dom.dt = min( dom.dt , dom.cfl * dom.dx / maxWave );
-        }
-      }
-    }
+    Kokkos::parallel_reduce( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob, real &dt) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      dt = min(dt,dt3d(k,j,i));
+    } , Kokkos::Min<real>(dom.dt) );
 
     real dtloc = dom.dt;
     ierr = MPI_Allreduce(&dtloc, &dom.dt, 1, MPI_REAL , MPI_MIN, MPI_COMM_WORLD);
-
 
     if (par.masterproc) {
       std::cout << "dx: " << dom.dx << "\n";

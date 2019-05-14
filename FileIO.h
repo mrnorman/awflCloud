@@ -5,6 +5,7 @@
 #include "const.h"
 #include "State.h"
 #include "pnetcdf.h"
+#include "Indexing.h"
 #include "mpi.h"
 
 class FileIO {
@@ -62,9 +63,18 @@ public:
     ncwrap( ncmpi_enddef( ncid ) , __LINE__ );
 
     // Compute x, y, and z coordinates
-    for (int i=0; i<dom.nx; i++) { xCoord(i) = ( par.i_beg + i + 0.5_fp ) * dom.dx; }
-    for (int j=0; j<dom.ny; j++) { yCoord(j) = ( par.j_beg + j + 0.5_fp ) * dom.dy; }
-    for (int k=0; k<dom.nz; k++) { zCoord(k) = (             k + 0.5_fp ) * dom.dz; }
+    // for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.nx , KOKKOS_LAMBDA (int const i) {
+      xCoord(i) = ( par.i_beg + i + 0.5_fp ) * dom.dx;
+    });
+    // for (int j=0; j<dom.ny; j++) {
+    Kokkos::parallel_for( dom.ny , KOKKOS_LAMBDA (int const j) {
+      yCoord(j) = ( par.j_beg + j + 0.5_fp ) * dom.dy;
+    });
+    // for (int k=0; k<dom.nz; k++) {
+    Kokkos::parallel_for( dom.nz , KOKKOS_LAMBDA (int const k) {
+      zCoord(k) = (             k + 0.5_fp ) * dom.dz;
+    });
 
     // Write out x, y, and z coordinates
     st[0] = par.i_beg;
@@ -79,9 +89,15 @@ public:
     ct[0] = dom.nz_glob;
     ncwrap( ncmpi_begin_indep_data(ncid) , __LINE__ );
     ncwrap( ncmpi_put_vara_float( ncid , zVar    , st , ct , zCoord.data() ) , __LINE__ );
-    for (int k=0; k<dom.nz; k++) { zCoord(k) = state.hyDensCells     (hs+k); }
+    // for (int k=0; k<dom.nz; k++) {
+    Kokkos::parallel_for( dom.nz , KOKKOS_LAMBDA (int const k) {
+      zCoord(k) = state.hyDensCells     (hs+k);
+    });
     ncwrap( ncmpi_put_vara_float( ncid , hyrVar  , st , ct , zCoord.data() ) , __LINE__ );
-    for (int k=0; k<dom.nz; k++) { zCoord(k) = state.hyDensThetaCells(hs+k); }
+    // for (int k=0; k<dom.nz; k++) {
+    Kokkos::parallel_for( dom.nz , KOKKOS_LAMBDA (int const k) {
+      zCoord(k) = state.hyDensThetaCells(hs+k);
+    });
     ncwrap( ncmpi_put_vara_float( ncid , hyrtVar , st , ct , zCoord.data() ) , __LINE__ );
     ncwrap( ncmpi_end_indep_data(ncid) , __LINE__ );
 
@@ -129,66 +145,72 @@ public:
     ct[0] = 1     ; ct[1] = dom.nz; ct[2] = dom.ny   ; ct[3] = dom.nx   ;
 
     // Write out density perturbation
-    for (int k=0; k<dom.nz; k++) {
-      for (int j=0; j<dom.ny; j++) {
-        for (int i=0; i<dom.nx; i++) {
-          data(k,j,i) = state.state(idR,hs+k,hs+j,hs+i);
-        }
-      }
-    }
+    // for (int k=0; k<dom.nz; k++) {
+    //   for (int j=0; j<dom.ny; j++) {
+    //     for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      data(k,j,i) = state.state(idR,hs+k,hs+j,hs+i);
+    });
     ncwrap( ncmpi_put_vara_float_all( ncid , rVar , st , ct , data.data() ) , __LINE__ );
 
     // Write out u wind
-    for (int k=0; k<dom.nz; k++) {
-      for (int j=0; j<dom.ny; j++) {
-        for (int i=0; i<dom.nx; i++) {
-          data(k,j,i) = state.state(idRU,hs+k,hs+j,hs+i) / ( state.state(idR,hs+k,hs+j,hs+i) + state.hyDensCells(hs+k) );
-        }
-      }
-    }
+    // for (int k=0; k<dom.nz; k++) {
+    //   for (int j=0; j<dom.ny; j++) {
+    //     for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      data(k,j,i) = state.state(idRU,hs+k,hs+j,hs+i) / ( state.state(idR,hs+k,hs+j,hs+i) + state.hyDensCells(hs+k) );
+    });
     ncwrap( ncmpi_put_vara_float_all( ncid , uVar , st , ct , data.data() ) , __LINE__ );
 
     // Write out v wind
-    for (int k=0; k<dom.nz; k++) {
-      for (int j=0; j<dom.ny; j++) {
-        for (int i=0; i<dom.nx; i++) {
-          data(k,j,i) = state.state(idRV,hs+k,hs+j,hs+i) / ( state.state(idR,hs+k,hs+j,hs+i) + state.hyDensCells(hs+k) );
-        }
-      }
-    }
+    // for (int k=0; k<dom.nz; k++) {
+    //   for (int j=0; j<dom.ny; j++) {
+    //     for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      data(k,j,i) = state.state(idRV,hs+k,hs+j,hs+i) / ( state.state(idR,hs+k,hs+j,hs+i) + state.hyDensCells(hs+k) );
+    });
     ncwrap( ncmpi_put_vara_float_all( ncid , vVar , st , ct , data.data() ) , __LINE__ );
 
     // Write out w wind
-    for (int k=0; k<dom.nz; k++) {
-      for (int j=0; j<dom.ny; j++) {
-        for (int i=0; i<dom.nx; i++) {
-          data(k,j,i) = state.state(idRW,hs+k,hs+j,hs+i) / ( state.state(idR,hs+k,hs+j,hs+i) + state.hyDensCells(hs+k) );
-        }
-      }
-    }
+    // for (int k=0; k<dom.nz; k++) {
+    //   for (int j=0; j<dom.ny; j++) {
+    //     for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      data(k,j,i) = state.state(idRW,hs+k,hs+j,hs+i) / ( state.state(idR,hs+k,hs+j,hs+i) + state.hyDensCells(hs+k) );
+    });
     ncwrap( ncmpi_put_vara_float_all( ncid , wVar , st , ct , data.data() ) , __LINE__ );
 
     // Write out potential temperature perturbations
-    for (int k=0; k<dom.nz; k++) {
-      for (int j=0; j<dom.ny; j++) {
-        for (int i=0; i<dom.nx; i++) {
-          data(k,j,i) = ( state.state(idRT,hs+k,hs+j,hs+i) + state.hyDensThetaCells(hs+k) ) /
-                        ( state.state(idR ,hs+k,hs+j,hs+i) + state.hyDensCells     (hs+k) ) -
-                        state.hyDensThetaCells(hs+k) / state.hyDensCells(hs+k);
-        }
-      }
-    }
+    // for (int k=0; k<dom.nz; k++) {
+    //   for (int j=0; j<dom.ny; j++) {
+    //     for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      data(k,j,i) = ( state.state(idRT,hs+k,hs+j,hs+i) + state.hyDensThetaCells(hs+k) ) /
+                    ( state.state(idR ,hs+k,hs+j,hs+i) + state.hyDensCells     (hs+k) ) -
+                    state.hyDensThetaCells(hs+k) / state.hyDensCells(hs+k);
+    });
     ncwrap( ncmpi_put_vara_float_all( ncid , thVar , st , ct , data.data() ) , __LINE__ );
 
     // Write out perturbation pressure
-    for (int k=0; k<dom.nz; k++) {
-      for (int j=0; j<dom.ny; j++) {
-        for (int i=0; i<dom.nx; i++) {
-          data(k,j,i) = C0*mypow(state.state(idRT,hs+k,hs+j,hs+i)+state.hyDensThetaCells(hs+k),GAMMA) -
-                        C0*mypow(state.hyDensThetaCells(hs+k),GAMMA);
-        }
-      }
-    }
+    // for (int k=0; k<dom.nz; k++) {
+    //   for (int j=0; j<dom.ny; j++) {
+    //     for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      data(k,j,i) = C0*mypow(state.state(idRT,hs+k,hs+j,hs+i)+state.hyDensThetaCells(hs+k),GAMMA) -
+                    C0*mypow(state.hyDensThetaCells(hs+k),GAMMA);
+    });
     ncwrap( ncmpi_put_vara_float_all( ncid , pVar , st , ct , data.data() ) , __LINE__ );
   }
 
