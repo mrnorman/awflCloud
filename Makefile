@@ -1,5 +1,5 @@
 
-CC := nvcc --expt-extended-lambda -x cu -ccbin ${OLCF_SPECTRUM_MPI_ROOT}/bin/mpic++
+CC := nvcc -x cu -ccbin ${OLCF_SPECTRUM_MPI_ROOT}/bin/mpic++
 # CFLAGS := -DARRAY_DEBUG -O1 -g -I${PNETCDF_PATH}/include
 CFLAGS := -O3 -I${PNETCDF_PATH}/include
 LDFLAGS := -L${PNETCDF_PATH}/lib -lpnetcdf

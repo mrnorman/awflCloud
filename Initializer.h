@@ -109,7 +109,7 @@ public:
     tint.initialize(dom);
 
     // Allocate the MPI exchange buffers
-    exch.initialize(dom);
+    exch.allocate(dom);
 
     // Allocate the fluid state variable
     state.state.setup( numState , dom.nz+2*hs , dom.ny+2*hs , dom.nx+2*hs );
