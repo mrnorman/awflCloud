@@ -68,115 +68,115 @@ public:
   }
 
   inline void haloPackN_x(Domain const &dom, real4d const &a, int const n) {
-    for (int v=0; v<n; v++) {
-      for (int k=0; k<dom.nz; k++) {
-        for (int j=0; j<dom.ny; j++) {
-          for (int ii=0; ii<hs; ii++) {
-            haloSendBufW(nPack+v,k,j,ii) = a(v,hs+k,hs+j,hs    +ii);
-            haloSendBufE(nPack+v,k,j,ii) = a(v,hs+k,hs+j,dom.nx+ii);
-          }
-        }
-      }
-    }
+    // for (int v=0; v<n; v++) {
+    //   for (int k=0; k<dom.nz; k++) {
+    //     for (int j=0; j<dom.ny; j++) {
+    //       for (int ii=0; ii<hs; ii++) {
+    Kokkos::parallel_for( n*dom.nz*dom.ny*hs , KOKKOS_LAMBDA (int iGlob) {
+      int v, k, j, ii;
+      unpackIndices(iGlob,n,dom.nz,dom.ny,hs,v,k,j,ii);
+      haloSendBufW(nPack+v,k,j,ii) = a(v,hs+k,hs+j,hs    +ii);
+      haloSendBufE(nPack+v,k,j,ii) = a(v,hs+k,hs+j,dom.nx+ii);
+    });
     nPack = nPack + n;
   }
 
 
   inline void haloPackN_y(Domain const &dom, real4d const &a, int const n) {
-    for (int v=0; v<n; v++) {
-      for (int k=0; k<dom.nz; k++) {
-        for (int ii=0; ii<hs; ii++) {
-          for (int i=0; i<dom.nx; i++) {
-            haloSendBufS(nPack+v,k,ii,i) = a(v,hs+k,hs    +ii,hs+i);
-            haloSendBufN(nPack+v,k,ii,i) = a(v,hs+k,dom.ny+ii,hs+i);
-          }
-        }
-      }
-    }
+    // for (int v=0; v<n; v++) {
+    //   for (int k=0; k<dom.nz; k++) {
+    //     for (int ii=0; ii<hs; ii++) {
+    //       for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( n*dom.nz*hs*dom.nx , KOKKOS_LAMBDA (int iGlob) {
+      int v, k, ii, i;
+      unpackIndices(iGlob,n,dom.nz,hs,dom.nx,v,k,ii,i);
+      haloSendBufS(nPack+v,k,ii,i) = a(v,hs+k,hs    +ii,hs+i);
+      haloSendBufN(nPack+v,k,ii,i) = a(v,hs+k,dom.ny+ii,hs+i);
+    });
     nPack = nPack + n;
   }
 
 
-  inline void haloPack1_x(Domain const &dom, real3d const &a) {
-    for (int k=0; k<dom.nz; k++) {
-      for (int j=0; j<dom.ny; j++) {
-        for (int ii=0; ii<hs; ii++) {
-          haloSendBufW(nPack,k,j,ii) = a(hs+k,hs+j,hs    +ii);
-          haloSendBufE(nPack,k,j,ii) = a(hs+k,hs+j,dom.nx+ii);
-        }
-      }
-    }
-    nPack = nPack + 1;
-  }
+  // inline void haloPack1_x(Domain const &dom, real3d const &a) {
+  //   for (int k=0; k<dom.nz; k++) {
+  //     for (int j=0; j<dom.ny; j++) {
+  //       for (int ii=0; ii<hs; ii++) {
+  //         haloSendBufW(nPack,k,j,ii) = a(hs+k,hs+j,hs    +ii);
+  //         haloSendBufE(nPack,k,j,ii) = a(hs+k,hs+j,dom.nx+ii);
+  //       }
+  //     }
+  //   }
+  //   nPack = nPack + 1;
+  // }
 
 
-  inline void haloPack1_y(Domain const &dom, real3d const &a) {
-    for (int k=0; k<dom.nz; k++) {
-      for (int ii=0; ii<hs; ii++) {
-        for (int i=0; i<dom.nx; i++) {
-          haloSendBufS(nPack,k,ii,i) = a(hs+k,hs    +ii,hs+i);
-          haloSendBufN(nPack,k,ii,i) = a(hs+k,dom.ny+ii,hs+i);
-        }
-      }
-    }
-    nPack = nPack + 1;
-  }
+  // inline void haloPack1_y(Domain const &dom, real3d const &a) {
+  //   for (int k=0; k<dom.nz; k++) {
+  //     for (int ii=0; ii<hs; ii++) {
+  //       for (int i=0; i<dom.nx; i++) {
+  //         haloSendBufS(nPack,k,ii,i) = a(hs+k,hs    +ii,hs+i);
+  //         haloSendBufN(nPack,k,ii,i) = a(hs+k,dom.ny+ii,hs+i);
+  //       }
+  //     }
+  //   }
+  //   nPack = nPack + 1;
+  // }
 
 
   inline void haloUnpackN_x(Domain const &dom, real4d &a, int const n) {
-    for (int v=0; v<n; v++) {
-      for (int k=0; k<dom.nz; k++) {
-        for (int j=0; j<dom.ny; j++) {
-          for (int ii=0; ii<hs; ii++) {
-            a(v,hs+k,hs+j,          ii) = haloRecvBufW(nUnpack+v,k,j,ii);
-            a(v,hs+k,hs+j,dom.nx+hs+ii) = haloRecvBufE(nUnpack+v,k,j,ii);
-          }
-        }
-      }
-    }
+    // for (int v=0; v<n; v++) {
+    //   for (int k=0; k<dom.nz; k++) {
+    //     for (int j=0; j<dom.ny; j++) {
+    //       for (int ii=0; ii<hs; ii++) {
+    Kokkos::parallel_for( n*dom.nz*dom.ny*hs , KOKKOS_LAMBDA (int iGlob) {
+      int v, k, j, ii;
+      unpackIndices(iGlob,n,dom.nz,dom.ny,hs,v,k,j,ii);
+      a(v,hs+k,hs+j,          ii) = haloRecvBufW(nUnpack+v,k,j,ii);
+      a(v,hs+k,hs+j,dom.nx+hs+ii) = haloRecvBufE(nUnpack+v,k,j,ii);
+    });
     nUnpack = nUnpack + n;
   }
 
 
   inline void haloUnpackN_y(Domain const &dom, real4d &a, int const n) {
-    for (int v=0; v<n; v++) {
-      for (int k=0; k<dom.nz; k++) {
-        for (int ii=0; ii<hs; ii++) {
-          for (int i=0; i<dom.nx; i++) {
-            a(v,hs+k,          ii,hs+i) = haloRecvBufS(nUnpack+v,k,ii,i);
-            a(v,hs+k,dom.ny+hs+ii,hs+i) = haloRecvBufN(nUnpack+v,k,ii,i);
-          }
-        }
-      }
-    }
+    // for (int v=0; v<n; v++) {
+    //   for (int k=0; k<dom.nz; k++) {
+    //     for (int ii=0; ii<hs; ii++) {
+    //       for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( n*dom.nz*hs*dom.nx , KOKKOS_LAMBDA (int iGlob) {
+      int v, k, ii, i;
+      unpackIndices(iGlob,n,dom.nz,hs,dom.nx,v,k,ii,i);
+      a(v,hs+k,          ii,hs+i) = haloRecvBufS(nUnpack+v,k,ii,i);
+      a(v,hs+k,dom.ny+hs+ii,hs+i) = haloRecvBufN(nUnpack+v,k,ii,i);
+    });
     nUnpack = nUnpack + n;
   }
 
 
-  inline void haloUnpack1_x(Domain const &dom, real3d &a) {
-    for (int k=0; k<dom.nz; k++) {
-      for (int j=0; j<dom.ny; j++) {
-        for (int ii=0; ii<hs; ii++) {
-          a(hs+k,hs+j,          ii) = haloRecvBufW(nUnpack,k,j,ii);
-          a(hs+k,hs+j,dom.nx+hs+ii) = haloRecvBufE(nUnpack,k,j,ii);
-        }
-      }
-    }
-    nUnpack = nUnpack + 1;
-  }
+  // inline void haloUnpack1_x(Domain const &dom, real3d &a) {
+  //   for (int k=0; k<dom.nz; k++) {
+  //     for (int j=0; j<dom.ny; j++) {
+  //       for (int ii=0; ii<hs; ii++) {
+  //         a(hs+k,hs+j,          ii) = haloRecvBufW(nUnpack,k,j,ii);
+  //         a(hs+k,hs+j,dom.nx+hs+ii) = haloRecvBufE(nUnpack,k,j,ii);
+  //       }
+  //     }
+  //   }
+  //   nUnpack = nUnpack + 1;
+  // }
 
 
-  inline void haloUnpack1_y(Domain const &dom, real3d &a) {
-    for (int k=0; k<dom.nz; k++) {
-      for (int ii=0; ii<hs; ii++) {
-        for (int i=0; i<dom.nx; i++) {
-          a(hs+k,          ii,hs+i) = haloRecvBufS(nUnpack,k,ii,i);
-          a(hs+k,dom.ny+hs+ii,hs+i) = haloRecvBufN(nUnpack,k,ii,i);
-        }
-      }
-    }
-    nUnpack = nUnpack + 1;
-  }
+  // inline void haloUnpack1_y(Domain const &dom, real3d &a) {
+  //   for (int k=0; k<dom.nz; k++) {
+  //     for (int ii=0; ii<hs; ii++) {
+  //       for (int i=0; i<dom.nx; i++) {
+  //         a(hs+k,          ii,hs+i) = haloRecvBufS(nUnpack,k,ii,i);
+  //         a(hs+k,dom.ny+hs+ii,hs+i) = haloRecvBufN(nUnpack,k,ii,i);
+  //       }
+  //     }
+  //   }
+  //   nUnpack = nUnpack + 1;
+  // }
 
 
   inline void haloExchange_x(Domain const &dom, Parallel const &par) {
