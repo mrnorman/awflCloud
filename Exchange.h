@@ -214,7 +214,7 @@ public:
   }
 
 
-  inline void edgePackN_x(Domain const &dom, Array<real> const &a, int const n) {
+  inline void edgePackN_x(Domain const &dom, real5d const &a, int const n) {
     for (int v=0; v<n; v++) {
       for (int k=0; k<dom.nz; k++) {
         for (int j=0; j<dom.ny; j++) {
@@ -227,7 +227,7 @@ public:
   }
 
 
-  inline void edgePackN_y(Domain const &dom, Array<real> const &a, int const n) {
+  inline void edgePackN_y(Domain const &dom, real5d const &a, int const n) {
     for (int v=0; v<n; v++) {
       for (int k=0; k<dom.nz; k++) {
         for (int i=0; i<dom.nx; i++) {
@@ -240,7 +240,7 @@ public:
   }
 
 
-  inline void edgeUnpackN_x(Domain const &dom, Array<real> &a, int const n) {
+  inline void edgeUnpackN_x(Domain const &dom, real5d &a, int const n) {
     for (int v=0; v<n; v++) {
       for (int k=0; k<dom.nz; k++) {
         for (int j=0; j<dom.ny; j++) {
@@ -253,7 +253,7 @@ public:
   }
 
 
-  inline void edgeUnpackN_y(Domain const &dom, Array<real> &a, int const n) {
+  inline void edgeUnpackN_y(Domain const &dom, real5d &a, int const n) {
     for (int v=0; v<n; v++) {
       for (int k=0; k<dom.nz; k++) {
         for (int i=0; i<dom.nx; i++) {

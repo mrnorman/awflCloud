@@ -10,6 +10,7 @@
 #include "Array.h"
 #include "mpi.h"
 
+
 class Initializer{
 
 public:

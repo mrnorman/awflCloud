@@ -3,10 +3,18 @@
 #define _CONST_H_
 
 #include "math.h"
+#include <Kokkos_Core.hpp>
 
 typedef float         real;
 typedef unsigned long ulong;
 typedef unsigned int  uint;
+
+typedef Kokkos::View<real*     ,Kokkos::LayoutRight> real1d;
+typedef Kokkos::View<real**    ,Kokkos::LayoutRight> real2d;
+typedef Kokkos::View<real***   ,Kokkos::LayoutRight> real3d;
+typedef Kokkos::View<real****  ,Kokkos::LayoutRight> real4d;
+typedef Kokkos::View<real***** ,Kokkos::LayoutRight> real5d;
+typedef Kokkos::View<real******,Kokkos::LayoutRight> real6d;
 
 #ifdef __NVCC__
 #define _HOSTDEV __host__ __device__

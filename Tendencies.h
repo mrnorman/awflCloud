@@ -15,10 +15,10 @@
 
 class Tendencies {
 
-  Array<real> stateLimits;
-  Array<real> fluxLimits;
-  Array<real> flux;
-  Array<real> src;
+  real5d stateLimits;
+  real5d fluxLimits;
+  real4d flux;
+  real3d src;
   SArray<real,tord> gllWts;
   TransformMatrices<real> trans;
   Riemann riem;
@@ -34,10 +34,10 @@ public :
 
 
   inline void initialize(Domain const &dom) {
-    fluxLimits .setup(numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
-    stateLimits.setup(numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
-    flux       .setup(numState  ,dom.nz+1,dom.ny+1,dom.nx+1);
-    src        .setup(           dom.nz  ,dom.ny  ,dom.nx  );
+    fluxLimits  = real5d("fluxLimits",numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
+    stateLimits = real5d("srcLimits" ,numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
+    flux        = real4d("flux"      ,numState  ,dom.nz+1,dom.ny+1,dom.nx+1);
+    src         = real3d("src"       ,dom.nz,dom.ny,dom.nx);
 
     SArray<real,ord,ord,ord> to_gll_tmp;
 

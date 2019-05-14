@@ -15,7 +15,7 @@ KOKKOS_DEVICES = "Serial"
 include ${KOKKOS_PATH}/Makefile.kokkos
 
 main: $(KOKKOS_LINK_DEPENDS) $(KOKKOS_CPP_DEPENDS) driver.cpp
-	$(CXX) ${CFLAGS} $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(KOKKOS_LDFLAGS) $(KOKKOS_LIBS) driver.cpp -o cloudFV ${LDFLAGS}
+	$(CXX) ${CFLAGS} $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) driver.cpp -o cloudFV $(KOKKOS_LDFLAGS) $(KOKKOS_LIBS) ${LDFLAGS}
 
 clean:
 	rm -f *.gch *.o *.dat cloudFV
