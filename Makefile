@@ -1,11 +1,22 @@
 
-CC := mpic++
+KOKKOS_PATH = /home/imn/kokkos
+KOKKOS_SRC_PATH = ${KOKKOS_PATH}
+SRC = driver.cpp
+
+default: main
+
+CXX := mpic++
 # CFLAGS := -DARRAY_DEBUG -O1 -g -I${PNETCDF_PATH}/include
 CFLAGS := -O3 -I${PNETCDF_PATH}/include
 LDFLAGS := -L${PNETCDF_PATH}/lib -lpnetcdf
 
-all:
-	${CC} ${CFLAGS} driver.cpp -o cloudFV ${LDFLAGS}
+KOKKOS_DEVICES = "Serial"
+
+include ${KOKKOS_PATH}/Makefile.kokkos
+
+main: $(KOKKOS_LINK_DEPENDS) $(KOKKOS_CPP_DEPENDS) driver.cpp
+	$(CXX) ${CFLAGS} $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(KOKKOS_LDFLAGS) $(KOKKOS_LIBS) driver.cpp -o cloudFV ${LDFLAGS}
 
 clean:
 	rm -f *.gch *.o *.dat cloudFV
+
