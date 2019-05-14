@@ -618,86 +618,85 @@ public :
   inline void compEulerTendADER_Z(Array<real> &state, Array<real> const &hyDensGLL, Array<real> const &hyDensThetaGLL,
                                   Domain const &dom, Exchange &exch, Parallel const &par, Array<real> &tend) {
     // Boundaries for the fluid state in the z-direction
-    launcher.parallelFor( hs*dom.ny*dom.nx ,
-      [] _YAKL (int iGlob, Array<real> &state, Domain const &dom) {
-        int ii, j, i;
-        yakl::unpackIndices(iGlob, hs, dom.ny, dom.nx, ii, j, i);
-        state(idR ,ii,hs+j,hs+i) = state(idR ,hs,hs+j,hs+i);
-        state(idRU,ii,hs+j,hs+i) = state(idRU,hs,hs+j,hs+i);
-        state(idRV,ii,hs+j,hs+i) = state(idRV,hs,hs+j,hs+i);
-        state(idRW,ii,hs+j,hs+i) = 0;
-        state(idRT,ii,hs+j,hs+i) = state(idRT,hs,hs+j,hs+i);
+    for (int j=0; j<dom.ny; j++) {
+      for (int i=0; i<dom.nx; i++) {
+        for (int ii=0; ii<hs; ii++) {
+          state(idR ,ii,hs+j,hs+i) = state(idR ,hs,hs+j,hs+i);
+          state(idRU,ii,hs+j,hs+i) = state(idRU,hs,hs+j,hs+i);
+          state(idRV,ii,hs+j,hs+i) = state(idRV,hs,hs+j,hs+i);
+          state(idRW,ii,hs+j,hs+i) = 0;
+          state(idRT,ii,hs+j,hs+i) = state(idRT,hs,hs+j,hs+i);
 
-        state(idR ,dom.nz+hs+ii,hs+j,hs+i) = state(idR ,dom.nz+hs-1,hs+j,hs+i);
-        state(idRU,dom.nz+hs+ii,hs+j,hs+i) = state(idRU,dom.nz+hs-1,hs+j,hs+i);
-        state(idRV,dom.nz+hs+ii,hs+j,hs+i) = state(idRV,dom.nz+hs-1,hs+j,hs+i);
-        state(idRW,dom.nz+hs+ii,hs+j,hs+i) = 0;
-        state(idRT,dom.nz+hs+ii,hs+j,hs+i) = state(idRT,dom.nz+hs-1,hs+j,hs+i);
-      } , state , dom );
+          state(idR ,dom.nz+hs+ii,hs+j,hs+i) = state(idR ,dom.nz+hs-1,hs+j,hs+i);
+          state(idRU,dom.nz+hs+ii,hs+j,hs+i) = state(idRU,dom.nz+hs-1,hs+j,hs+i);
+          state(idRV,dom.nz+hs+ii,hs+j,hs+i) = state(idRV,dom.nz+hs-1,hs+j,hs+i);
+          state(idRW,dom.nz+hs+ii,hs+j,hs+i) = 0;
+          state(idRT,dom.nz+hs+ii,hs+j,hs+i) = state(idRT,dom.nz+hs-1,hs+j,hs+i);
+        }
+      }
+    }
 
     // Reconstruct to 2 GLL points in the x-direction
-    launcher.parallelFor( dom.nz*dom.ny*dom.nx ,
-      [this] _YAKL (int iGlob, Array<real> const &state, Array<real> const &hyDensGLL, Array<real> const &hyDensThetaGLL,
-                           Domain const &dom, Array<real> &stateLimits, Array<real> &fluxLimits, Array<real> &src, int const doWeno) {
-        int k, j, i;
-        yakl::unpackIndices(iGlob, dom.nz, dom.ny, dom.nx, k, j, i);
-        SArray<real,numState,tord,tord> stateDTs;  // GLL state values
-        SArray<real,numState,tord,tord> fluxDTs;   // GLL flux values
-        SArray<real,tord,tord> sourceDTs;   // GLL source values
-        SArray<real,tord> hyRHOT;
-        SArray<real,tord> hyRHO;
+    for (int k=0; k<dom.nz; k++) {
+      for (int j=0; j<dom.ny; j++) {
+        for (int i=0; i<dom.nx; i++) {
+          SArray<real,numState,tord,tord> stateDTs;  // GLL state values
+          SArray<real,numState,tord,tord> fluxDTs;   // GLL flux values
+          SArray<real,tord,tord> sourceDTs;   // GLL source values
+          SArray<real,tord> hyRHOT;
+          SArray<real,tord> hyRHO;
 
-        // Compute GLL points from cell averages
-        for (int l=0; l<numState; l++) {
-          SArray<real,ord> stencil;
-          SArray<real,tord> gllPts;
-          for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,k+ii,hs+j,hs+i); }
-          reconStencil(stencil,gllPts,doWeno);
-          for (int ii=0; ii<tord; ii++) { stateDTs(l,0,ii) = gllPts(ii); }
+          // Compute GLL points from cell averages
+          for (int l=0; l<numState; l++) {
+            SArray<real,ord> stencil;
+            SArray<real,tord> gllPts;
+            for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,k+ii,hs+j,hs+i); }
+            reconStencil(stencil,gllPts,doWeno);
+            for (int ii=0; ii<tord; ii++) { stateDTs(l,0,ii) = gllPts(ii); }
+          }
+          for (int ii=0; ii<tord; ii++) {
+            stateDTs(idR ,0,ii) += hyDensGLL     (k,ii);
+            stateDTs(idRT,0,ii) += hyDensThetaGLL(k,ii);
+            hyRHOT(ii) = hyDensThetaGLL(k,ii);
+            hyRHO (ii) = hyDensGLL     (k,ii);
+          }
+
+          // Boundary conditions
+          if (k == 0       ) { stateDTs(idRW,0,0     ) = 0; }
+          if (k == dom.nz-1) { stateDTs(idRW,0,tord-1) = 0; }
+
+          // Compute DTs of the state and flux, and collapse down into a time average
+          ader.diffTransformEulerZ( stateDTs , fluxDTs , sourceDTs , aderDerivZ , hyRHOT, hyRHO );
+          ader.timeAvg( stateDTs  , dom );
+          ader.timeAvg( fluxDTs   , dom );
+          ader.timeAvg( sourceDTs , dom );
+
+          // Boundary conditions
+          if (k == 0       ) { stateDTs(idRW,0,0     ) = 0; }
+          if (k == dom.nz-1) { stateDTs(idRW,0,tord-1) = 0; }
+
+          // Store state and flux limits into a globally indexed array
+          for (int l=0; l<numState; l++) {
+            // Store the left cell edge state and flux estimates
+            stateLimits(l,1,k  ,j,i) = stateDTs(l,0,0);
+            fluxLimits (l,1,k  ,j,i) = fluxDTs (l,0,0);
+
+            // Store the Right cell edge state and flux estimates
+            stateLimits(l,0,k+1,j,i) = stateDTs(l,0,tord-1);
+            fluxLimits (l,0,k+1,j,i) = fluxDTs (l,0,tord-1);
+          }
+          src(k,j,i) = 0;
+          for (int ii=0; ii<tord; ii++) {
+            src(k,j,i) += sourceDTs(0,ii) * gllWts(ii);
+          }
+
         }
-        for (int ii=0; ii<tord; ii++) {
-          stateDTs(idR ,0,ii) += hyDensGLL     (k,ii);
-          stateDTs(idRT,0,ii) += hyDensThetaGLL(k,ii);
-          hyRHOT(ii) = hyDensThetaGLL(k,ii);
-          hyRHO (ii) = hyDensGLL     (k,ii);
-        }
-
-        // Boundary conditions
-        if (k == 0       ) { stateDTs(idRW,0,0     ) = 0; }
-        if (k == dom.nz-1) { stateDTs(idRW,0,tord-1) = 0; }
-
-        // Compute DTs of the state and flux, and collapse down into a time average
-        ader.diffTransformEulerZ( stateDTs , fluxDTs , sourceDTs , aderDerivZ , hyRHOT, hyRHO );
-        ader.timeAvg( stateDTs  , dom );
-        ader.timeAvg( fluxDTs   , dom );
-        ader.timeAvg( sourceDTs , dom );
-
-        // Boundary conditions
-        if (k == 0       ) { stateDTs(idRW,0,0     ) = 0; }
-        if (k == dom.nz-1) { stateDTs(idRW,0,tord-1) = 0; }
-
-        // Store state and flux limits into a globally indexed array
-        for (int l=0; l<numState; l++) {
-          // Store the left cell edge state and flux estimates
-          stateLimits(l,1,k  ,j,i) = stateDTs(l,0,0);
-          fluxLimits (l,1,k  ,j,i) = fluxDTs (l,0,0);
-
-          // Store the Right cell edge state and flux estimates
-          stateLimits(l,0,k+1,j,i) = stateDTs(l,0,tord-1);
-          fluxLimits (l,0,k+1,j,i) = fluxDTs (l,0,tord-1);
-        }
-        src(k,j,i) = 0;
-        for (int ii=0; ii<tord; ii++) {
-          src(k,j,i) += sourceDTs(0,ii) * gllWts(ii);
-        }
-      } , state , hyDensGLL , hyDensThetaGLL , dom , stateLimits , fluxLimits , src , doWeno );
-    launcher.synchronizeSelf();
+      }
+    }
 
     // Apply boundary conditions to fluxes and state values
-    launcher.parallelFor( dom.ny*dom.nx ,
-      [] _YAKL (int iGlob, Array<real> &stateLimits , Array<real> &fluxLimits, Domain const &dom) {
-        int j, i;
-        yakl::unpackIndices(iGlob, dom.ny, dom.nx, j, i);
+    for (int j=0; j<dom.ny; j++) {
+      for (int i=0; i<dom.nx; i++) {
         stateLimits(idR ,0,0     ,j,i) = stateLimits(idR ,1,0     ,j,i);
         stateLimits(idRU,0,0     ,j,i) = stateLimits(idRU,1,0     ,j,i);
         stateLimits(idRV,0,0     ,j,i) = stateLimits(idRV,1,0     ,j,i);
@@ -723,38 +722,41 @@ public :
         fluxLimits(idRV,1,dom.nz,j,i) = fluxLimits(idRV,0,dom.nz,j,i);
         fluxLimits(idRW,1,dom.nz,j,i) = fluxLimits(idRW,0,dom.nz,j,i);
         fluxLimits(idRT,1,dom.nz,j,i) = fluxLimits(idRT,0,dom.nz,j,i);
-      } , stateLimits , fluxLimits , dom );
+      }
+    }
 
-    // Riemann solve
-    launcher.parallelFor( (dom.nz+1)*dom.ny*dom.nx ,
-      [] _YAKL (int iGlob, Array<real> const &stateLimits, Array<real> const &fluxLimits, Domain const &dom, Riemann &riem, Array<real> &flux) {
-        int k, j, i;
-        yakl::unpackIndices(iGlob, dom.nz+1, dom.ny, dom.nx, k, j, i);
-        SArray<real,numState> s1, s2, f1, f2, upw;
-        for (int l=0; l<numState; l++) {
-          s1(l) = stateLimits(l,0,k,j,i);
-          s2(l) = stateLimits(l,1,k,j,i);
-          f1(l) = fluxLimits (l,0,k,j,i);
-          f2(l) = fluxLimits (l,1,k,j,i);
+    // Local lax-friedrichs fluxes
+    for (int k=0; k<dom.nz+1; k++) {
+      for (int j=0; j<dom.ny; j++) {
+        for (int i=0; i<dom.nx; i++) {
+          SArray<real,numState> s1, s2, f1, f2, upw;
+          for (int l=0; l<numState; l++) {
+            s1(l) = stateLimits(l,0,k,j,i);
+            s2(l) = stateLimits(l,1,k,j,i);
+            f1(l) = fluxLimits (l,0,k,j,i);
+            f2(l) = fluxLimits (l,1,k,j,i);
+          }
+          riem.riemannZ(s1, s2, f1, f2, upw);
+          for (int l=0; l<numState; l++) {
+            flux(l,k,j,i) = upw(l);
+          }
         }
-        riem.riemannZ(s1, s2, f1, f2, upw);
-        for (int l=0; l<numState; l++) {
-          flux(l,k,j,i) = upw(l);
-        }
-      } , stateLimits , fluxLimits , dom , riem , flux );
+      }
+    }
 
     // Form the tendencies
-    launcher.parallelFor( numState*dom.nz*dom.ny*dom.nx ,
-      [] _YAKL (int iGlob, Array<real> const &flux, Array<real> &src, Domain const &dom, Array<real> &tend) {
-        int l, k, j, i;
-        yakl::unpackIndices(iGlob, numState, dom.nz, dom.ny, dom.nx, l, k, j, i);
-        tend(l,k,j,i) = - ( flux(l,k+1,j,i) - flux(l,k,j,i) ) / dom.dz;
-        if (l==idRW) {
-          tend(l,k,j,i) += src(k,j,i);
+    for (int l=0; l<numState; l++) {
+      for (int k=0; k<dom.nz; k++) {
+        for (int j=0; j<dom.ny; j++) {
+          for (int i=0; i<dom.nx; i++) {
+            tend(l,k,j,i) = - ( flux(l,k+1,j,i) - flux(l,k,j,i) ) / dom.dz;
+            if (l==idRW) {
+              tend(l,k,j,i) += src(k,j,i);
+            }
+          }
         }
-      } , flux , src , dom , tend );
-    launcher.synchronizeSelf();
-
+      }
+    }
   }
 
 
