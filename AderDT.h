@@ -11,7 +11,7 @@ class AderDT {
 public:
 
 
-  inline _YAKL void diffTransformEulerX( SArray<real,numState,tord,tord> &state, SArray<real,numState,tord,tord> &flux, SArray<real,tord,tord> const &deriv ) {
+  inline _HOSTDEV void diffTransformEulerX( SArray<real,numState,tord,tord> &state, SArray<real,numState,tord,tord> &flux, SArray<real,tord,tord> const &deriv ) {
     SArray<real,tord,tord> ruu, ruv, ruw, rut, rtgamma;
     real tot_ruu, tot_ruv, tot_ruw, tot_rut, tot_rtgamma;
 
@@ -91,7 +91,7 @@ public:
   }
 
 
-  inline _YAKL void diffTransformEulerY( SArray<real,numState,tord,tord> &state, SArray<real,numState,tord,tord> &flux, SArray<real,tord,tord> const &deriv ) {
+  inline _HOSTDEV void diffTransformEulerY( SArray<real,numState,tord,tord> &state, SArray<real,numState,tord,tord> &flux, SArray<real,tord,tord> const &deriv ) {
     SArray<real,tord,tord> rvu, rvv, rvw, rvt, rtgamma;
     real tot_rvu, tot_rvv, tot_rvw, tot_rvt, tot_rtgamma;
 
@@ -171,7 +171,7 @@ public:
   }
 
 
-  inline _YAKL void diffTransformEulerZ( SArray<real,numState,tord,tord> &state, SArray<real,numState,tord,tord> &flux,
+  inline _HOSTDEV void diffTransformEulerZ( SArray<real,numState,tord,tord> &state, SArray<real,numState,tord,tord> &flux,
                                    SArray<real,tord,tord> &source, SArray<real,tord,tord> const &deriv, SArray<real,tord> const &hyRHOT, SArray<real,tord> const &hyRHO ) {
     SArray<real,tord,tord> rwu, rwv, rww, rwt, rtgamma;
     real tot_rwu, tot_rwv, tot_rww, tot_rwt, tot_rtgamma;
@@ -258,7 +258,7 @@ public:
   }
 
 
-  inline _YAKL void timeAvg( SArray<real,numState,tord,tord> &dts , Domain const &dom ) {
+  inline _HOSTDEV void timeAvg( SArray<real,numState,tord,tord> &dts , Domain const &dom ) {
     real dtmult = dom.dt;
     for (int kt=1; kt<tord; kt++) {
       for (int l=0; l<numState; l++) {
@@ -271,7 +271,7 @@ public:
   }
 
 
-  inline _YAKL void timeAvg( SArray<real,tord,tord> &dts , Domain const &dom ) {
+  inline _HOSTDEV void timeAvg( SArray<real,tord,tord> &dts , Domain const &dom ) {
     real dtmult = dom.dt;
     for (int kt=1; kt<tord; kt++) {
       for (int ii=0; ii<tord; ii++) {

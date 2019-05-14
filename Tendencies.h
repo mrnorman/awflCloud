@@ -69,7 +69,7 @@ public :
 
 
   // Transform ord stencil cell averages into tord GLL point values
-  inline _YAKL void reconStencil(SArray<real,ord> const &stencil, SArray<real,tord> &gll, int const doWeno) {
+  inline _HOSTDEV void reconStencil(SArray<real,ord> const &stencil, SArray<real,tord> &gll, int const doWeno) {
     SArray<real,ord> coefs;
     if (doWeno) {
       weno.compute_weno_coefs(wenoRecon,stencil,coefs);

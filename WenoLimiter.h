@@ -17,7 +17,7 @@ protected:
 
 public:
 
-  _YAKL WenoLimiter() {
+  _HOSTDEV WenoLimiter() {
     if        (ord == 3) {
       FP sigma = 0.1_fp;
       idl(0) = 1._fp;
@@ -49,7 +49,7 @@ public:
   }
 
 
-  inline _YAKL void compute_weno_coefs( SArray<FP,ord,ord,ord> const &recon , SArray<FP,ord> const &u , SArray<FP,ord> &aw ) {
+  inline _HOSTDEV void compute_weno_coefs( SArray<FP,ord,ord,ord> const &recon , SArray<FP,ord> const &u , SArray<FP,ord> &aw ) {
     SArray<FP,hs+2> tv;
     SArray<FP,hs+2> wts;
     SArray<FP,hs+2,ord> a;
@@ -131,7 +131,7 @@ public:
   }
 
 
-  inline _YAKL void map_weights( SArray<FP,hs+2> const &idl , SArray<FP,hs+2> &wts ) {
+  inline _HOSTDEV void map_weights( SArray<FP,hs+2> const &idl , SArray<FP,hs+2> &wts ) {
     // Map the weights for quicker convergence. WARNING: Ideal weights must be (0,1) before mapping
     for (int i=0; i<hs+2; i++) {
       wts(i) = wts(i) * ( idl(i) + idl(i)*idl(i) - 3._fp*idl(i)*wts(i) + wts(i)*wts(i) ) / ( idl(i)*idl(i) + wts(i) * ( 1._fp - 2._fp * idl(i) ) );
@@ -139,7 +139,7 @@ public:
   }
 
 
-  inline _YAKL void convexify( SArray<FP,hs+2> &wts ) {
+  inline _HOSTDEV void convexify( SArray<FP,hs+2> &wts ) {
     FP sum = 0._fp;
     for (int i=0; i<hs+2; i++) { sum += wts(i); }
     for (int i=0; i<hs+2; i++) { wts(i) /= (sum + eps); }
