@@ -447,55 +447,55 @@ public :
     //Exchange halos in the x-direction
     exch.haloInit      ();
     exch.haloPackN_x   (dom, state, numState);
-    launcher.synchronizeSelf();
     exch.haloExchange_x(dom, par);
     exch.haloUnpackN_x (dom, state, numState);
 
     launcher.parallelFor( dom.nz*dom.ny*dom.nx ,
-      [this] _YAKL (int iGlob, Array<real> const &state, Array<real> const &hyDensCells, Array<real> const &hyDensThetaCells,
-                               Domain const &dom, Array<real> &stateLimits, Array<real> &fluxLimits, int const doWeno) {
-        int k, j, i;
-        yakl::unpackIndices(iGlob, dom.nz, dom.ny, dom.nx, k, j, i);
+    [this] _YAKL (int iGlob, Array<real> &state, Array<real> const &hyDensCells, Array<real> const &hyDensThetaCells,
+                                  Domain const &dom, Exchange &exch, Parallel const &par, Array<real> &tend, int const doWeno) {
+      int k, j, i;
+      yakl::unpackIndices(iGlob, dom.nz, dom.ny, dom.nx, k, j, i);
 
-        // Reconstruct to tord GLL points in the x-direction
-        SArray<real,numState,tord,tord> stateDTs;  // GLL state values
-        SArray<real,numState,tord,tord> fluxDTs;   // GLL flux values
+      // Reconstruct to tord GLL points in the x-direction
+      SArray<real,numState,tord,tord> stateDTs;  // GLL state values
+      SArray<real,numState,tord,tord> fluxDTs;   // GLL flux values
 
-        // Compute tord GLL points of the state vector
-        for (int l=0; l<numState; l++) {
-          SArray<real,ord> stencil;
-          SArray<real,tord> gllPts;
-          for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,hs+k,hs+j,i+ii); }
-          reconStencil(stencil,gllPts,doWeno);
-          for (int ii=0; ii<tord; ii++) { stateDTs(l,0,ii) = gllPts(ii); }
-        }
-        for (int ii=0; ii<tord; ii++) {
-          stateDTs(idR ,0,ii) += hyDensCells     (hs+k);
-          stateDTs(idRT,0,ii) += hyDensThetaCells(hs+k);
-        }
+      // Compute tord GLL points of the state vector
+      for (int l=0; l<numState; l++) {
+        SArray<real,ord> stencil;
+        SArray<real,tord> gllPts;
+        for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,hs+k,hs+j,i+ii); }
+        reconStencil(stencil,gllPts,doWeno);
+        for (int ii=0; ii<tord; ii++) { stateDTs(l,0,ii) = gllPts(ii); }
+      }
+      for (int ii=0; ii<tord; ii++) {
+        stateDTs(idR ,0,ii) += hyDensCells     (hs+k);
+        stateDTs(idRT,0,ii) += hyDensThetaCells(hs+k);
+      }
 
-        // Compute DTs of the state and flux, and collapse down into a time average
-        ader.diffTransformEulerX( stateDTs , fluxDTs , aderDerivX );
-        ader.timeAvg( stateDTs , dom );
-        ader.timeAvg( fluxDTs  , dom );
+      // Compute DTs of the state and flux, and collapse down into a time average
+      ader.diffTransformEulerX( stateDTs , fluxDTs , aderDerivX );
+      ader.timeAvg( stateDTs , dom );
+      ader.timeAvg( fluxDTs  , dom );
 
-        // Store state and flux limits into a globally indexed array
-        for (int l=0; l<numState; l++) {
-          // Store the left cell edge state and flux estimates
-          stateLimits(l,1,k,j,i  ) = stateDTs(l,0,0);
-          fluxLimits (l,1,k,j,i  ) = fluxDTs (l,0,0);
+      // Store state and flux limits into a globally indexed array
+      for (int l=0; l<numState; l++) {
+        // Store the left cell edge state and flux estimates
+        stateLimits(l,1,k,j,i  ) = stateDTs(l,0,0);
+        fluxLimits (l,1,k,j,i  ) = fluxDTs (l,0,0);
 
-          // Store the Right cell edge state and flux estimates
-          stateLimits(l,0,k,j,i+1) = stateDTs(l,0,tord-1);
-          fluxLimits (l,0,k,j,i+1) = fluxDTs (l,0,tord-1);
-        }
-      } , state, hyDensCells, hyDensThetaCells, dom, stateLimits, fluxLimits, doWeno );
+        // Store the Right cell edge state and flux estimates
+        stateLimits(l,0,k,j,i+1) = stateDTs(l,0,tord-1);
+        fluxLimits (l,0,k,j,i+1) = fluxDTs (l,0,tord-1);
+      }
+    } , state, hyDensCells, hyDensThetaCells, dom, exch, par, tend, doWeno );
+
+    launcher.synchronizeSelf();
 
     //Reconcile the edge fluxes via MPI exchange.
     exch.haloInit      ();
     exch.edgePackN_x   (dom, stateLimits, numState);
     exch.edgePackN_x   (dom, fluxLimits , numState);
-    launcher.synchronizeSelf();
     exch.edgeExchange_x(dom, par);
     exch.edgeUnpackN_x (dom, stateLimits, numState);
     exch.edgeUnpackN_x (dom, fluxLimits , numState);
