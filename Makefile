@@ -20,3 +20,5 @@ main: $(KOKKOS_LINK_DEPENDS) $(KOKKOS_CPP_DEPENDS) driver.cpp
 clean:
 	rm -f *.gch *.o *.dat cloudFV
 
+realclean: clean
+	rm -f KokkosCore_config.h KokkosCore_config.tmp libkokkos.a

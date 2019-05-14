@@ -4,7 +4,6 @@
 
 #include "const.h"
 #include "Parallel.h"
-#include "Array.h"
 #include "Domain.h"
 #include "State.h"
 #include "Tendencies.h"

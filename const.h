@@ -16,6 +16,13 @@ typedef Kokkos::View<real****  ,Kokkos::LayoutRight> real4d;
 typedef Kokkos::View<real***** ,Kokkos::LayoutRight> real5d;
 typedef Kokkos::View<real******,Kokkos::LayoutRight> real6d;
 
+typedef Kokkos::View<int*     ,Kokkos::LayoutRight> int1d;
+typedef Kokkos::View<int**    ,Kokkos::LayoutRight> int2d;
+typedef Kokkos::View<int***   ,Kokkos::LayoutRight> int3d;
+typedef Kokkos::View<int****  ,Kokkos::LayoutRight> int4d;
+typedef Kokkos::View<int***** ,Kokkos::LayoutRight> int5d;
+typedef Kokkos::View<int******,Kokkos::LayoutRight> int6d;
+
 #ifdef __NVCC__
 #define _HOSTDEV __host__ __device__
 #else

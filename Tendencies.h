@@ -5,7 +5,6 @@
 #include "const.h"
 #include "Parallel.h"
 #include "SArray.h"
-#include "Array.h"
 #include "Riemann.h"
 #include "Domain.h"
 #include "Exchange.h"

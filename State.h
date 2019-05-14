@@ -4,7 +4,6 @@
 
 #include "const.h"
 #include "SArray.h"
-#include "Array.h"
 
 class State {
 
