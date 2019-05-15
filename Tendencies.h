@@ -19,7 +19,6 @@ class Tendencies {
   real4d flux;
   real3d src;
   SArray<real,tord> gllWts;
-  TransformMatrices<real> trans;
   SArray<real,ord,tord> to_gll;
   SArray<real,ord,ord,ord> wenoRecon;
   SArray<real,tord,tord> aderDerivX;
@@ -32,6 +31,8 @@ public :
 
 
   inline void initialize(Domain const &dom) {
+    TransformMatrices<real> trans;
+
     fluxLimits  = real5d("fluxLimits",numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
     stateLimits = real5d("srcLimits" ,numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
     flux        = real4d("flux"      ,numState  ,dom.nz+1,dom.ny+1,dom.nx+1);
@@ -161,35 +162,10 @@ public :
     exch.edgeUnpackN_x (dom, fluxLimits , numState);
 
     // Riemann solver
-    // for (int k=0; k<dom.nz; k++) {
-    //   for (int j=0; j<dom.ny; j++) {
-    //     for (int i=0; i<dom.nx+1; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*(dom.nx+1) , KOKKOS_LAMBDA (int const iGlob) {
-      int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx+1,k,j,i);
-      SArray<real,numState> s1, s2, f1, f2, upw;
-      for (int l=0; l<numState; l++) {
-        s1(l) = stateLimits(l,0,k,j,i);
-        s2(l) = stateLimits(l,1,k,j,i);
-        f1(l) = fluxLimits (l,0,k,j,i);
-        f2(l) = fluxLimits (l,1,k,j,i);
-      }
-      riemannX(s1, s2, f1, f2, upw);
-      for (int l=0; l<numState; l++) {
-        flux(l,k,j,i) = upw(l);
-      }
-    });
+    computeFlux_X(stateLimits, fluxLimits, flux, dom);
 
     // Form the tendencies
-    // for (int l=0; l<numState; l++) {
-    //   for (int k=0; k<dom.nz; k++) {
-    //     for (int j=0; j<dom.ny; j++) {
-    //       for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( numState*dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
-      int l, k, j, i;
-      unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
-      tend(l,k,j,i) = - ( flux(l,k,j,i+1) - flux(l,k,j,i) ) / dom.dx;
-    });
+    computeTend_X(flux, tend, dom);
   }
 
 
@@ -262,36 +238,11 @@ public :
     exch.edgeUnpackN_y (dom, stateLimits, numState);
     exch.edgeUnpackN_y (dom, fluxLimits , numState);
 
-    // Local lax-friedrichs fluxes
-    // for (int k=0; k<dom.nz; k++) {
-    //   for (int j=0; j<dom.ny+1; j++) {
-    //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*(dom.ny+1)*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
-      int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny+1,dom.nx,k,j,i);
-      SArray<real,numState> s1, s2, f1, f2, upw;
-      for (int l=0; l<numState; l++) {
-        s1(l) = stateLimits(l,0,k,j,i);
-        s2(l) = stateLimits(l,1,k,j,i);
-        f1(l) = fluxLimits (l,0,k,j,i);
-        f2(l) = fluxLimits (l,1,k,j,i);
-      }
-      riemannY(s1, s2, f1, f2, upw);
-      for (int l=0; l<numState; l++) {
-        flux(l,k,j,i) = upw(l);
-      }
-    });
+    // Riemann solver
+    computeFlux_Y(stateLimits, fluxLimits, flux, dom);
 
     // Form the tendencies
-    // for (int l=0; l<numState; l++) {
-    //   for (int k=0; k<dom.nz; k++) {
-    //     for (int j=0; j<dom.ny; j++) {
-    //       for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( numState*dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
-      int l, k, j, i;
-      unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
-      tend(l,k,j,i) = - ( flux(l,k,j+1,i) - flux(l,k,j,i) ) / dom.dy;
-    });
+    computeTend_Y(flux, tend, dom);
   }
 
 
@@ -504,43 +455,6 @@ public :
 
 
 
-  inline void computeFlux_X(real5d const &stateLimits, real5d const &fluxLimits, real4d &flux, Domain const &dom ) {
-    // for (int k=0; k<dom.nz; k++) {
-    //   for (int j=0; j<dom.ny; j++) {
-    //     for (int i=0; i<dom.nx+1; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*(dom.nx+1) , KOKKOS_LAMBDA (int const iGlob) {
-      int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx+1,k,j,i);
-      SArray<real,numState> s1, s2, f1, f2, upw;
-      for (int l=0; l<numState; l++) {
-        s1(l) = stateLimits(l,0,k,j,i);
-        s2(l) = stateLimits(l,1,k,j,i);
-        f1(l) = fluxLimits (l,0,k,j,i);
-        f2(l) = fluxLimits (l,1,k,j,i);
-      }
-      riemannX(s1, s2, f1, f2, upw);
-      for (int l=0; l<numState; l++) {
-        flux(l,k,j,i) = upw(l);
-      }
-    });
-  }
-
-
-
-  inline void computeTend_X(real4d const &flux, real4d &tend, Domain const &dom) {
-    // for (int l=0; l<numState; l++) {
-    //   for (int k=0; k<dom.nz; k++) {
-    //     for (int j=0; j<dom.ny; j++) {
-    //       for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( numState*dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
-      int l, k, j, i;
-      unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
-      tend(l,k,j,i) = - ( flux(l,k,j,i+1) - flux(l,k,j,i) ) / dom.dx;
-    });
-  }
-
-
-
   inline void compEulerTendADER_X(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
                                   Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
     //Exchange halos in the x-direction
@@ -626,36 +540,11 @@ public :
     exch.edgeUnpackN_y (dom, stateLimits, numState);
     exch.edgeUnpackN_y (dom, fluxLimits , numState);
 
-    // Local lax-friedrichs fluxes
-    // for (int k=0; k<dom.nz; k++) {
-    //   for (int j=0; j<dom.ny+1; j++) {
-    //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*(dom.ny+1)*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
-      int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny+1,dom.nx,k,j,i);
-      SArray<real,numState> s1, s2, f1, f2, upw;
-      for (int l=0; l<numState; l++) {
-        s1(l) = stateLimits(l,0,k,j,i);
-        s2(l) = stateLimits(l,1,k,j,i);
-        f1(l) = fluxLimits (l,0,k,j,i);
-        f2(l) = fluxLimits (l,1,k,j,i);
-      }
-      riemannY(s1, s2, f1, f2, upw);
-      for (int l=0; l<numState; l++) {
-        flux(l,k,j,i) = upw(l);
-      }
-    });
+    // Riemann solver
+    computeFlux_Y(stateLimits, fluxLimits, flux, dom);
 
     // Form the tendencies
-    // for (int l=0; l<numState; l++) {
-    //   for (int k=0; k<dom.nz; k++) {
-    //     for (int j=0; j<dom.ny; j++) {
-    //       for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( numState*dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
-      int l, k, j, i;
-      unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
-      tend(l,k,j,i) = - ( flux(l,k,j+1,i) - flux(l,k,j,i) ) / dom.dy;
-    });
+    computeTend_Y(flux, tend, dom);
   }
 
 
@@ -809,6 +698,75 @@ public :
     });
   }
 
+
+  inline void computeFlux_X(real5d const &stateLimits, real5d const &fluxLimits, real4d &flux, Domain const &dom ) {
+    // for (int k=0; k<dom.nz; k++) {
+    //   for (int j=0; j<dom.ny; j++) {
+    //     for (int i=0; i<dom.nx+1; i++) {
+    Kokkos::parallel_for( dom.nz*dom.ny*(dom.nx+1) , KOKKOS_LAMBDA (int const iGlob) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx+1,k,j,i);
+      SArray<real,numState> s1, s2, f1, f2, upw;
+      for (int l=0; l<numState; l++) {
+        s1(l) = stateLimits(l,0,k,j,i);
+        s2(l) = stateLimits(l,1,k,j,i);
+        f1(l) = fluxLimits (l,0,k,j,i);
+        f2(l) = fluxLimits (l,1,k,j,i);
+      }
+      riemannX(s1, s2, f1, f2, upw);
+      for (int l=0; l<numState; l++) {
+        flux(l,k,j,i) = upw(l);
+      }
+    });
+  }
+
+
+  inline void computeTend_X(real4d const &flux, real4d &tend, Domain const &dom) {
+    // for (int l=0; l<numState; l++) {
+    //   for (int k=0; k<dom.nz; k++) {
+    //     for (int j=0; j<dom.ny; j++) {
+    //       for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( numState*dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int l, k, j, i;
+      unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
+      tend(l,k,j,i) = - ( flux(l,k,j,i+1) - flux(l,k,j,i) ) / dom.dx;
+    });
+  }
+
+
+  inline void computeFlux_Y(real5d const &stateLimits, real5d const &fluxLimits, real4d &flux, Domain const &dom ) {
+    // for (int k=0; k<dom.nz; k++) {
+    //   for (int j=0; j<dom.ny+1; j++) {
+    //     for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.nz*(dom.ny+1)*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz,dom.ny+1,dom.nx,k,j,i);
+      SArray<real,numState> s1, s2, f1, f2, upw;
+      for (int l=0; l<numState; l++) {
+        s1(l) = stateLimits(l,0,k,j,i);
+        s2(l) = stateLimits(l,1,k,j,i);
+        f1(l) = fluxLimits (l,0,k,j,i);
+        f2(l) = fluxLimits (l,1,k,j,i);
+      }
+      riemannY(s1, s2, f1, f2, upw);
+      for (int l=0; l<numState; l++) {
+        flux(l,k,j,i) = upw(l);
+      }
+    });
+  }
+
+
+  inline void computeTend_Y(real4d const &flux, real4d &tend, Domain const &dom) {
+    // for (int l=0; l<numState; l++) {
+    //   for (int k=0; k<dom.nz; k++) {
+    //     for (int j=0; j<dom.ny; j++) {
+    //       for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( numState*dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int l, k, j, i;
+      unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
+      tend(l,k,j,i) = - ( flux(l,k,j+1,i) - flux(l,k,j,i) ) / dom.dy;
+    });
+  }
 
 
 };
