@@ -482,13 +482,9 @@ public :
   }
 
 
-  inline void compEulerTendADER_Z(real4d &state, real2d const &hyDensGLL, real2d const &hyDensThetaGLL,
-                                  Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
-
-    // Boundaries for the fluid state in the z-direction
-    stateBoundariesZ(state, dom);
-
-    // Reconstruct to 2 GLL points in the x-direction
+  inline void reconAder_Z(real4d &state, real2d const &hyDensGLL, real2d const &hyDensThetaGLL,
+                          Domain const &dom, SArray<real,ord,ord,ord> const &wenoRecon, SArray<real,ord,tord> const &to_gll, 
+                          real5d &stateLimits, real5d &fluxLimits, real3d &src, SArray<real,hs+2> const &wenoIdl, real &wenoSigma) {
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
@@ -546,6 +542,17 @@ public :
       }
 
     });
+  }
+
+
+  inline void compEulerTendADER_Z(real4d &state, real2d const &hyDensGLL, real2d const &hyDensThetaGLL,
+                                  Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+
+    // Boundaries for the fluid state in the z-direction
+    stateBoundariesZ(state, dom);
+
+    // Reconstruct tord GLL points in the z-direction
+    reconAder_Z(state, hyDensGLL, hyDensThetaGLL, dom, wenoRecon, to_gll, stateLimits, fluxLimits, src, wenoIdl, wenoSigma);
 
     // Apply boundary conditions to fluxes and state values
     edgeBoundariesZ(stateLimits, fluxLimits, dom);
