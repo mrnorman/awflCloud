@@ -168,10 +168,25 @@ public :
   }
 
 
+  inline void compEulerTendSD_S(real4d const &state, Domain const &dom, real4d &tend) {
+    // Form the tendencies
+    // for (int k=0; k<dom.nz; k++) {
+    //   for (int j=0; j<dom.ny; j++) {
+    //     for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      tend(idR ,k,j,i) = 0;
+      tend(idRU,k,j,i) = 0;
+      tend(idRV,k,j,i) = 0;
+      tend(idRW,k,j,i) = -state(idR,hs+k,hs+j,hs+i) * GRAV;
+      tend(idRT,k,j,i) = 0;
+    });
+  }
+
+
   inline void compEulerTendADER_X(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
                                   Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
-
-    // Kokkos::fence(); std::cout << "got here 1\n";
 
     //Exchange halos in the x-direction
     exch.haloInit      ();
@@ -182,8 +197,6 @@ public :
     // Reconstruct to tord GLL points in the x-direction
     reconAder_X(state, hyDensCells, hyDensThetaCells, dom, wenoRecon, to_gll, stateLimits, fluxLimits, wenoIdl, wenoSigma, aderDerivX);
 
-    // Kokkos::fence(); std::cout << "got here 2\n";
-
     //Reconcile the edge fluxes via MPI exchange.
     exch.haloInit      ();
     exch.edgePackN_x   (dom, stateLimits, numState);
@@ -191,8 +204,6 @@ public :
     exch.edgeExchange_x(dom, par);
     exch.edgeUnpackN_x (dom, stateLimits, numState);
     exch.edgeUnpackN_x (dom, fluxLimits , numState);
-
-    // Kokkos::fence(); std::cout << "got here 3\n";
 
     // Riemann solver
     computeFlux_X(stateLimits, fluxLimits, flux, dom);
@@ -237,7 +248,7 @@ public :
     stateBoundariesZ(state, dom);
 
     // Reconstruct tord GLL points in the z-direction
-    reconAder_Z(state, hyDensGLL, hyDensThetaGLL, dom, wenoRecon, to_gll, stateLimits, fluxLimits, src, wenoIdl, wenoSigma, aderDerivZ);
+    reconAder_Z(state, hyDensGLL, hyDensThetaGLL, dom, wenoRecon, to_gll, stateLimits, fluxLimits, src, wenoIdl, wenoSigma, aderDerivZ, gllWts);
 
     // Apply boundary conditions to fluxes and state values
     edgeBoundariesZ(stateLimits, fluxLimits, dom);
@@ -421,23 +432,6 @@ public :
   }
 
 
-  inline void compEulerTendSD_S(real4d const &state, Domain const &dom, real4d &tend) {
-    // Form the tendencies
-    // for (int k=0; k<dom.nz; k++) {
-    //   for (int j=0; j<dom.ny; j++) {
-    //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
-      int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
-      tend(idR ,k,j,i) = 0;
-      tend(idRU,k,j,i) = 0;
-      tend(idRV,k,j,i) = 0;
-      tend(idRW,k,j,i) = -state(idR,hs+k,hs+j,hs+i) * GRAV;
-      tend(idRT,k,j,i) = 0;
-    });
-  }
-
-
   inline void reconAder_X(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
                           Domain const &dom, SArray<real,ord,ord,ord> const &wenoRecon, SArray<real,ord,tord> const &to_gll, 
                           real5d &stateLimits, real5d &fluxLimits, SArray<real,hs+2> const &wenoIdl, real &wenoSigma,
@@ -533,7 +527,7 @@ public :
   inline void reconAder_Z(real4d &state, real2d const &hyDensGLL, real2d const &hyDensThetaGLL,
                           Domain const &dom, SArray<real,ord,ord,ord> const &wenoRecon, SArray<real,ord,tord> const &to_gll, 
                           real5d &stateLimits, real5d &fluxLimits, real3d &src, SArray<real,hs+2> const &wenoIdl, real &wenoSigma,
-                          SArray<real,tord,tord> const &aderDerivZ) {
+                          SArray<real,tord,tord> const &aderDerivZ, SArray<real,tord> const &gllWts) {
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
