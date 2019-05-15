@@ -5,11 +5,6 @@
 #include "const.h"
 #include "SArray.h"
 
-class AderDT {
-
-
-public:
-
 
   inline _HOSTDEV void diffTransformEulerX( SArray<real,numState,tord,tord> &state, SArray<real,numState,tord,tord> &flux, SArray<real,tord,tord> const &deriv ) {
     SArray<real,tord,tord> ruu, ruv, ruw, rut, rtgamma;
@@ -281,7 +276,5 @@ public:
     }
   }
 
-
-};
 
 #endif

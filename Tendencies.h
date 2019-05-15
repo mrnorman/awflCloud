@@ -20,14 +20,13 @@ class Tendencies {
   real3d src;
   SArray<real,tord> gllWts;
   TransformMatrices<real> trans;
-  Riemann riem;
   SArray<real,ord,tord> to_gll;
-  WenoLimiter<real> weno;
   SArray<real,ord,ord,ord> wenoRecon;
-  AderDT ader;
   SArray<real,tord,tord> aderDerivX;
   SArray<real,tord,tord> aderDerivY;
   SArray<real,tord,tord> aderDerivZ;
+  SArray<real,hs+2> wenoIdl;
+  real wenoSigma;
 
 public :
 
@@ -64,14 +63,18 @@ public :
 
     trans.get_gll_weights(gllWts);
 
+    wenoSetIdealSigma(wenoIdl,wenoSigma);
+
   }
 
 
   // Transform ord stencil cell averages into tord GLL point values
-  inline _HOSTDEV void reconStencil(SArray<real,ord> const &stencil, SArray<real,tord> &gll, int const doWeno) {
+  inline _HOSTDEV void reconStencil(SArray<real,ord> const &stencil, SArray<real,tord> &gll, int const doWeno,
+                                    SArray<real,ord,ord,ord> const &wenoRecon, SArray<real,ord,tord> const &to_gll,
+                                    SArray<real,hs+2> const &wenoIdl, real wenoSigma) {
     SArray<real,ord> coefs;
     if (doWeno) {
-      weno.compute_weno_coefs(wenoRecon,stencil,coefs);
+      compute_weno_coefs(wenoRecon,stencil,coefs,wenoIdl,wenoSigma);
     } else {
       for (int ii=0; ii<ord; ii++) {
         coefs(ii) = stencil(ii);
@@ -89,6 +92,7 @@ public :
 
   inline void compEulerTendSD_X(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
                                 Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+
 
     //Exchange halos in the x-direction
     exch.haloInit      ();
@@ -111,7 +115,7 @@ public :
         SArray<real,ord> stencil;
         SArray<real,tord> gllPts;
         for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,hs+k,hs+j,i+ii); }
-        reconStencil(stencil,gllPts,dom.doWeno);
+        reconStencil(stencil, gllPts, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
         for (int ii=0; ii<tord; ii++) { gllState(l,ii) = gllPts(ii); }
       }
       for (int ii=0; ii<tord; ii++) {
@@ -170,7 +174,7 @@ public :
         f1(l) = fluxLimits (l,0,k,j,i);
         f2(l) = fluxLimits (l,1,k,j,i);
       }
-      riem.riemannX(s1, s2, f1, f2, upw);
+      riemannX(s1, s2, f1, f2, upw);
       for (int l=0; l<numState; l++) {
         flux(l,k,j,i) = upw(l);
       }
@@ -191,6 +195,7 @@ public :
 
   inline void compEulerTendSD_Y(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
                                 Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+
     //Exchange halos in the y-direction
     exch.haloInit      ();
     exch.haloPackN_y   (dom, state, numState);
@@ -212,7 +217,7 @@ public :
         SArray<real,ord> stencil;
         SArray<real,tord> gllPts;
         for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,hs+k,j+ii,hs+i); }
-        reconStencil(stencil,gllPts,dom.doWeno);
+        reconStencil(stencil, gllPts, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
         for (int ii=0; ii<tord; ii++) { gllState(l,ii) = gllPts(ii); }
       }
       for (int ii=0; ii<tord; ii++) {
@@ -271,7 +276,7 @@ public :
         f1(l) = fluxLimits (l,0,k,j,i);
         f2(l) = fluxLimits (l,1,k,j,i);
       }
-      riem.riemannY(s1, s2, f1, f2, upw);
+      riemannY(s1, s2, f1, f2, upw);
       for (int l=0; l<numState; l++) {
         flux(l,k,j,i) = upw(l);
       }
@@ -292,6 +297,7 @@ public :
 
   inline void compEulerTendSD_Z(real4d &state, real2d const &hyDensGLL, real2d const &hyDensThetaGLL,
                                 Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+
     // Boundaries for the fluid state in the z-direction
     // for (int j=0; j<dom.ny; j++) {
     //   for (int i=0; i<dom.nx; i++) {
@@ -327,7 +333,7 @@ public :
         SArray<real,ord> stencil;
         SArray<real,tord> gllPts;
         for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,k+ii,hs+j,hs+i); }
-        reconStencil(stencil,gllPts,dom.doWeno);
+        reconStencil(stencil, gllPts, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
         for (int ii=0; ii<tord; ii++) { gllState(l,ii) = gllPts(ii); }
       }
       for (int ii=0; ii<tord; ii++) {
@@ -415,7 +421,7 @@ public :
         f1(l) = fluxLimits (l,0,k,j,i);
         f2(l) = fluxLimits (l,1,k,j,i);
       }
-      riem.riemannZ(s1, s2, f1, f2, upw);
+      riemannZ(s1, s2, f1, f2, upw);
       for (int l=0; l<numState; l++) {
         flux(l,k,j,i) = upw(l);
       }
@@ -451,15 +457,10 @@ public :
   }
 
 
-  inline void compEulerTendADER_X(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
-                                  Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
-    //Exchange halos in the x-direction
-    exch.haloInit      ();
-    exch.haloPackN_x   (dom, state, numState);
-    exch.haloExchange_x(dom, par);
-    exch.haloUnpackN_x (dom, state, numState);
+  inline void reconAder_X(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
+                          Domain const &dom, SArray<real,ord,ord,ord> const &wenoRecon, SArray<real,ord,tord> const &to_gll, 
+                          real5d &stateLimits, real5d &fluxLimits, SArray<real,hs+2> const &wenoIdl, real &wenoSigma) {
 
-    // Reconstruct to tord GLL points in the x-direction
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
@@ -474,7 +475,7 @@ public :
         SArray<real,ord> stencil;
         SArray<real,tord> gllPts;
         for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,hs+k,hs+j,i+ii); }
-        reconStencil(stencil,gllPts,dom.doWeno);
+        reconStencil(stencil, gllPts, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
         for (int ii=0; ii<tord; ii++) { stateDTs(l,0,ii) = gllPts(ii); }
       }
       for (int ii=0; ii<tord; ii++) {
@@ -483,9 +484,9 @@ public :
       }
 
       // Compute DTs of the state and flux, and collapse down into a time average
-      ader.diffTransformEulerX( stateDTs , fluxDTs , aderDerivX );
-      ader.timeAvg( stateDTs , dom );
-      ader.timeAvg( fluxDTs  , dom );
+      diffTransformEulerX( stateDTs , fluxDTs , aderDerivX );
+      timeAvg( stateDTs , dom );
+      timeAvg( fluxDTs  , dom );
 
       // Store state and flux limits into a globally indexed array
       for (int l=0; l<numState; l++) {
@@ -499,16 +500,11 @@ public :
       }
 
     });
+  }
 
-    //Reconcile the edge fluxes via MPI exchange.
-    exch.haloInit      ();
-    exch.edgePackN_x   (dom, stateLimits, numState);
-    exch.edgePackN_x   (dom, fluxLimits , numState);
-    exch.edgeExchange_x(dom, par);
-    exch.edgeUnpackN_x (dom, stateLimits, numState);
-    exch.edgeUnpackN_x (dom, fluxLimits , numState);
 
-    // Riemann solver
+
+  inline void computeFlux_X(real5d const &stateLimits, real5d const &fluxLimits, real4d &flux, Domain const &dom ) {
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx+1; i++) {
@@ -522,13 +518,16 @@ public :
         f1(l) = fluxLimits (l,0,k,j,i);
         f2(l) = fluxLimits (l,1,k,j,i);
       }
-      riem.riemannX(s1, s2, f1, f2, upw);
+      riemannX(s1, s2, f1, f2, upw);
       for (int l=0; l<numState; l++) {
         flux(l,k,j,i) = upw(l);
       }
     });
+  }
 
-    // Form the tendencies
+
+
+  inline void computeTend_X(real4d const &flux, real4d &tend, Domain const &dom) {
     // for (int l=0; l<numState; l++) {
     //   for (int k=0; k<dom.nz; k++) {
     //     for (int j=0; j<dom.ny; j++) {
@@ -541,8 +540,37 @@ public :
   }
 
 
+
+  inline void compEulerTendADER_X(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
+                                  Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+    //Exchange halos in the x-direction
+    exch.haloInit      ();
+    exch.haloPackN_x   (dom, state, numState);
+    exch.haloExchange_x(dom, par);
+    exch.haloUnpackN_x (dom, state, numState);
+
+    // Reconstruct to tord GLL points in the x-direction
+    reconAder_X(state, hyDensCells, hyDensThetaCells, dom, wenoRecon, to_gll, stateLimits, fluxLimits, wenoIdl, wenoSigma);
+
+    //Reconcile the edge fluxes via MPI exchange.
+    exch.haloInit      ();
+    exch.edgePackN_x   (dom, stateLimits, numState);
+    exch.edgePackN_x   (dom, fluxLimits , numState);
+    exch.edgeExchange_x(dom, par);
+    exch.edgeUnpackN_x (dom, stateLimits, numState);
+    exch.edgeUnpackN_x (dom, fluxLimits , numState);
+
+    // Riemann solver
+    computeFlux_X(stateLimits, fluxLimits, flux, dom);
+
+    // Form the tendencies
+    computeTend_X(flux, tend, dom);
+  }
+
+
   inline void compEulerTendADER_Y(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
                                   Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+
     //Exchange halos in the y-direction
     exch.haloInit      ();
     exch.haloPackN_y   (dom, state, numState);
@@ -564,7 +592,7 @@ public :
         SArray<real,ord> stencil;
         SArray<real,tord> gllPts;
         for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,hs+k,j+ii,hs+i); }
-        reconStencil(stencil,gllPts,dom.doWeno);
+        reconStencil(stencil, gllPts, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
         for (int ii=0; ii<tord; ii++) { stateDTs(l,0,ii) = gllPts(ii); }
       }
       for (int ii=0; ii<tord; ii++) {
@@ -573,9 +601,9 @@ public :
       }
 
       // Compute DTs of the state and flux, and collapse down into a time average
-      ader.diffTransformEulerY( stateDTs , fluxDTs , aderDerivY );
-      ader.timeAvg( stateDTs , dom );
-      ader.timeAvg( fluxDTs  , dom );
+      diffTransformEulerY( stateDTs , fluxDTs , aderDerivY );
+      timeAvg( stateDTs , dom );
+      timeAvg( fluxDTs  , dom );
 
       // Store state and flux limits into a globally indexed array
       for (int l=0; l<numState; l++) {
@@ -612,7 +640,7 @@ public :
         f1(l) = fluxLimits (l,0,k,j,i);
         f2(l) = fluxLimits (l,1,k,j,i);
       }
-      riem.riemannY(s1, s2, f1, f2, upw);
+      riemannY(s1, s2, f1, f2, upw);
       for (int l=0; l<numState; l++) {
         flux(l,k,j,i) = upw(l);
       }
@@ -633,6 +661,7 @@ public :
 
   inline void compEulerTendADER_Z(real4d &state, real2d const &hyDensGLL, real2d const &hyDensThetaGLL,
                                   Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+
     // Boundaries for the fluid state in the z-direction
     // for (int j=0; j<dom.ny; j++) {
     //   for (int i=0; i<dom.nx; i++) {
@@ -671,7 +700,7 @@ public :
         SArray<real,ord> stencil;
         SArray<real,tord> gllPts;
         for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,k+ii,hs+j,hs+i); }
-        reconStencil(stencil,gllPts,dom.doWeno);
+        reconStencil(stencil, gllPts, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
         for (int ii=0; ii<tord; ii++) { stateDTs(l,0,ii) = gllPts(ii); }
       }
       for (int ii=0; ii<tord; ii++) {
@@ -686,10 +715,10 @@ public :
       if (k == dom.nz-1) { stateDTs(idRW,0,tord-1) = 0; }
 
       // Compute DTs of the state and flux, and collapse down into a time average
-      ader.diffTransformEulerZ( stateDTs , fluxDTs , sourceDTs , aderDerivZ , hyRHOT, hyRHO );
-      ader.timeAvg( stateDTs  , dom );
-      ader.timeAvg( fluxDTs   , dom );
-      ader.timeAvg( sourceDTs , dom );
+      diffTransformEulerZ( stateDTs , fluxDTs , sourceDTs , aderDerivZ , hyRHOT, hyRHO );
+      timeAvg( stateDTs  , dom );
+      timeAvg( fluxDTs   , dom );
+      timeAvg( sourceDTs , dom );
 
       // Boundary conditions
       if (k == 0       ) { stateDTs(idRW,0,0     ) = 0; }
@@ -759,7 +788,7 @@ public :
         f1(l) = fluxLimits (l,0,k,j,i);
         f2(l) = fluxLimits (l,1,k,j,i);
       }
-      riem.riemannZ(s1, s2, f1, f2, upw);
+      riemannZ(s1, s2, f1, f2, upw);
       for (int l=0; l<numState; l++) {
         flux(l,k,j,i) = upw(l);
       }
