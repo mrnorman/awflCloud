@@ -605,6 +605,7 @@ public :
       riemannX(s1, s2, f1, f2, upw);
       for (int l=0; l<numState; l++) {
         flux(l,k,j,i) = upw(l);
+        flux(l,k,j,i) = 0.5_fp * ( f2(l) + f1(l) - dom.cfl*dom.dx/dom.dt * (s2(l) - s1(l)) );
       }
     });
   }
@@ -640,6 +641,7 @@ public :
       riemannY(s1, s2, f1, f2, upw);
       for (int l=0; l<numState; l++) {
         flux(l,k,j,i) = upw(l);
+        flux(l,k,j,i) = 0.5_fp * ( f2(l) + f1(l) - dom.cfl*dom.dy/dom.dt * (s2(l) - s1(l)) );
       }
     });
   }
@@ -675,6 +677,7 @@ public :
       riemannZ(s1, s2, f1, f2, upw);
       for (int l=0; l<numState; l++) {
         flux(l,k,j,i) = upw(l);
+        flux(l,k,j,i) = 0.5_fp * ( f2(l) + f1(l) - dom.cfl*dom.dz/dom.dt * (s2(l) - s1(l)) );
       }
     });
   }

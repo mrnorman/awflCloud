@@ -3,9 +3,9 @@
 // Legal syntax is key : value
 // You can end input key:value lines with comments
 
-nx         : 800     // Number of cells in the x-direction
+nx         : 400     // Number of cells in the x-direction
 ny         : 1       // Number of cells in the y-direction
-nz         : 400     // Number of cells in the z-direction
+nz         : 200     // Number of cells in the z-direction
 xlen       : 20000.  // Domain length in the x-direction (m)
 ylen       : 20000.  // Domain length in the y-direction (m)
 zlen       : 10000.  // Domain length in the z-direction (m)
