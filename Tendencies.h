@@ -102,6 +102,150 @@ public :
     exch.haloUnpackN_x (dom, state, numState);
 
     // Reconstruct to tord GLL points in the x-direction
+    reconSD_X(state, hyDensCells, hyDensThetaCells, dom, wenoRecon, to_gll, stateLimits, fluxLimits, wenoIdl, wenoSigma);
+
+    //Reconcile the edge fluxes via MPI exchange.
+    exch.haloInit      ();
+    exch.edgePackN_x   (dom, stateLimits, numState);
+    exch.edgePackN_x   (dom, fluxLimits , numState);
+    exch.edgeExchange_x(dom, par);
+    exch.edgeUnpackN_x (dom, stateLimits, numState);
+    exch.edgeUnpackN_x (dom, fluxLimits , numState);
+
+    // Riemann solver
+    computeFlux_X(stateLimits, fluxLimits, flux, dom);
+
+    // Form the tendencies
+    computeTend_X(flux, tend, dom);
+  }
+
+
+  inline void compEulerTendSD_Y(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
+                                Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+
+    //Exchange halos in the y-direction
+    exch.haloInit      ();
+    exch.haloPackN_y   (dom, state, numState);
+    exch.haloExchange_y(dom, par);
+    exch.haloUnpackN_y (dom, state, numState);
+
+    // Reconstruct to tord GLL points in the y-direction
+    reconSD_Y(state, hyDensCells, hyDensThetaCells, dom, wenoRecon, to_gll, stateLimits, fluxLimits, wenoIdl, wenoSigma);
+
+    //Reconcile the edge fluxes via MPI exchange.
+    exch.haloInit      ();
+    exch.edgePackN_y   (dom, stateLimits, numState);
+    exch.edgePackN_y   (dom, fluxLimits , numState);
+    exch.edgeExchange_y(dom, par);
+    exch.edgeUnpackN_y (dom, stateLimits, numState);
+    exch.edgeUnpackN_y (dom, fluxLimits , numState);
+
+    // Riemann solver
+    computeFlux_Y(stateLimits, fluxLimits, flux, dom);
+
+    // Form the tendencies
+    computeTend_Y(flux, tend, dom);
+  }
+
+
+  inline void compEulerTendSD_Z(real4d &state, real2d const &hyDensGLL, real2d const &hyDensThetaGLL,
+                                Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+
+    // Boundaries for the fluid state in the z-direction
+    stateBoundariesZ(state, dom);
+
+    // Reconstruct to tord GLL points in the x-direction
+    reconSD_Z(state, hyDensGLL, hyDensThetaGLL, dom, wenoRecon, to_gll, stateLimits, fluxLimits, wenoIdl, wenoSigma);
+
+    // Apply boundary conditions to fluxes and state values
+    edgeBoundariesZ(stateLimits, fluxLimits, dom);
+
+    // Riemann solver
+    computeFlux_Z(stateLimits, fluxLimits, flux, dom);
+
+    // Form the tendencies
+    computeTend_Z(flux, tend, src, dom);
+  }
+
+
+  inline void compEulerTendADER_X(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
+                                  Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+    //Exchange halos in the x-direction
+    exch.haloInit      ();
+    exch.haloPackN_x   (dom, state, numState);
+    exch.haloExchange_x(dom, par);
+    exch.haloUnpackN_x (dom, state, numState);
+
+    // Reconstruct to tord GLL points in the x-direction
+    reconAder_X(state, hyDensCells, hyDensThetaCells, dom, wenoRecon, to_gll, stateLimits, fluxLimits, wenoIdl, wenoSigma);
+
+    //Reconcile the edge fluxes via MPI exchange.
+    exch.haloInit      ();
+    exch.edgePackN_x   (dom, stateLimits, numState);
+    exch.edgePackN_x   (dom, fluxLimits , numState);
+    exch.edgeExchange_x(dom, par);
+    exch.edgeUnpackN_x (dom, stateLimits, numState);
+    exch.edgeUnpackN_x (dom, fluxLimits , numState);
+
+    // Riemann solver
+    computeFlux_X(stateLimits, fluxLimits, flux, dom);
+
+    // Form the tendencies
+    computeTend_X(flux, tend, dom);
+  }
+
+
+  inline void compEulerTendADER_Y(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
+                                  Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+
+    //Exchange halos in the y-direction
+    exch.haloInit      ();
+    exch.haloPackN_y   (dom, state, numState);
+    exch.haloExchange_y(dom, par);
+    exch.haloUnpackN_y (dom, state, numState);
+
+    // Reconstruct to tord GLL points in the y-direction
+    reconAder_Y(state, hyDensCells, hyDensThetaCells, dom, wenoRecon, to_gll, stateLimits, fluxLimits, wenoIdl, wenoSigma);
+
+    //Reconcile the edge fluxes via MPI exchange.
+    exch.haloInit      ();
+    exch.edgePackN_y   (dom, stateLimits, numState);
+    exch.edgePackN_y   (dom, fluxLimits , numState);
+    exch.edgeExchange_y(dom, par);
+    exch.edgeUnpackN_y (dom, stateLimits, numState);
+    exch.edgeUnpackN_y (dom, fluxLimits , numState);
+
+    // Riemann solver
+    computeFlux_Y(stateLimits, fluxLimits, flux, dom);
+
+    // Form the tendencies
+    computeTend_Y(flux, tend, dom);
+  }
+
+
+  inline void compEulerTendADER_Z(real4d &state, real2d const &hyDensGLL, real2d const &hyDensThetaGLL,
+                                  Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+
+    // Boundaries for the fluid state in the z-direction
+    stateBoundariesZ(state, dom);
+
+    // Reconstruct tord GLL points in the z-direction
+    reconAder_Z(state, hyDensGLL, hyDensThetaGLL, dom, wenoRecon, to_gll, stateLimits, fluxLimits, src, wenoIdl, wenoSigma);
+
+    // Apply boundary conditions to fluxes and state values
+    edgeBoundariesZ(stateLimits, fluxLimits, dom);
+
+    // Riemann solver
+    computeFlux_Z(stateLimits, fluxLimits, flux, dom);
+
+    // Form the tendencies
+    computeTend_Z(flux, tend, src, dom);
+  }
+
+
+  inline void reconSD_X(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
+                        Domain const &dom, SArray<real,ord,ord,ord> const &wenoRecon, SArray<real,ord,tord> const &to_gll, 
+                        real5d &stateLimits, real5d &fluxLimits, SArray<real,hs+2> const &wenoIdl, real &wenoSigma) {
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
@@ -152,33 +296,11 @@ public :
       }
 
     });
-
-    //Reconcile the edge fluxes via MPI exchange.
-    exch.haloInit      ();
-    exch.edgePackN_x   (dom, stateLimits, numState);
-    exch.edgePackN_x   (dom, fluxLimits , numState);
-    exch.edgeExchange_x(dom, par);
-    exch.edgeUnpackN_x (dom, stateLimits, numState);
-    exch.edgeUnpackN_x (dom, fluxLimits , numState);
-
-    // Riemann solver
-    computeFlux_X(stateLimits, fluxLimits, flux, dom);
-
-    // Form the tendencies
-    computeTend_X(flux, tend, dom);
   }
 
-
-  inline void compEulerTendSD_Y(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
-                                Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
-
-    //Exchange halos in the y-direction
-    exch.haloInit      ();
-    exch.haloPackN_y   (dom, state, numState);
-    exch.haloExchange_y(dom, par);
-    exch.haloUnpackN_y (dom, state, numState);
-
-    // Reconstruct to tord GLL points in the x-direction
+  inline void reconSD_Y(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
+                        Domain const &dom, SArray<real,ord,ord,ord> const &wenoRecon, SArray<real,ord,tord> const &to_gll, 
+                        real5d &stateLimits, real5d &fluxLimits, SArray<real,hs+2> const &wenoIdl, real &wenoSigma) {
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
@@ -229,30 +351,12 @@ public :
       }
 
     });
-
-    //Reconcile the edge fluxes via MPI exchange.
-    exch.haloInit      ();
-    exch.edgePackN_y   (dom, stateLimits, numState);
-    exch.edgePackN_y   (dom, fluxLimits , numState);
-    exch.edgeExchange_y(dom, par);
-    exch.edgeUnpackN_y (dom, stateLimits, numState);
-    exch.edgeUnpackN_y (dom, fluxLimits , numState);
-
-    // Riemann solver
-    computeFlux_Y(stateLimits, fluxLimits, flux, dom);
-
-    // Form the tendencies
-    computeTend_Y(flux, tend, dom);
   }
 
 
-  inline void compEulerTendSD_Z(real4d &state, real2d const &hyDensGLL, real2d const &hyDensThetaGLL,
-                                Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
-
-    // Boundaries for the fluid state in the z-direction
-    stateBoundariesZ(state, dom);
-
-    // Reconstruct to tord GLL points in the x-direction
+  inline void reconSD_Z(real4d &state, real2d const &hyDensGLL, real2d const &hyDensThetaGLL,
+                        Domain const &dom, SArray<real,ord,ord,ord> const &wenoRecon, SArray<real,ord,tord> const &to_gll, 
+                        real5d &stateLimits, real5d &fluxLimits, SArray<real,hs+2> const &wenoIdl, real &wenoSigma) {
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
@@ -307,15 +411,6 @@ public :
       }
 
     });
-
-    // Apply boundary conditions to fluxes and state values
-    edgeBoundariesZ(stateLimits, fluxLimits, dom);
-
-    // Riemann solver
-    computeFlux_Z(stateLimits, fluxLimits, flux, dom);
-
-    // Form the tendencies
-    computeTend_Z(flux, tend, src, dom);
   }
 
 
@@ -381,34 +476,6 @@ public :
   }
 
 
-
-  inline void compEulerTendADER_X(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
-                                  Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
-    //Exchange halos in the x-direction
-    exch.haloInit      ();
-    exch.haloPackN_x   (dom, state, numState);
-    exch.haloExchange_x(dom, par);
-    exch.haloUnpackN_x (dom, state, numState);
-
-    // Reconstruct to tord GLL points in the x-direction
-    reconAder_X(state, hyDensCells, hyDensThetaCells, dom, wenoRecon, to_gll, stateLimits, fluxLimits, wenoIdl, wenoSigma);
-
-    //Reconcile the edge fluxes via MPI exchange.
-    exch.haloInit      ();
-    exch.edgePackN_x   (dom, stateLimits, numState);
-    exch.edgePackN_x   (dom, fluxLimits , numState);
-    exch.edgeExchange_x(dom, par);
-    exch.edgeUnpackN_x (dom, stateLimits, numState);
-    exch.edgeUnpackN_x (dom, fluxLimits , numState);
-
-    // Riemann solver
-    computeFlux_X(stateLimits, fluxLimits, flux, dom);
-
-    // Form the tendencies
-    computeTend_X(flux, tend, dom);
-  }
-
-
   inline void reconAder_Y(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
                           Domain const &dom, SArray<real,ord,ord,ord> const &wenoRecon, SArray<real,ord,tord> const &to_gll, 
                           real5d &stateLimits, real5d &fluxLimits, SArray<real,hs+2> const &wenoIdl, real &wenoSigma) {
@@ -451,34 +518,6 @@ public :
       }
 
     });
-  }
-
-
-  inline void compEulerTendADER_Y(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
-                                  Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
-
-    //Exchange halos in the y-direction
-    exch.haloInit      ();
-    exch.haloPackN_y   (dom, state, numState);
-    exch.haloExchange_y(dom, par);
-    exch.haloUnpackN_y (dom, state, numState);
-
-    // Reconstruct to tord GLL points in the y-direction
-    reconAder_Y(state, hyDensCells, hyDensThetaCells, dom, wenoRecon, to_gll, stateLimits, fluxLimits, wenoIdl, wenoSigma);
-
-    //Reconcile the edge fluxes via MPI exchange.
-    exch.haloInit      ();
-    exch.edgePackN_y   (dom, stateLimits, numState);
-    exch.edgePackN_y   (dom, fluxLimits , numState);
-    exch.edgeExchange_y(dom, par);
-    exch.edgeUnpackN_y (dom, stateLimits, numState);
-    exch.edgeUnpackN_y (dom, fluxLimits , numState);
-
-    // Riemann solver
-    computeFlux_Y(stateLimits, fluxLimits, flux, dom);
-
-    // Form the tendencies
-    computeTend_Y(flux, tend, dom);
   }
 
 
@@ -542,26 +581,6 @@ public :
       }
 
     });
-  }
-
-
-  inline void compEulerTendADER_Z(real4d &state, real2d const &hyDensGLL, real2d const &hyDensThetaGLL,
-                                  Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
-
-    // Boundaries for the fluid state in the z-direction
-    stateBoundariesZ(state, dom);
-
-    // Reconstruct tord GLL points in the z-direction
-    reconAder_Z(state, hyDensGLL, hyDensThetaGLL, dom, wenoRecon, to_gll, stateLimits, fluxLimits, src, wenoIdl, wenoSigma);
-
-    // Apply boundary conditions to fluxes and state values
-    edgeBoundariesZ(stateLimits, fluxLimits, dom);
-
-    // Riemann solver
-    computeFlux_Z(stateLimits, fluxLimits, flux, dom);
-
-    // Form the tendencies
-    computeTend_Z(flux, tend, src, dom);
   }
 
 
