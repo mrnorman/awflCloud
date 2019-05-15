@@ -164,6 +164,9 @@ public:
 
 
   inline void edgePackN_x(Domain const &dom, real5d const &a, int const n) {
+    edgePackN_x_ext(dom,a,n,edgeSendBufW,edgeSendBufE,nPack);
+  }
+  inline void edgePackN_x_ext(Domain const &dom, real5d const &a, int const n, real3d &edgeSendBufW, real3d &edgeSendBufE, int &nPack) {
     // for (int v=0; v<n; v++) {
     //   for (int k=0; k<dom.nz; k++) {
     //     for (int j=0; j<dom.ny; j++) {
@@ -178,6 +181,9 @@ public:
 
 
   inline void edgePackN_y(Domain const &dom, real5d const &a, int const n) {
+    edgePackN_y_ext(dom,a,n,edgeSendBufS,edgeSendBufN,nPack);
+  }
+  inline void edgePackN_y_ext(Domain const &dom, real5d const &a, int const n, real3d &edgeSendBufS, real3d &edgeSendBufN, int &nPack) {
     // for (int v=0; v<n; v++) {
     //   for (int k=0; k<dom.nz; k++) {
     //     for (int i=0; i<dom.nx; i++) {
@@ -192,6 +198,9 @@ public:
 
 
   inline void edgeUnpackN_x(Domain const &dom, real5d &a, int const n) {
+    edgeUnpackN_x_ext(dom, a, n, edgeRecvBufW, edgeRecvBufE, nUnpack);
+  }
+  inline void edgeUnpackN_x_ext(Domain const &dom, real5d &a, int const n, real3d const &edgeRecvBufW, real3d const &edgeRecvBufE, int &nUnpack) {
     // for (int v=0; v<n; v++) {
     //   for (int k=0; k<dom.nz; k++) {
     //     for (int j=0; j<dom.ny; j++) {
@@ -206,6 +215,9 @@ public:
 
 
   inline void edgeUnpackN_y(Domain const &dom, real5d &a, int const n) {
+    edgeUnpackN_y_ext(dom, a, n, edgeRecvBufS, edgeRecvBufN, nUnpack);
+  }
+  inline void edgeUnpackN_y_ext(Domain const &dom, real5d &a, int const n, real3d const &edgeRecvBufS, real3d const &edgeRecvBufN, int &nUnpack) {
     // for (int v=0; v<n; v++) {
     //   for (int k=0; k<dom.nz; k++) {
     //     for (int i=0; i<dom.nx; i++) {
