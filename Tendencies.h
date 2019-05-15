@@ -250,24 +250,7 @@ public :
                                 Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
 
     // Boundaries for the fluid state in the z-direction
-    // for (int j=0; j<dom.ny; j++) {
-    //   for (int i=0; i<dom.nx; i++) {
-    //     for (int ii=0; ii<hs; ii++) {
-    Kokkos::parallel_for( dom.ny*dom.nx*hs , KOKKOS_LAMBDA (int const iGlob) {
-      int j, i, ii;
-      unpackIndices(iGlob,dom.ny,dom.nx,hs,j,i,ii);
-      state(idR ,ii,hs+j,hs+i) = state(idR ,hs,hs+j,hs+i);
-      state(idRU,ii,hs+j,hs+i) = state(idRU,hs,hs+j,hs+i);
-      state(idRV,ii,hs+j,hs+i) = state(idRV,hs,hs+j,hs+i);
-      state(idRW,ii,hs+j,hs+i) = 0;
-      state(idRT,ii,hs+j,hs+i) = state(idRT,hs,hs+j,hs+i);
-
-      state(idR ,dom.nz+hs+ii,hs+j,hs+i) = state(idR ,dom.nz+hs-1,hs+j,hs+i);
-      state(idRU,dom.nz+hs+ii,hs+j,hs+i) = state(idRU,dom.nz+hs-1,hs+j,hs+i);
-      state(idRV,dom.nz+hs+ii,hs+j,hs+i) = state(idRV,dom.nz+hs-1,hs+j,hs+i);
-      state(idRW,dom.nz+hs+ii,hs+j,hs+i) = 0;
-      state(idRT,dom.nz+hs+ii,hs+j,hs+i) = state(idRT,dom.nz+hs-1,hs+j,hs+i);
-    });
+    stateBoundariesZ(state, dom);
 
     // Reconstruct to tord GLL points in the x-direction
     // for (int k=0; k<dom.nz; k++) {
@@ -326,37 +309,7 @@ public :
     });
 
     // Apply boundary conditions to fluxes and state values
-    // for (int j=0; j<dom.ny; j++) {
-    //   for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
-      int j, i;
-      unpackIndices(iGlob,dom.ny,dom.nx,j,i);
-      stateLimits(idR ,0,0     ,j,i) = stateLimits(idR ,1,0     ,j,i);
-      stateLimits(idRU,0,0     ,j,i) = stateLimits(idRU,1,0     ,j,i);
-      stateLimits(idRV,0,0     ,j,i) = stateLimits(idRV,1,0     ,j,i);
-      stateLimits(idRW,0,0     ,j,i) = 0;
-      stateLimits(idRW,1,0     ,j,i) = 0;
-      stateLimits(idRT,0,0     ,j,i) = stateLimits(idRT,1,0     ,j,i);
-
-      stateLimits(idR ,1,dom.nz,j,i) = stateLimits(idR ,0,dom.nz,j,i);
-      stateLimits(idRU,1,dom.nz,j,i) = stateLimits(idRU,0,dom.nz,j,i);
-      stateLimits(idRV,1,dom.nz,j,i) = stateLimits(idRV,0,dom.nz,j,i);
-      stateLimits(idRW,0,dom.nz,j,i) = 0;
-      stateLimits(idRW,1,dom.nz,j,i) = 0;
-      stateLimits(idRT,1,dom.nz,j,i) = stateLimits(idRT,0,dom.nz,j,i);
-
-      fluxLimits(idR ,0,0     ,j,i) = fluxLimits(idR ,1,0     ,j,i);
-      fluxLimits(idRU,0,0     ,j,i) = fluxLimits(idRU,1,0     ,j,i);
-      fluxLimits(idRV,0,0     ,j,i) = fluxLimits(idRV,1,0     ,j,i);
-      fluxLimits(idRW,0,0     ,j,i) = fluxLimits(idRW,1,0     ,j,i);
-      fluxLimits(idRT,0,0     ,j,i) = fluxLimits(idRT,1,0     ,j,i);
-
-      fluxLimits(idR ,1,dom.nz,j,i) = fluxLimits(idR ,0,dom.nz,j,i);
-      fluxLimits(idRU,1,dom.nz,j,i) = fluxLimits(idRU,0,dom.nz,j,i);
-      fluxLimits(idRV,1,dom.nz,j,i) = fluxLimits(idRV,0,dom.nz,j,i);
-      fluxLimits(idRW,1,dom.nz,j,i) = fluxLimits(idRW,0,dom.nz,j,i);
-      fluxLimits(idRT,1,dom.nz,j,i) = fluxLimits(idRT,0,dom.nz,j,i);
-    });
+    edgeBoundariesZ(stateLimits, fluxLimits, dom);
 
     // Riemann solver
     computeFlux_Z(stateLimits, fluxLimits, flux, dom);
@@ -527,24 +480,7 @@ public :
                                   Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
 
     // Boundaries for the fluid state in the z-direction
-    // for (int j=0; j<dom.ny; j++) {
-    //   for (int i=0; i<dom.nx; i++) {
-    //     for (int ii=0; ii<hs; ii++) {
-    Kokkos::parallel_for( dom.ny*dom.nx*hs , KOKKOS_LAMBDA (int const iGlob) {
-      int j, i, ii;
-      unpackIndices(iGlob,dom.ny,dom.nx,hs,j,i,ii);
-      state(idR ,ii,hs+j,hs+i) = state(idR ,hs,hs+j,hs+i);
-      state(idRU,ii,hs+j,hs+i) = state(idRU,hs,hs+j,hs+i);
-      state(idRV,ii,hs+j,hs+i) = state(idRV,hs,hs+j,hs+i);
-      state(idRW,ii,hs+j,hs+i) = 0;
-      state(idRT,ii,hs+j,hs+i) = state(idRT,hs,hs+j,hs+i);
-
-      state(idR ,dom.nz+hs+ii,hs+j,hs+i) = state(idR ,dom.nz+hs-1,hs+j,hs+i);
-      state(idRU,dom.nz+hs+ii,hs+j,hs+i) = state(idRU,dom.nz+hs-1,hs+j,hs+i);
-      state(idRV,dom.nz+hs+ii,hs+j,hs+i) = state(idRV,dom.nz+hs-1,hs+j,hs+i);
-      state(idRW,dom.nz+hs+ii,hs+j,hs+i) = 0;
-      state(idRT,dom.nz+hs+ii,hs+j,hs+i) = state(idRT,dom.nz+hs-1,hs+j,hs+i);
-    });
+    stateBoundariesZ(state, dom);
 
     // Reconstruct to 2 GLL points in the x-direction
     // for (int k=0; k<dom.nz; k++) {
@@ -606,37 +542,7 @@ public :
     });
 
     // Apply boundary conditions to fluxes and state values
-    // for (int j=0; j<dom.ny; j++) {
-    //   for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
-      int j, i;
-      unpackIndices(iGlob,dom.ny,dom.nx,j,i);
-      stateLimits(idR ,0,0     ,j,i) = stateLimits(idR ,1,0     ,j,i);
-      stateLimits(idRU,0,0     ,j,i) = stateLimits(idRU,1,0     ,j,i);
-      stateLimits(idRV,0,0     ,j,i) = stateLimits(idRV,1,0     ,j,i);
-      stateLimits(idRW,0,0     ,j,i) = 0;
-      stateLimits(idRW,1,0     ,j,i) = 0;
-      stateLimits(idRT,0,0     ,j,i) = stateLimits(idRT,1,0     ,j,i);
-
-      stateLimits(idR ,1,dom.nz,j,i) = stateLimits(idR ,0,dom.nz,j,i);
-      stateLimits(idRU,1,dom.nz,j,i) = stateLimits(idRU,0,dom.nz,j,i);
-      stateLimits(idRV,1,dom.nz,j,i) = stateLimits(idRV,0,dom.nz,j,i);
-      stateLimits(idRW,0,dom.nz,j,i) = 0;
-      stateLimits(idRW,1,dom.nz,j,i) = 0;
-      stateLimits(idRT,1,dom.nz,j,i) = stateLimits(idRT,0,dom.nz,j,i);
-
-      fluxLimits(idR ,0,0     ,j,i) = fluxLimits(idR ,1,0     ,j,i);
-      fluxLimits(idRU,0,0     ,j,i) = fluxLimits(idRU,1,0     ,j,i);
-      fluxLimits(idRV,0,0     ,j,i) = fluxLimits(idRV,1,0     ,j,i);
-      fluxLimits(idRW,0,0     ,j,i) = fluxLimits(idRW,1,0     ,j,i);
-      fluxLimits(idRT,0,0     ,j,i) = fluxLimits(idRT,1,0     ,j,i);
-
-      fluxLimits(idR ,1,dom.nz,j,i) = fluxLimits(idR ,0,dom.nz,j,i);
-      fluxLimits(idRU,1,dom.nz,j,i) = fluxLimits(idRU,0,dom.nz,j,i);
-      fluxLimits(idRV,1,dom.nz,j,i) = fluxLimits(idRV,0,dom.nz,j,i);
-      fluxLimits(idRW,1,dom.nz,j,i) = fluxLimits(idRW,0,dom.nz,j,i);
-      fluxLimits(idRT,1,dom.nz,j,i) = fluxLimits(idRT,0,dom.nz,j,i);
-    });
+    edgeBoundariesZ(stateLimits, fluxLimits, dom);
 
     // Riemann solver
     computeFlux_Z(stateLimits, fluxLimits, flux, dom);
@@ -750,6 +656,63 @@ public :
       if (l==idRW) {
         tend(l,k,j,i) += src(k,j,i);
       }
+    });
+  }
+
+
+  inline void stateBoundariesZ(real4d &state, Domain const &dom) {
+    // for (int j=0; j<dom.ny; j++) {
+    //   for (int i=0; i<dom.nx; i++) {
+    //     for (int ii=0; ii<hs; ii++) {
+    Kokkos::parallel_for( dom.ny*dom.nx*hs , KOKKOS_LAMBDA (int const iGlob) {
+      int j, i, ii;
+      unpackIndices(iGlob,dom.ny,dom.nx,hs,j,i,ii);
+      state(idR ,ii,hs+j,hs+i) = state(idR ,hs,hs+j,hs+i);
+      state(idRU,ii,hs+j,hs+i) = state(idRU,hs,hs+j,hs+i);
+      state(idRV,ii,hs+j,hs+i) = state(idRV,hs,hs+j,hs+i);
+      state(idRW,ii,hs+j,hs+i) = 0;
+      state(idRT,ii,hs+j,hs+i) = state(idRT,hs,hs+j,hs+i);
+
+      state(idR ,dom.nz+hs+ii,hs+j,hs+i) = state(idR ,dom.nz+hs-1,hs+j,hs+i);
+      state(idRU,dom.nz+hs+ii,hs+j,hs+i) = state(idRU,dom.nz+hs-1,hs+j,hs+i);
+      state(idRV,dom.nz+hs+ii,hs+j,hs+i) = state(idRV,dom.nz+hs-1,hs+j,hs+i);
+      state(idRW,dom.nz+hs+ii,hs+j,hs+i) = 0;
+      state(idRT,dom.nz+hs+ii,hs+j,hs+i) = state(idRT,dom.nz+hs-1,hs+j,hs+i);
+    });
+  }
+
+
+  inline void edgeBoundariesZ(real5d &stateLimits, real5d &fluxLimits, Domain const &dom) {
+    // for (int j=0; j<dom.ny; j++) {
+    //   for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int j, i;
+      unpackIndices(iGlob,dom.ny,dom.nx,j,i);
+      stateLimits(idR ,0,0     ,j,i) = stateLimits(idR ,1,0     ,j,i);
+      stateLimits(idRU,0,0     ,j,i) = stateLimits(idRU,1,0     ,j,i);
+      stateLimits(idRV,0,0     ,j,i) = stateLimits(idRV,1,0     ,j,i);
+      stateLimits(idRW,0,0     ,j,i) = 0;
+      stateLimits(idRW,1,0     ,j,i) = 0;
+      stateLimits(idRT,0,0     ,j,i) = stateLimits(idRT,1,0     ,j,i);
+
+      stateLimits(idR ,1,dom.nz,j,i) = stateLimits(idR ,0,dom.nz,j,i);
+      stateLimits(idRU,1,dom.nz,j,i) = stateLimits(idRU,0,dom.nz,j,i);
+      stateLimits(idRV,1,dom.nz,j,i) = stateLimits(idRV,0,dom.nz,j,i);
+      stateLimits(idRW,0,dom.nz,j,i) = 0;
+      stateLimits(idRW,1,dom.nz,j,i) = 0;
+      stateLimits(idRT,1,dom.nz,j,i) = stateLimits(idRT,0,dom.nz,j,i);
+
+      fluxLimits(idR ,0,0     ,j,i) = fluxLimits(idR ,1,0     ,j,i);
+      fluxLimits(idRU,0,0     ,j,i) = fluxLimits(idRU,1,0     ,j,i);
+      fluxLimits(idRV,0,0     ,j,i) = fluxLimits(idRV,1,0     ,j,i);
+      fluxLimits(idRW,0,0     ,j,i) = fluxLimits(idRW,1,0     ,j,i);
+      fluxLimits(idRT,0,0     ,j,i) = fluxLimits(idRT,1,0     ,j,i);
+
+      fluxLimits(idR ,1,dom.nz,j,i) = fluxLimits(idR ,0,dom.nz,j,i);
+      fluxLimits(idRU,1,dom.nz,j,i) = fluxLimits(idRU,0,dom.nz,j,i);
+      fluxLimits(idRV,1,dom.nz,j,i) = fluxLimits(idRV,0,dom.nz,j,i);
+      fluxLimits(idRW,1,dom.nz,j,i) = fluxLimits(idRW,0,dom.nz,j,i);
+      fluxLimits(idRT,1,dom.nz,j,i) = fluxLimits(idRT,0,dom.nz,j,i);
     });
   }
 
