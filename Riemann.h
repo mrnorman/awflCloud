@@ -10,7 +10,7 @@ inline _HOSTDEV void godunovLinearX(SArray<real,numState> &s1, SArray<real,numSt
                                     SArray<real,numState> &f1, SArray<real,numState> &f2,
                                     SArray<real,numState> &upw ) {
   SArray<real,numState> ch1, ch2, chu, ev;
-  real const windTol = 1.0e-6;
+  real const windTol = 0; // 1.0e-6;
 
   // Compute interface values
   real r = 0.5_fp * ( s1(idR ) + s2(idR ) );
@@ -42,7 +42,7 @@ inline _HOSTDEV void godunovLinearX(SArray<real,numState> &s1, SArray<real,numSt
 
   // Compute the upwind characteristics
   for (int l=0; l<numState; l++) {
-    if        (ev(l) > windTol) {
+    if        (ev(l) >= windTol) {
       chu(l) = ch1(l);
     } else if (ev(l) < windTol) {
       chu(l) = ch2(l);
@@ -64,7 +64,7 @@ inline _HOSTDEV void godunovLinearY(SArray<real,numState> &s1, SArray<real,numSt
                                     SArray<real,numState> &f1, SArray<real,numState> &f2,
                                     SArray<real,numState> &upw ) {
   SArray<real,numState> ch1, ch2, chu, ev;
-  real const windTol = 1.0e-6;
+  real const windTol = 0; // 1.0e-6;
 
   // Compute interface values
   real r = 0.5_fp * ( s1(idR ) + s2(idR ) );
@@ -96,7 +96,7 @@ inline _HOSTDEV void godunovLinearY(SArray<real,numState> &s1, SArray<real,numSt
 
   // Compute the upwind characteristics
   for (int l=0; l<numState; l++) {
-    if        (ev(l) > windTol) {
+    if        (ev(l) >= windTol) {
       chu(l) = ch1(l);
     } else if (ev(l) < windTol) {
       chu(l) = ch2(l);
@@ -118,7 +118,7 @@ inline _HOSTDEV void godunovLinearZ(SArray<real,numState> &s1, SArray<real,numSt
                                     SArray<real,numState> &f1, SArray<real,numState> &f2,
                                     SArray<real,numState> &upw ) {
   SArray<real,numState> ch1, ch2, chu, ev;
-  real const windTol = 1.0e-6;
+  real const windTol = 0; // 1.0e-6;
 
   // Compute interface values
   real r = 0.5_fp * ( s1(idR ) + s2(idR ) );
@@ -150,7 +150,7 @@ inline _HOSTDEV void godunovLinearZ(SArray<real,numState> &s1, SArray<real,numSt
 
   // Compute the upwind characteristics
   for (int l=0; l<numState; l++) {
-    if        (ev(l) > windTol) {
+    if        (ev(l) >= windTol) {
       chu(l) = ch1(l);
     } else if (ev(l) < windTol) {
       chu(l) = ch2(l);
