@@ -339,7 +339,6 @@ public :
   inline void reconAder_X(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
                           Domain const &dom, SArray<real,ord,ord,ord> const &wenoRecon, SArray<real,ord,tord> const &to_gll, 
                           real5d &stateLimits, real5d &fluxLimits, SArray<real,hs+2> const &wenoIdl, real &wenoSigma) {
-
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
@@ -410,16 +409,9 @@ public :
   }
 
 
-  inline void compEulerTendADER_Y(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
-                                  Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
-
-    //Exchange halos in the y-direction
-    exch.haloInit      ();
-    exch.haloPackN_y   (dom, state, numState);
-    exch.haloExchange_y(dom, par);
-    exch.haloUnpackN_y (dom, state, numState);
-
-    // Reconstruct to tord GLL points in the x-direction
+  inline void reconAder_Y(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
+                          Domain const &dom, SArray<real,ord,ord,ord> const &wenoRecon, SArray<real,ord,tord> const &to_gll, 
+                          real5d &stateLimits, real5d &fluxLimits, SArray<real,hs+2> const &wenoIdl, real &wenoSigma) {
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
@@ -459,6 +451,20 @@ public :
       }
 
     });
+  }
+
+
+  inline void compEulerTendADER_Y(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
+                                  Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+
+    //Exchange halos in the y-direction
+    exch.haloInit      ();
+    exch.haloPackN_y   (dom, state, numState);
+    exch.haloExchange_y(dom, par);
+    exch.haloUnpackN_y (dom, state, numState);
+
+    // Reconstruct to tord GLL points in the y-direction
+    reconAder_Y(state, hyDensCells, hyDensThetaCells, dom, wenoRecon, to_gll, stateLimits, fluxLimits, wenoIdl, wenoSigma);
 
     //Reconcile the edge fluxes via MPI exchange.
     exch.haloInit      ();
