@@ -38,7 +38,7 @@ inline _HOSTDEV real operator"" _fp( long double x ) {
   return static_cast<real>(x);
 }
 
-#define ord  5
+#define ord  7
 #define tord 3
 #define hs (ord-1)/2
 

@@ -128,38 +128,62 @@ public:
   inline void haloExchange_x(Domain const &dom, Parallel const &par) {
     int ierr;
 
-    Kokkos::fence();
+    if (par.nproc_x > 1) {
+      Kokkos::fence();
 
-    //Pre-post the receives
-    ierr = MPI_Irecv( haloRecvBufW.data() , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,0) , 0 , MPI_COMM_WORLD , &rReq[0] );
-    ierr = MPI_Irecv( haloRecvBufE.data() , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,2) , 1 , MPI_COMM_WORLD , &rReq[1] );
+      //Pre-post the receives
+      ierr = MPI_Irecv( haloRecvBufW.data() , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,0) , 0 , MPI_COMM_WORLD , &rReq[0] );
+      ierr = MPI_Irecv( haloRecvBufE.data() , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,2) , 1 , MPI_COMM_WORLD , &rReq[1] );
 
-    //Send the data
-    ierr = MPI_Isend( haloSendBufW.data() , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,0) , 1 , MPI_COMM_WORLD , &sReq[0] );
-    ierr = MPI_Isend( haloSendBufE.data() , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,2) , 0 , MPI_COMM_WORLD , &sReq[1] );
+      //Send the data
+      ierr = MPI_Isend( haloSendBufW.data() , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,0) , 1 , MPI_COMM_WORLD , &sReq[0] );
+      ierr = MPI_Isend( haloSendBufE.data() , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,2) , 0 , MPI_COMM_WORLD , &sReq[1] );
 
-    //Wait for the sends and receives to finish
-    ierr = MPI_Waitall(2, sReq, sStat);
-    ierr = MPI_Waitall(2, rReq, rStat);
+      //Wait for the sends and receives to finish
+      ierr = MPI_Waitall(2, sReq, sStat);
+      ierr = MPI_Waitall(2, rReq, rStat);
+    } else {
+      haloExchange_x_loc(dom, haloSendBufW, haloSendBufE, haloRecvBufW, haloRecvBufE);
+    }
+  }
+  inline void haloExchange_x_loc(Domain const &dom, real4d &haloSendBufW, real4d &haloSendBufE, real4d &haloRecvBufW, real4d &haloRecvBufE) {
+    Kokkos::parallel_for( nPack*dom.nz*dom.ny*hs , KOKKOS_LAMBDA (int iGlob) {
+      int v, k, j, ii;
+      unpackIndices(iGlob,nPack,dom.nz,dom.ny,hs,v,k,j,ii);
+      haloRecvBufW(v,k,j,ii) = haloSendBufE(v,k,j,ii);
+      haloRecvBufE(v,k,j,ii) = haloSendBufW(v,k,j,ii);
+    });
   }
 
 
   inline void haloExchange_y(Domain const &dom, Parallel const &par) {
     int ierr;
 
-    Kokkos::fence();
+    if (par.nproc_y > 1) {
+      Kokkos::fence();
 
-    //Pre-post the receives
-    ierr = MPI_Irecv( haloRecvBufS.data() , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(0,1) , 0 , MPI_COMM_WORLD , &rReq[0] );
-    ierr = MPI_Irecv( haloRecvBufN.data() , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(2,1) , 1 , MPI_COMM_WORLD , &rReq[1] );
+      //Pre-post the receives
+      ierr = MPI_Irecv( haloRecvBufS.data() , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(0,1) , 0 , MPI_COMM_WORLD , &rReq[0] );
+      ierr = MPI_Irecv( haloRecvBufN.data() , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(2,1) , 1 , MPI_COMM_WORLD , &rReq[1] );
 
-    //Send the data
-    ierr = MPI_Isend( haloSendBufS.data() , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(0,1) , 1 , MPI_COMM_WORLD , &sReq[0] );
-    ierr = MPI_Isend( haloSendBufN.data() , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(2,1) , 0 , MPI_COMM_WORLD , &sReq[1] );
+      //Send the data
+      ierr = MPI_Isend( haloSendBufS.data() , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(0,1) , 1 , MPI_COMM_WORLD , &sReq[0] );
+      ierr = MPI_Isend( haloSendBufN.data() , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(2,1) , 0 , MPI_COMM_WORLD , &sReq[1] );
 
-    //Wait for the sends and receives to finish
-    ierr = MPI_Waitall(2, sReq, sStat);
-    ierr = MPI_Waitall(2, rReq, rStat);
+      //Wait for the sends and receives to finish
+      ierr = MPI_Waitall(2, sReq, sStat);
+      ierr = MPI_Waitall(2, rReq, rStat);
+    } else {
+      haloExchange_y_loc(dom, haloSendBufS, haloSendBufN, haloRecvBufS, haloRecvBufN);
+    }
+  }
+  inline void haloExchange_y_loc(Domain const &dom, real4d &haloSendBufS, real4d &haloSendBufN, real4d &haloRecvBufS, real4d &haloRecvBufN) {
+    Kokkos::parallel_for( nPack*dom.nz*hs*dom.nx , KOKKOS_LAMBDA (int iGlob) {
+      int v, k, ii, i;
+      unpackIndices(iGlob,nPack,dom.nz,hs,dom.nx,v,k,ii,i);
+      haloRecvBufS(v,k,ii,i) = haloSendBufN(v,k,ii,i);
+      haloRecvBufN(v,k,ii,i) = haloSendBufS(v,k,ii,i);
+    });
   }
 
 
@@ -234,38 +258,62 @@ public:
   inline void edgeExchange_x(Domain const &dom, Parallel const &par) {
     int ierr;
 
-    Kokkos::fence();
+    if (par.nproc_x > 1) {
+      Kokkos::fence();
 
-    //Pre-post the receives
-    ierr = MPI_Irecv( edgeRecvBufW.data() , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,0) , 0 , MPI_COMM_WORLD , &rReq[0] );
-    ierr = MPI_Irecv( edgeRecvBufE.data() , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,2) , 1 , MPI_COMM_WORLD , &rReq[1] );
+      //Pre-post the receives
+      ierr = MPI_Irecv( edgeRecvBufW.data() , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,0) , 0 , MPI_COMM_WORLD , &rReq[0] );
+      ierr = MPI_Irecv( edgeRecvBufE.data() , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,2) , 1 , MPI_COMM_WORLD , &rReq[1] );
 
-    //Send the data
-    ierr = MPI_Isend( edgeSendBufW.data() , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,0) , 1 , MPI_COMM_WORLD , &sReq[0] );
-    ierr = MPI_Isend( edgeSendBufE.data() , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,2) , 0 , MPI_COMM_WORLD , &sReq[1] );
+      //Send the data
+      ierr = MPI_Isend( edgeSendBufW.data() , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,0) , 1 , MPI_COMM_WORLD , &sReq[0] );
+      ierr = MPI_Isend( edgeSendBufE.data() , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,2) , 0 , MPI_COMM_WORLD , &sReq[1] );
 
-    //Wait for the sends and receives to finish
-    ierr = MPI_Waitall(2, sReq, sStat);
-    ierr = MPI_Waitall(2, rReq, rStat);
+      //Wait for the sends and receives to finish
+      ierr = MPI_Waitall(2, sReq, sStat);
+      ierr = MPI_Waitall(2, rReq, rStat);
+    } else {
+      edgeExchange_x_loc(dom, edgeSendBufW, edgeSendBufE, edgeRecvBufW, edgeRecvBufE);
+    }
+  }
+  inline void edgeExchange_x_loc(Domain const &dom, real3d &edgeSendBufW, real3d &edgeSendBufE, real3d &edgeRecvBufW, real3d &edgeRecvBufE) {
+    Kokkos::parallel_for( nPack*dom.nz*dom.ny , KOKKOS_LAMBDA (int iGlob) {
+      int v, k, j;
+      unpackIndices(iGlob,nPack,dom.nz,dom.ny,v,k,j);
+      edgeRecvBufW(v,k,j) = edgeSendBufE(v,k,j);
+      edgeRecvBufE(v,k,j) = edgeSendBufW(v,k,j);
+    });
   }
 
 
   inline void edgeExchange_y(Domain const &dom, Parallel const &par) {
     int ierr;
 
-    Kokkos::fence();
+    if (par.nproc_y > 1) {
+      Kokkos::fence();
 
-    //Pre-post the receives
-    ierr = MPI_Irecv( edgeRecvBufS.data() , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(0,1) , 0 , MPI_COMM_WORLD , &rReq[0] );
-    ierr = MPI_Irecv( edgeRecvBufN.data() , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(2,1) , 1 , MPI_COMM_WORLD , &rReq[1] );
+      //Pre-post the receives
+      ierr = MPI_Irecv( edgeRecvBufS.data() , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(0,1) , 0 , MPI_COMM_WORLD , &rReq[0] );
+      ierr = MPI_Irecv( edgeRecvBufN.data() , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(2,1) , 1 , MPI_COMM_WORLD , &rReq[1] );
 
-    //Send the data
-    ierr = MPI_Isend( edgeSendBufS.data() , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(0,1) , 1 , MPI_COMM_WORLD , &sReq[0] );
-    ierr = MPI_Isend( edgeSendBufN.data() , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(2,1) , 0 , MPI_COMM_WORLD , &sReq[1] );
+      //Send the data
+      ierr = MPI_Isend( edgeSendBufS.data() , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(0,1) , 1 , MPI_COMM_WORLD , &sReq[0] );
+      ierr = MPI_Isend( edgeSendBufN.data() , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(2,1) , 0 , MPI_COMM_WORLD , &sReq[1] );
 
-    //Wait for the sends and receives to finish
-    ierr = MPI_Waitall(2, sReq, sStat);
-    ierr = MPI_Waitall(2, rReq, rStat);
+      //Wait for the sends and receives to finish
+      ierr = MPI_Waitall(2, sReq, sStat);
+      ierr = MPI_Waitall(2, rReq, rStat);
+    } else {
+      edgeExchange_y_loc(dom, edgeSendBufS, edgeSendBufN, edgeRecvBufS, edgeRecvBufN);
+    }
+  }
+  inline void edgeExchange_y_loc(Domain const &dom, real3d &edgeSendBufS, real3d &edgeSendBufN, real3d &edgeRecvBufS, real3d &edgeRecvBufN) {
+    Kokkos::parallel_for( nPack*dom.nz*dom.nx, KOKKOS_LAMBDA (int iGlob) {
+      int v, k, i;
+      unpackIndices(iGlob,nPack,dom.nz,dom.nx,v,k,i);
+      edgeRecvBufS(v,k,i) = edgeSendBufN(v,k,i);
+      edgeRecvBufN(v,k,i) = edgeSendBufS(v,k,i);
+    });
   }
 
 };
