@@ -10,9 +10,9 @@ xlen       : 20000.  // Domain length in the x-direction (m)
 ylen       : 20000.  // Domain length in the y-direction (m)
 zlen       : 10000.  // Domain length in the z-direction (m)
 cfl        : 0.9     // CFL value to use
-simLength  : 100.    // How long to simulation (s)
+simLength  : 10.     // How long to simulation (s)
 parNx      : 1       // Number of parallel tasks in the x-direction
 parNy      : 1       // Number of parallel tasks in the y-direction
-outFreq    : 10.     // Frequency for output in seconds
+outFreq    : 200.    // Frequency for output in seconds
 doWeno     : 1
 timeMethod : ADER    // Method to use in time (SSPRK3 or ADER)

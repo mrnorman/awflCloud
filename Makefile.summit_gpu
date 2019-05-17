@@ -14,7 +14,8 @@ LDFLAGS = -L${PNETCDF_PATH}/lib -lpnetcdf
 
 KOKKOS_DEVICES = "Cuda"
 KOKKOS_ARCH = "Volta70"
-KOKKOS_CUDA_OPTIONS += "enable_lambda"
+KOKKOS_CUDA_OPTIONS = "enable_lambda"
+KOKKOS_OPTIONS = "disable_profiling"
 
 DEPFLAGS = -M
 OBJ = $(notdir $(SRC:.cpp=.o))
