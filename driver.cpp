@@ -69,11 +69,15 @@ int main(int argc, char** argv) {
       ioWallTime += timer.seconds() - timeTmp;
     }
 
-    std::cout << "Initialization walltime: " << initWallTime << " seconds.\n";
-    std::cout << "Time stepping walltime:  " << dtWallTime   << " seconds.\n";
-    std::cout << "File IO walltime:        " << ioWallTime   << " seconds.\n";
+    if (par.masterproc) {
+      std::cout << "Initialization walltime: " << initWallTime << " seconds.\n";
+      std::cout << "Time stepping walltime:  " << dtWallTime   << " seconds.\n";
+      std::cout << "File IO walltime:        " << ioWallTime   << " seconds.\n";
+    }
   }
 
   Kokkos::finalize();
+
+  int ierr = MPI_Finalize();
 
 }
