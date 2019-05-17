@@ -130,23 +130,23 @@ inline _HOSTDEV void godunovLinearZ(SArray<real,numState> &s1, SArray<real,numSt
   real cs = mysqrt( GAMMA * p / r );
 
   // Compute left and right characteristic variables
-  ch1(0) =  w*f1(0)/(2*cs) - f1(3)/(2*cs) + f1(4)/(2*t);
-  ch1(1) = -w*f1(0)/(2*cs) + f1(3)/(2*cs) + f1(4)/(2*t);
-  ch1(2) = f1(0) -   f1(4)/t;
-  ch1(3) = f1(1) - u*f1(4)/t;
-  ch1(4) = f1(2) - v*f1(4)/t;
+  ch1(0) = f1(0) - f1(4)/t;
+  ch1(1) = f1(1) - f1(4)*u/t;
+  ch1(2) = f1(2) - f1(4)*v/t;
+  ch1(3) =  f1(0)*w/(2*cs) - f1(3)/(2*cs) + f1(4)/(2*t);
+  ch1(4) = -f1(0)*w/(2*cs) + f1(3)/(2*cs) + f1(4)/(2*t);
 
-  ch2(0) =  w*f2(0)/(2*cs) - f2(3)/(2*cs) + f2(4)/(2*t);
-  ch2(1) = -w*f2(0)/(2*cs) + f2(3)/(2*cs) + f2(4)/(2*t);
-  ch2(2) = f2(0) -   f2(4)/t;
-  ch2(3) = f2(1) - u*f2(4)/t;
-  ch2(4) = f2(2) - v*f2(4)/t;
+  ch2(0) = f2(0) - f2(4)/t;
+  ch2(1) = f2(1) - f2(4)*u/t;
+  ch2(2) = f2(2) - f2(4)*v/t;
+  ch2(3) =  f2(0)*w/(2*cs) - f2(3)/(2*cs) + f2(4)/(2*t);
+  ch2(4) = -f2(0)*w/(2*cs) + f2(3)/(2*cs) + f2(4)/(2*t);
 
-  ev(0) = w-cs;
-  ev(1) = w+cs;
+  ev(0) = w;
+  ev(1) = w;
   ev(2) = w;
-  ev(3) = w;
-  ev(4) = w;
+  ev(3) = w-cs;
+  ev(4) = w+cs;
 
   // Compute the upwind characteristics
   for (int l=0; l<numState; l++) {
@@ -160,11 +160,11 @@ inline _HOSTDEV void godunovLinearZ(SArray<real,numState> &s1, SArray<real,numSt
   }
 
   // Compute the fluxes
-  upw(0) = chu(0) + chu(1) + chu(2);
-  upw(1) = u*chu(0) + u*chu(1) + chu(3);
-  upw(2) = v*chu(0) + v*chu(1) + chu(4);
-  upw(3) = (w-cs)*chu(0) + (w+cs)*chu(1) + w*chu(3);
-  upw(4) = t*chu(0) + t*chu(1);
+  upw(0) = chu(0)   + chu(3)        + chu(4);
+  upw(1) = chu(1)   + chu(3)*u      + chu(4)*u;
+  upw(2) = chu(2)   + chu(3)*v      + chu(4)*v;
+  upw(3) = chu(0)*w + chu(3)*(w-cs) + chu(4)*(w+cs);
+  upw(4) =            chu(3)*t      + chu(4)*t;
 }
 
 
