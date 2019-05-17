@@ -16,6 +16,13 @@
 int main(int argc, char** argv) {
   Kokkos::initialize();
 
+  double dtWallTime = 0;
+  double ioWallTime = 0;
+  double initWallTime = 0;
+  double timeTmp;
+
+  Kokkos::Timer timer;
+
   {
     // Create the model objects
     State          state;
@@ -27,6 +34,7 @@ int main(int argc, char** argv) {
     Exchange       exch;
     TimeIntegrator tint;
 
+    timeTmp = timer.seconds();
 
     // Initialize MPI and read the input file
     init.initialize_mpi( &argc , &argv , par );
@@ -39,18 +47,31 @@ int main(int argc, char** argv) {
     // Initialize the model
     init.initialize(state, dom, par, exch, tint);
 
+    initWallTime += timer.seconds() - timeTmp;
+
     // Output the initial model state
+    timeTmp = timer.seconds();
     io.outputInit(state, dom, par);
+    ioWallTime += timer.seconds() - timeTmp;
 
     while (dom.etime < dom.simLength) {
       if (dom.etime + dom.dt > dom.simLength) { dom.dt = dom.simLength - dom.etime; }
+
+      timeTmp = timer.seconds();
       tint.stepForward(state, dom, exch, par);
+      dtWallTime += timer.seconds() - timeTmp;
+
       dom.etime += dom.dt;
       if (par.masterproc) {std::cout << dom.etime << "\n";}
+
+      timeTmp = timer.seconds();
       io.output(state, dom, par);
+      ioWallTime += timer.seconds() - timeTmp;
     }
 
-    io.output(state, dom, par);
+    std::cout << "Initialization walltime: " << initWallTime << " seconds.\n";
+    std::cout << "Time stepping walltime:  " << dtWallTime   << " seconds.\n";
+    std::cout << "File IO walltime:        " << ioWallTime   << " seconds.\n";
   }
 
   Kokkos::finalize();
