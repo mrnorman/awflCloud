@@ -18,6 +18,7 @@ class Tendencies {
   real5d fluxLimits;
   real4d flux;
   real3d src;
+  real5d stateGLL;
   SArray<real,tord> gllWts;
   SArray<real,ord,tord> to_gll;
   SArray<real,ord,ord,ord> wenoRecon;
@@ -37,6 +38,7 @@ public :
     stateLimits = real5d("srcLimits" ,numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
     flux        = real4d("flux"      ,numState  ,dom.nz+1,dom.ny+1,dom.nx+1);
     src         = real3d("src"       ,dom.nz,dom.ny,dom.nx);
+    stateGLL    = real5d("stateGLL"  ,numState,dom.nz,dom.ny,dom.nx,tord);
 
     SArray<real,ord,ord,ord> to_gll_tmp;
 
@@ -195,7 +197,7 @@ public :
     exch.haloUnpackN_x (dom, state, numState);
 
     // Reconstruct to tord GLL points in the x-direction
-    reconAder_X(state, hyDensCells, hyDensThetaCells, dom, wenoRecon, to_gll, stateLimits, fluxLimits, wenoIdl, wenoSigma, aderDerivX);
+    reconAder_X(state, hyDensCells, hyDensThetaCells, dom, wenoRecon, to_gll, stateLimits, fluxLimits, wenoIdl, wenoSigma, aderDerivX, stateGLL);
 
     //Reconcile the edge fluxes via MPI exchange.
     exch.haloInit      ();
@@ -223,7 +225,7 @@ public :
     exch.haloUnpackN_y (dom, state, numState);
 
     // Reconstruct to tord GLL points in the y-direction
-    reconAder_Y(state, hyDensCells, hyDensThetaCells, dom, wenoRecon, to_gll, stateLimits, fluxLimits, wenoIdl, wenoSigma, aderDerivY);
+    reconAder_Y(state, hyDensCells, hyDensThetaCells, dom, wenoRecon, to_gll, stateLimits, fluxLimits, wenoIdl, wenoSigma, aderDerivY, stateGLL);
 
     //Reconcile the edge fluxes via MPI exchange.
     exch.haloInit      ();
@@ -248,7 +250,7 @@ public :
     stateBoundariesZ(state, dom);
 
     // Reconstruct tord GLL points in the z-direction
-    reconAder_Z(state, hyDensGLL, hyDensThetaGLL, dom, wenoRecon, to_gll, stateLimits, fluxLimits, src, wenoIdl, wenoSigma, aderDerivZ, gllWts);
+    reconAder_Z(state, hyDensGLL, hyDensThetaGLL, dom, wenoRecon, to_gll, stateLimits, fluxLimits, src, wenoIdl, wenoSigma, aderDerivZ, gllWts, stateGLL);
 
     // Apply boundary conditions to fluxes and state values
     edgeBoundariesZ(stateLimits, fluxLimits, dom);
@@ -435,7 +437,24 @@ public :
   inline void reconAder_X(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
                           Domain const &dom, SArray<real,ord,ord,ord> const &wenoRecon, SArray<real,ord,tord> const &to_gll, 
                           real5d &stateLimits, real5d &fluxLimits, SArray<real,hs+2> const &wenoIdl, real &wenoSigma,
-                          SArray<real,tord,tord> const &aderDerivX) {
+                          SArray<real,tord,tord> const &aderDerivX, real5d &stateGLL) {
+    // for (int k=0; k<dom.nz; k++) {
+    //   for (int j=0; j<dom.ny; j++) {
+    //     for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+
+      // Compute tord GLL points of the state vector
+      for (int l=0; l<numState; l++) {
+        SArray<real,ord> stencil;
+        SArray<real,tord> gllPts;
+        for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,hs+k,hs+j,i+ii); }
+        reconStencil(stencil, gllPts, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
+        for (int ii=0; ii<tord; ii++) { stateGLL(l,k,j,i,ii) = gllPts(ii); }
+      }
+    });
+
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
@@ -445,14 +464,10 @@ public :
       SArray<real,numState,tord,tord> stateDTs;  // GLL state values
       SArray<real,numState,tord,tord> fluxDTs;   // GLL flux values
 
-      // Compute tord GLL points of the state vector
       for (int l=0; l<numState; l++) {
-        SArray<real,ord> stencil;
-        SArray<real,tord> gllPts;
-        for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,hs+k,hs+j,i+ii); }
-        reconStencil(stencil, gllPts, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
-        for (int ii=0; ii<tord; ii++) { stateDTs(l,0,ii) = gllPts(ii); }
+        for (int ii=0; ii<tord; ii++) { stateDTs(l,0,ii) = stateGLL(l,k,j,i,ii); }
       }
+
       for (int ii=0; ii<tord; ii++) {
         stateDTs(idR ,0,ii) += hyDensCells     (hs+k);
         stateDTs(idRT,0,ii) += hyDensThetaCells(hs+k);
@@ -481,7 +496,24 @@ public :
   inline void reconAder_Y(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
                           Domain const &dom, SArray<real,ord,ord,ord> const &wenoRecon, SArray<real,ord,tord> const &to_gll, 
                           real5d &stateLimits, real5d &fluxLimits, SArray<real,hs+2> const &wenoIdl, real &wenoSigma,
-                          SArray<real,tord,tord> const &aderDerivY) {
+                          SArray<real,tord,tord> const &aderDerivY, real5d &stateGLL) {
+    // for (int k=0; k<dom.nz; k++) {
+    //   for (int j=0; j<dom.ny; j++) {
+    //     for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+
+      // Compute GLL points from cell averages
+      for (int l=0; l<numState; l++) {
+        SArray<real,ord> stencil;
+        SArray<real,tord> gllPts;
+        for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,hs+k,j+ii,hs+i); }
+        reconStencil(stencil, gllPts, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
+        for (int ii=0; ii<tord; ii++) { stateGLL(l,k,j,i,ii) = gllPts(ii); }
+      }
+    });
+
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
@@ -493,11 +525,7 @@ public :
 
       // Compute GLL points from cell averages
       for (int l=0; l<numState; l++) {
-        SArray<real,ord> stencil;
-        SArray<real,tord> gllPts;
-        for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,hs+k,j+ii,hs+i); }
-        reconStencil(stencil, gllPts, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
-        for (int ii=0; ii<tord; ii++) { stateDTs(l,0,ii) = gllPts(ii); }
+        for (int ii=0; ii<tord; ii++) { stateDTs(l,0,ii) = stateGLL(l,k,j,i,ii); }
       }
       for (int ii=0; ii<tord; ii++) {
         stateDTs(idR ,0,ii) += hyDensCells     (hs+k);
@@ -527,7 +555,24 @@ public :
   inline void reconAder_Z(real4d &state, real2d const &hyDensGLL, real2d const &hyDensThetaGLL,
                           Domain const &dom, SArray<real,ord,ord,ord> const &wenoRecon, SArray<real,ord,tord> const &to_gll, 
                           real5d &stateLimits, real5d &fluxLimits, real3d &src, SArray<real,hs+2> const &wenoIdl, real &wenoSigma,
-                          SArray<real,tord,tord> const &aderDerivZ, SArray<real,tord> const &gllWts) {
+                          SArray<real,tord,tord> const &aderDerivZ, SArray<real,tord> const &gllWts, real5d &stateGLL) {
+    // for (int k=0; k<dom.nz; k++) {
+    //   for (int j=0; j<dom.ny; j++) {
+    //     for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+
+      // Compute GLL points from cell averages
+      for (int l=0; l<numState; l++) {
+        SArray<real,ord> stencil;
+        SArray<real,tord> gllPts;
+        for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,k+ii,hs+j,hs+i); }
+        reconStencil(stencil, gllPts, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
+        for (int ii=0; ii<tord; ii++) { stateGLL(l,k,j,i,ii) = gllPts(ii); }
+      }
+    });
+
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
@@ -542,11 +587,7 @@ public :
 
       // Compute GLL points from cell averages
       for (int l=0; l<numState; l++) {
-        SArray<real,ord> stencil;
-        SArray<real,tord> gllPts;
-        for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,k+ii,hs+j,hs+i); }
-        reconStencil(stencil, gllPts, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
-        for (int ii=0; ii<tord; ii++) { stateDTs(l,0,ii) = gllPts(ii); }
+        for (int ii=0; ii<tord; ii++) { stateDTs(l,0,ii) = stateGLL(l,k,j,i,ii); }
       }
       for (int ii=0; ii<tord; ii++) {
         stateDTs(idR ,0,ii) += hyDensGLL     (k,ii);

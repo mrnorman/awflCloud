@@ -31,7 +31,8 @@ public:
     outTimer = 0.;
 
     // Create the file
-    ncwrap( ncmpi_create( MPI_COMM_WORLD , "output.nc" , NC_CLOBBER | NC_64BIT_DATA , MPI_INFO_NULL , &ncid ) , __LINE__ );
+    // ncwrap( ncmpi_create( MPI_COMM_WORLD , "output.nc" , NC_CLOBBER | NC_64BIT_DATA , MPI_INFO_NULL , &ncid ) , __LINE__ );
+    ncwrap( ncmpi_create( MPI_COMM_WORLD , "output.nc" , NC_CLOBBER , MPI_INFO_NULL , &ncid ) , __LINE__ );
 
     // Create the dimensions
     ncwrap( ncmpi_def_dim( ncid , "t" , (MPI_Offset) NC_UNLIMITED , &tDim ) , __LINE__ );
