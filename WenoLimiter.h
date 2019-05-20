@@ -51,6 +51,39 @@ inline _HOSTDEV void wenoSetIdealSigma(SArray<real,hs+2> &idl, real &sigma) {
     idl(3) = 18._fp;
     idl(4) = 1._fp;
     idl(5) = 5832._fp;
+  } else if (ord == 11) {
+    // These aren't tuned!!!
+    sigma = 0.1_fp;
+    idl(0) = 1._fp;
+    idl(1) = 1._fp;
+    idl(2) = 1._fp;
+    idl(3) = 1._fp;
+    idl(4) = 1._fp;
+    idl(5) = 1._fp;
+    idl(6) = 1._fp;
+  } else if (ord == 13) {
+    // These aren't tuned!!!
+    sigma = 0.1_fp;
+    idl(0) = 1._fp;
+    idl(1) = 1._fp;
+    idl(2) = 1._fp;
+    idl(3) = 1._fp;
+    idl(4) = 1._fp;
+    idl(5) = 1._fp;
+    idl(6) = 1._fp;
+    idl(7) = 1._fp;
+  } else if (ord == 15) {
+    // These aren't tuned!!!
+    sigma = 0.1_fp;
+    idl(0) = 1._fp;
+    idl(1) = 1._fp;
+    idl(2) = 1._fp;
+    idl(3) = 1._fp;
+    idl(4) = 1._fp;
+    idl(5) = 1._fp;
+    idl(6) = 1._fp;
+    idl(7) = 1._fp;
+    idl(8) = 1._fp;
   }
   convexify( idl );
 }

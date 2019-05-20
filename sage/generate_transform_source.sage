@@ -4,7 +4,7 @@ load("transformation_matrices.sage")
 load("c_utils.sage")
 
 N1 = 2
-N2 = 10
+N2 = 15
 
 print('#ifndef _TRANSFORM_MATRICES_H_')
 print('#define _TRANSFORM_MATRICES_H_')
