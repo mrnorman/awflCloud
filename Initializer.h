@@ -197,7 +197,10 @@ public:
             if (dom.run2d) yloc = dom.ylen/2;
 
             hydro::hydroConstTheta( t0 , zloc , r );
-            t = ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, 2000, 2000, 2000, 2000, 2);
+            t = ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, 2000, 2000, 2000, 2000,  20);
+
+            hydro::hydroConstTheta( t0 , zloc , r );
+            t += ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, 8000, 2000, 2000, 2000, -20);
 
             real wt = gllOrdWeights(ii)*gllOrdWeights(jj)*gllOrdWeights(kk);
             state.state(idRT,hs+k,hs+j,hs+i) += wt * r*t;
