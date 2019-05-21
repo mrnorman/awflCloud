@@ -35,6 +35,7 @@ int main(int argc, char** argv) {
     TimeIntegrator tint;
 
     timeTmp = timer.seconds();
+    int nstep = 0;
 
     // Initialize MPI and read the input file
     init.initialize_mpi( &argc , &argv , par );
@@ -57,9 +58,9 @@ int main(int argc, char** argv) {
     while (dom.etime < dom.simLength) {
       if (dom.etime + dom.dt > dom.simLength) { dom.dt = dom.simLength - dom.etime; }
 
-      timeTmp = timer.seconds();
+      Kokkos::fence() ; timeTmp = timer.seconds();
       tint.stepForward(state, dom, exch, par);
-      dtWallTime += timer.seconds() - timeTmp;
+      Kokkos::fence() ; dtWallTime += timer.seconds() - timeTmp;
 
       dom.etime += dom.dt;
       if (par.masterproc) {std::cout << dom.etime << "\n";}
@@ -67,12 +68,15 @@ int main(int argc, char** argv) {
       timeTmp = timer.seconds();
       io.output(state, dom, par);
       ioWallTime += timer.seconds() - timeTmp;
+
+      nstep += 1;
     }
 
     if (par.masterproc) {
       std::cout << "Initialization walltime: " << initWallTime << " seconds.\n";
       std::cout << "Time stepping walltime:  " << dtWallTime   << " seconds.\n";
       std::cout << "File IO walltime:        " << ioWallTime   << " seconds.\n";
+      std::cout << "Time / dt / Cell:        " << dtWallTime / nstep / dom.nx / dom.ny / dom.nz * 1.e9  << " nanoseconds.\n";
     }
   }
 
