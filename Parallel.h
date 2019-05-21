@@ -20,7 +20,7 @@ public:
   ulong i_end;
   ulong j_end;
   int masterproc;
-  SArray<real,3,3> neigh;
+  SArray<int,3,3> neigh;
 };
 
 #endif
