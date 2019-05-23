@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
       std::cout << "Initialization walltime: " << initWallTime << " seconds.\n";
       std::cout << "Time stepping walltime:  " << dtWallTime   << " seconds.\n";
       std::cout << "File IO walltime:        " << ioWallTime   << " seconds.\n";
-      std::cout << "Time / dt / Cell:        " << dtWallTime / nstep / dom.nx / dom.ny / dom.nz * 1.e9  << " nanoseconds.\n";
+      std::cout << "Time / dt / Cell:        " << dtWallTime / nstep / dom.nx_glob / dom.ny_glob / dom.nz_glob * 1.e9  << " nanoseconds.\n";
     }
   }
 

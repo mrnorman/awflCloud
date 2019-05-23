@@ -92,9 +92,10 @@ public:
     Kokkos::fence();
 
     #ifdef __NVCC__
-      cudaMemcpy( xCoord_cpu , xCoord.data() , dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
-      cudaMemcpy( yCoord_cpu , yCoord.data() , dom.ny*sizeof(real) , cudaMemcpyDeviceToHost );
-      cudaMemcpy( zCoord_cpu , zCoord.data() , dom.nz*sizeof(real) , cudaMemcpyDeviceToHost );
+      cudaMemcpyAsync( xCoord_cpu , xCoord.data() , dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
+      cudaMemcpyAsync( yCoord_cpu , yCoord.data() , dom.ny*sizeof(real) , cudaMemcpyDeviceToHost );
+      cudaMemcpyAsync( zCoord_cpu , zCoord.data() , dom.nz*sizeof(real) , cudaMemcpyDeviceToHost );
+      cudaDeviceSynchronize();
     #endif
 
     // Write out x, y, and z coordinates
@@ -117,7 +118,8 @@ public:
     });
     Kokkos::fence();
     #ifdef __NVCC__
-      cudaMemcpy( zCoord_cpu , zCoord.data() , dom.nz*sizeof(real) , cudaMemcpyDeviceToHost );
+      cudaMemcpyAsync( zCoord_cpu , zCoord.data() , dom.nz*sizeof(real) , cudaMemcpyDeviceToHost );
+      cudaDeviceSynchronize();
     #endif
     ncwrap( ncmpi_put_vara_float( ncid , hyrVar  , st , ct , zCoord_cpu ) , __LINE__ );
 
@@ -127,7 +129,8 @@ public:
     });
     Kokkos::fence();
     #ifdef __NVCC__
-      cudaMemcpy( zCoord_cpu , zCoord.data() , dom.nz*sizeof(real) , cudaMemcpyDeviceToHost );
+      cudaMemcpyAsync( zCoord_cpu , zCoord.data() , dom.nz*sizeof(real) , cudaMemcpyDeviceToHost );
+      cudaDeviceSynchronize();
     #endif
     ncwrap( ncmpi_put_vara_float( ncid , hyrtVar , st , ct , zCoord_cpu ) , __LINE__ );
 
@@ -200,7 +203,8 @@ public:
     });
     Kokkos::fence();
     #ifdef __NVCC__
-      cudaMemcpy( data_cpu , data.data() , dom.nz*dom.ny*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
+      cudaMemcpyAsync( data_cpu , data.data() , dom.nz*dom.ny*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
+      cudaDeviceSynchronize();
     #endif
     ncwrap( ncmpi_put_vara_float_all( ncid , rVar , st , ct , data_cpu ) , __LINE__ );
 
@@ -215,7 +219,8 @@ public:
     });
     Kokkos::fence();
     #ifdef __NVCC__
-      cudaMemcpy( data_cpu , data.data() , dom.nz*dom.ny*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
+      cudaMemcpyAsync( data_cpu , data.data() , dom.nz*dom.ny*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
+      cudaDeviceSynchronize();
     #endif
     ncwrap( ncmpi_put_vara_float_all( ncid , uVar , st , ct , data_cpu ) , __LINE__ );
 
@@ -230,7 +235,8 @@ public:
     });
     Kokkos::fence();
     #ifdef __NVCC__
-      cudaMemcpy( data_cpu , data.data() , dom.nz*dom.ny*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
+      cudaMemcpyAsync( data_cpu , data.data() , dom.nz*dom.ny*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
+      cudaDeviceSynchronize();
     #endif
     ncwrap( ncmpi_put_vara_float_all( ncid , vVar , st , ct , data_cpu ) , __LINE__ );
 
@@ -245,7 +251,8 @@ public:
     });
     Kokkos::fence();
     #ifdef __NVCC__
-      cudaMemcpy( data_cpu , data.data() , dom.nz*dom.ny*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
+      cudaMemcpyAsync( data_cpu , data.data() , dom.nz*dom.ny*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
+      cudaDeviceSynchronize();
     #endif
     ncwrap( ncmpi_put_vara_float_all( ncid , wVar , st , ct , data_cpu ) , __LINE__ );
 
@@ -262,7 +269,8 @@ public:
     });
     Kokkos::fence();
     #ifdef __NVCC__
-      cudaMemcpy( data_cpu , data.data() , dom.nz*dom.ny*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
+      cudaMemcpyAsync( data_cpu , data.data() , dom.nz*dom.ny*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
+      cudaDeviceSynchronize();
     #endif
     ncwrap( ncmpi_put_vara_float_all( ncid , thVar , st , ct , data_cpu ) , __LINE__ );
 
@@ -278,7 +286,8 @@ public:
     });
     Kokkos::fence();
     #ifdef __NVCC__
-      cudaMemcpy( data_cpu , data.data() , dom.nz*dom.ny*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
+      cudaMemcpyAsync( data_cpu , data.data() , dom.nz*dom.ny*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
+      cudaDeviceSynchronize();
     #endif
     ncwrap( ncmpi_put_vara_float_all( ncid , pVar , st , ct , data_cpu ) , __LINE__ );
 

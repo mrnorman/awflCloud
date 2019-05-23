@@ -188,7 +188,7 @@ public:
   inline void haloExchange_x(Domain const &dom, Parallel const &par) {
     int ierr;
 
-    if (par.nproc_x > 1) {
+    if (par.nproc_x > 0) {
       Kokkos::fence();
 
       //Pre-post the receives
@@ -230,7 +230,7 @@ public:
   inline void haloExchange_y(Domain const &dom, Parallel const &par) {
     int ierr;
 
-    if (par.nproc_y > 1) {
+    if (par.nproc_y > 0) {
       Kokkos::fence();
 
       //Pre-post the receives
@@ -344,7 +344,7 @@ public:
   inline void edgeExchange_x(Domain const &dom, Parallel const &par) {
     int ierr;
 
-    if (par.nproc_x > 1) {
+    if (par.nproc_x > 0) {
       Kokkos::fence();
 
       //Pre-post the receives
@@ -386,7 +386,7 @@ public:
   inline void edgeExchange_y(Domain const &dom, Parallel const &par) {
     int ierr;
 
-    if (par.nproc_y > 1) {
+    if (par.nproc_y > 0) {
       Kokkos::fence();
 
       //Pre-post the receives
