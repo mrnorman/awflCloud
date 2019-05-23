@@ -10,12 +10,12 @@ typedef unsigned long ulong;
 typedef unsigned int  uint;
 
 #ifdef __NVCC__
-  typedef Kokkos::View<real*     ,Kokkos::LayoutRight,Kokkos::Device<Kokkos::Cuda,Kokkos::CudaUVMSpace>> real1d;
-  typedef Kokkos::View<real**    ,Kokkos::LayoutRight,Kokkos::Device<Kokkos::Cuda,Kokkos::CudaUVMSpace>> real2d;
-  typedef Kokkos::View<real***   ,Kokkos::LayoutRight,Kokkos::Device<Kokkos::Cuda,Kokkos::CudaUVMSpace>> real3d;
-  typedef Kokkos::View<real****  ,Kokkos::LayoutRight,Kokkos::Device<Kokkos::Cuda,Kokkos::CudaUVMSpace>> real4d;
-  typedef Kokkos::View<real***** ,Kokkos::LayoutRight,Kokkos::Device<Kokkos::Cuda,Kokkos::CudaUVMSpace>> real5d;
-  typedef Kokkos::View<real******,Kokkos::LayoutRight,Kokkos::Device<Kokkos::Cuda,Kokkos::CudaUVMSpace>> real6d;
+  typedef Kokkos::View<real*     ,Kokkos::LayoutRight,Kokkos::Device<Kokkos::Cuda,Kokkos::CudaSpace>> real1d;
+  typedef Kokkos::View<real**    ,Kokkos::LayoutRight,Kokkos::Device<Kokkos::Cuda,Kokkos::CudaSpace>> real2d;
+  typedef Kokkos::View<real***   ,Kokkos::LayoutRight,Kokkos::Device<Kokkos::Cuda,Kokkos::CudaSpace>> real3d;
+  typedef Kokkos::View<real****  ,Kokkos::LayoutRight,Kokkos::Device<Kokkos::Cuda,Kokkos::CudaSpace>> real4d;
+  typedef Kokkos::View<real***** ,Kokkos::LayoutRight,Kokkos::Device<Kokkos::Cuda,Kokkos::CudaSpace>> real5d;
+  typedef Kokkos::View<real******,Kokkos::LayoutRight,Kokkos::Device<Kokkos::Cuda,Kokkos::CudaSpace>> real6d;
 #else
   typedef Kokkos::View<real*     ,Kokkos::LayoutRight> real1d;
   typedef Kokkos::View<real**    ,Kokkos::LayoutRight> real2d;
