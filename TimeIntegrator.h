@@ -132,6 +132,33 @@ public :
     });
   }
 
+
+  inline void applyHeatingCooling(real4d &state, Domain const &dom) {
+    // for (int k=0; k<dom.nz; k++) {
+    //   for (int j=0; j<dom.ny; j++) {
+    //     for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int l, k, j, i;
+      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      real xloc = (i+0.5_fp)*dom.dx;
+      real yloc = (j+0.5_fp)*dom.dy;
+      real zloc = (k+0.5_fp)*dom.dz;
+      state(idRT,k,j,i) += dom.dt*ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, 0.   , 2000.,2000.,2000.,  10.)
+      state(idRT,k,j,i) += dom.dt*ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, zlen., 2000.,2000.,2000., -10.)
+    });
+  }
+
+
+  inline _HOSTDEV real ellipsoid_linear(real const x   , real const y   , real const z ,
+                                        real const x0  , real const y0  , real const z0,
+                                        real const xrad, real const yrad, real const zrad, real const amp) {
+    real xn = (x-x0)/xrad;
+    real yn = (y-y0)/yrad;
+    real zn = (z-z0)/zrad;
+    real dist = mysqrt( xn*xn + yn*yn + zn*zn );
+    return amp * max( 1._fp - dist , 0._fp );
+  }
+
 };
 
 #endif
