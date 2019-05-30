@@ -145,8 +145,8 @@ public :
       real yloc = (j+0.5_fp)*dom.dy;
       real zloc = (k+0.5_fp)*dom.dz;
       if (dom.run2d) {yloc = dom.ylen/2;}
-      state(idRT,hs+k,hs+j,hs+i) += dom.dt * hyDens(k) * ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, 0.      , 2000.,2000.,2000.,  0.05);
-      state(idRT,hs+k,hs+j,hs+i) += dom.dt * hyDens(k) * ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, dom.zlen, 2000.,2000.,2000., -0.05);
+      state(idRT,hs+k,hs+j,hs+i) += dom.dt * ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, 0.      , 2000.,2000.,2000.,  0.05);
+      state(idRT,hs+k,hs+j,hs+i) += dom.dt * ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, dom.zlen, 2000.,2000.,2000., -0.05);
     });
   }
 
