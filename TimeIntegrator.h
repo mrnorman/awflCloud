@@ -72,6 +72,7 @@ public :
       tend.compEulerTendADER_X(state.state, state.hyDensCells, state.hyDensThetaCells, dom, exch, par, tendArr);
       applyTendencies( state.state , 1._fp , state.state , 0._fp , state.state , 1._fp , tendArr, dom);
     }
+    applyHeatingCooling(state.state,state.hyDensCells,dom);
   }
 
 
@@ -133,18 +134,19 @@ public :
   }
 
 
-  inline void applyHeatingCooling(real4d &state, Domain const &dom) {
+  inline void applyHeatingCooling(real4d &state, real1d const &hyDens, Domain const &dom) {
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
     Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
-      int l, k, j, i;
+      int k, j, i;
       unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       real xloc = (i+0.5_fp)*dom.dx;
       real yloc = (j+0.5_fp)*dom.dy;
       real zloc = (k+0.5_fp)*dom.dz;
-      state(idRT,k,j,i) += dom.dt*ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, 0.   , 2000.,2000.,2000.,  10.)
-      state(idRT,k,j,i) += dom.dt*ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, zlen., 2000.,2000.,2000., -10.)
+      if (dom.run2d) {yloc = dom.ylen/2;}
+      state(idRT,hs+k,hs+j,hs+i) += dom.dt * hyDens(k) * ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, 0.      , 2000.,2000.,2000.,  0.05);
+      state(idRT,hs+k,hs+j,hs+i) += dom.dt * hyDens(k) * ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, dom.zlen, 2000.,2000.,2000., -0.05);
     });
   }
 
