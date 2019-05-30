@@ -72,7 +72,7 @@ public :
       tend.compEulerTendADER_X(state.state, state.hyDensCells, state.hyDensThetaCells, dom, exch, par, tendArr);
       applyTendencies( state.state , 1._fp , state.state , 0._fp , state.state , 1._fp , tendArr, dom);
     }
-    applyHeatingCooling(state.state,state.hyDensCells,dom);
+    applyHeatingCooling(state.state,state.hyDensCells,par,dom);
   }
 
 
@@ -134,31 +134,22 @@ public :
   }
 
 
-  inline void applyHeatingCooling(real4d &state, real1d const &hyDens, Domain const &dom) {
-    // for (int k=0; k<dom.nz; k++) {
-    //   for (int j=0; j<dom.ny; j++) {
-    //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
-      int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
-      real xloc = (i+0.5_fp)*dom.dx;
-      real yloc = (j+0.5_fp)*dom.dy;
-      real zloc = (k+0.5_fp)*dom.dz;
+  inline void applyHeatingCooling(real4d &state, real1d const &hyDens, Parallel const &par, Domain const &dom) {
+    // for (int j=0; j<dom.ny; j++) {
+    //   for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int j, i;
+      unpackIndices(iGlob,dom.ny,dom.nx,j,i);
+      real xloc = (par.i_beg + i + 0.5_fp) * dom.dx;
+      real yloc = (par.j_beg + j + 0.5_fp) * dom.dy;
       if (dom.run2d) {yloc = dom.ylen/2;}
-      state(idRT,hs+k,hs+j,hs+i) += dom.dt * ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, 0.      , 2000.,2000.,2000.,  0.05);
-      state(idRT,hs+k,hs+j,hs+i) += dom.dt * ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, dom.zlen, 2000.,2000.,2000., -0.05);
+      for (int k=dom.nz; k < hs+dom.nz; k++) {
+        state(idRT,k,hs+j,hs+i) -= dom.dt * 0.01;
+      }   
+      for (int k=hs; k < 2*hs; k++) {
+        state(idRT,k,hs+j,hs+i) += dom.dt * 0.01;
+      }   
     });
-  }
-
-
-  inline _HOSTDEV real ellipsoid_linear(real const x   , real const y   , real const z ,
-                                        real const x0  , real const y0  , real const z0,
-                                        real const xrad, real const yrad, real const zrad, real const amp) {
-    real xn = (x-x0)/xrad;
-    real yn = (y-y0)/yrad;
-    real zn = (z-z0)/zrad;
-    real dist = mysqrt( xn*xn + yn*yn + zn*zn );
-    return amp * max( 1._fp - dist , 0._fp );
   }
 
 };

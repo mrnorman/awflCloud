@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
       Kokkos::fence() ; dtWallTime += timer.seconds() - timeTmp;
 
       dom.etime += dom.dt;
-      if (par.masterproc) {std::cout << dom.etime << "\n";}
+      if (par.masterproc && nstep%100 == 0) {std::cout << dom.etime << "\n";}
 
       timeTmp = timer.seconds();
       io.output(state, dom, par);
