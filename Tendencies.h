@@ -263,6 +263,35 @@ public :
   }
 
 
+  inline void compEulerTendSplitSD_X(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
+                                     Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+
+
+    //Exchange halos in the x-direction
+    exch.haloInit      ();
+    exch.haloPackN_x   (dom, state, numState);
+    exch.haloExchange_x(dom, par);
+    exch.haloUnpackN_x (dom, state, numState);
+
+    // Reconstruct to tord GLL points in the x-direction
+    reconSD_X(state, hyDensCells, hyDensThetaCells, dom, wenoRecon, to_gll, stateLimits, fluxLimits, wenoIdl, wenoSigma);
+
+    //Reconcile the edge fluxes via MPI exchange.
+    exch.haloInit      ();
+    exch.edgePackN_x   (dom, stateLimits, numState);
+    exch.edgePackN_x   (dom, fluxLimits , numState);
+    exch.edgeExchange_x(dom, par);
+    exch.edgeUnpackN_x (dom, stateLimits, numState);
+    exch.edgeUnpackN_x (dom, fluxLimits , numState);
+
+    // Riemann solver
+    computeFlux_X(stateLimits, fluxLimits, flux, dom);
+
+    // Form the tendencies
+    computeTend_X(flux, tend, dom);
+  }
+
+
   inline void reconSD_X(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
                         Domain const &dom, SArray<real,ord,ord,ord> const &wenoRecon, SArray<real,ord,tord> const &to_gll, 
                         real5d &stateLimits, real5d &fluxLimits, SArray<real,hs+2> const &wenoIdl, real &wenoSigma) {
