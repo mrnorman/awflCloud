@@ -44,8 +44,8 @@ public:
     outTimer = 0.;
 
     // Create the file
-    ncwrap( ncmpi_create( MPI_COMM_WORLD , "output.nc" , NC_CLOBBER | NC_64BIT_DATA , MPI_INFO_NULL , &ncid ) , __LINE__ );
-    // ncwrap( ncmpi_create( MPI_COMM_WORLD , "output.nc" , NC_CLOBBER , MPI_INFO_NULL , &ncid ) , __LINE__ );
+    // ncwrap( ncmpi_create( MPI_COMM_WORLD , "output.nc" , NC_CLOBBER | NC_64BIT_DATA , MPI_INFO_NULL , &ncid ) , __LINE__ );
+    ncwrap( ncmpi_create( MPI_COMM_WORLD , "output.nc" , NC_CLOBBER , MPI_INFO_NULL , &ncid ) , __LINE__ );
 
     // Create the dimensions
     ncwrap( ncmpi_def_dim( ncid , "t" , (MPI_Offset) NC_UNLIMITED , &tDim ) , __LINE__ );
@@ -62,6 +62,12 @@ public:
     ncwrap( ncmpi_def_var( ncid , "y"      , NC_FLOAT , 1 , dimids , &yVar ) , __LINE__ );
     dimids[0] = zDim;
     ncwrap( ncmpi_def_var( ncid , "z"      , NC_FLOAT , 1 , dimids , &zVar ) , __LINE__ );
+
+    ncwrap( ncmpi_put_att_text (ncid, tVar, "units", strlen("seconds"), "seconds"), __LINE__ );
+    ncwrap( ncmpi_put_att_text (ncid, xVar, "units", strlen("meters" ), "meters" ), __LINE__ );
+    ncwrap( ncmpi_put_att_text (ncid, yVar, "units", strlen("meters" ), "meters" ), __LINE__ );
+    ncwrap( ncmpi_put_att_text (ncid, zVar, "units", strlen("meters" ), "meters" ), __LINE__ );
+
     dimids[0] = tDim; dimids[1] = zDim; dimids[2] = yDim; dimids[3] = xDim;
     ncwrap( ncmpi_def_var( ncid , "density" , NC_FLOAT , 4 , dimids , &rVar  ) , __LINE__ );
     ncwrap( ncmpi_def_var( ncid , "u"       , NC_FLOAT , 4 , dimids , &uVar  ) , __LINE__ );
@@ -290,6 +296,11 @@ public:
       cudaDeviceSynchronize();
     #endif
     ncwrap( ncmpi_put_vara_float_all( ncid , pVar , st , ct , data_cpu ) , __LINE__ );
+
+    ncwrap( ncmpi_begin_indep_data(ncid) , __LINE__ );
+    st[0] = numOut;
+    ncwrap( ncmpi_put_var1_float( ncid , tVar , st , &(dom.etime) ) , __LINE__ );
+    ncwrap( ncmpi_end_indep_data(ncid) , __LINE__ );
 
     #ifdef __NVCC__
       cudaFree( data_cpu );
