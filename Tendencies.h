@@ -17,7 +17,7 @@ class Tendencies {
   real5d stateLimits;
   real5d fluxLimits;
   real4d flux;
-  real4d src;
+  real3d src;
   real5d stateGLL;
   SArray<real,tord> gllWts;
   SArray<real,ord,tord> to_gll;
@@ -37,7 +37,7 @@ public :
     fluxLimits  = real5d("fluxLimits",numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
     stateLimits = real5d("srcLimits" ,numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
     flux        = real4d("flux"      ,numState  ,dom.nz+1,dom.ny+1,dom.nx+1);
-    src         = real4d("src"       ,numState  ,dom.nz  ,dom.ny  ,dom.nx  );
+    src         = real3d("src"       ,dom.nz,dom.ny,dom.nx);
     stateGLL    = real5d("stateGLL"  ,numState,dom.nz,dom.ny,dom.nx,tord);
 
     SArray<real,ord,ord,ord> to_gll_tmp;
@@ -270,8 +270,7 @@ public :
     stateBoundariesZ(state, dom);
 
     // Reconstruct to tord GLL points in the x-direction
-    reconSlowSD_Z(state, hyDensGLL, hyDensThetaGLL, dom, wenoRecon, to_gll, stateLimits, fluxLimits, src, wenoIdl, wenoSigma);
-    reconFastSD_Z(state, hyDensGLL, hyDensThetaGLL, dom, wenoRecon, to_gll, stateLimits, fluxLimits, src, wenoIdl, wenoSigma);
+    reconSD_Z(state, hyDensGLL, hyDensThetaGLL, dom, wenoRecon, to_gll, stateLimits, fluxLimits, wenoIdl, wenoSigma);
 
     // Apply boundary conditions to fluxes and state values
     edgeBoundariesZ(stateLimits, fluxLimits, dom);
@@ -575,7 +574,7 @@ public :
 
   inline void reconAder_Z(real4d &state, real2d const &hyDensGLL, real2d const &hyDensThetaGLL,
                           Domain const &dom, SArray<real,ord,ord,ord> const &wenoRecon, SArray<real,ord,tord> const &to_gll, 
-                          real5d &stateLimits, real5d &fluxLimits, real4d &src, SArray<real,hs+2> const &wenoIdl, real &wenoSigma,
+                          real5d &stateLimits, real5d &fluxLimits, real3d &src, SArray<real,hs+2> const &wenoIdl, real &wenoSigma,
                           SArray<real,tord,tord> const &aderDerivZ, SArray<real,tord> const &gllWts, real5d &stateGLL) {
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
@@ -641,11 +640,9 @@ public :
         stateLimits(l,0,k+1,j,i) = stateDTs(l,0,tord-1);
         fluxLimits (l,0,k+1,j,i) = fluxDTs (l,0,tord-1);
       }
-      for (int l=0; l<numState; l++) {
-        src(l,k,j,i) = 0;
-      }
+      src(k,j,i) = 0;
       for (int ii=0; ii<tord; ii++) {
-        src(idRW,k,j,i) += sourceDTs(0,ii) * gllWts(ii);
+        src(k,j,i) += sourceDTs(0,ii) * gllWts(ii);
       }
 
     });
@@ -747,7 +744,7 @@ public :
   }
 
 
-  inline void computeTend_Z(real4d const &flux, real4d &tend, real4d &src, Domain const &dom) {
+  inline void computeTend_Z(real4d const &flux, real4d &tend, real3d &src, Domain const &dom) {
     // for (int l=0; l<numState; l++) {
     //   for (int k=0; k<dom.nz; k++) {
     //     for (int j=0; j<dom.ny; j++) {
@@ -755,7 +752,10 @@ public :
     Kokkos::parallel_for( numState*dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
       int l, k, j, i;
       unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
-      tend(l,k,j,i) = - ( flux(l,k+1,j,i) - flux(l,k,j,i) ) / dom.dz + src(l,k,j,i);
+      tend(l,k,j,i) = - ( flux(l,k+1,j,i) - flux(l,k,j,i) ) / dom.dz;
+      if (l==idRW) {
+        tend(l,k,j,i) += src(k,j,i);
+      }
     });
   }
 
