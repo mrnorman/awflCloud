@@ -117,9 +117,8 @@ public:
     } else {
       strloc = str;
     }
-    if      ( !strcmp(strloc.c_str(),"SSPRK3"      ) ) { timeMethod = TIME_SSPRK3      ; }
-    else if ( !strcmp(strloc.c_str(),"ADER"        ) ) { timeMethod = TIME_ADER        ; }
-    else if ( !strcmp(strloc.c_str(),"SPLIT_SSPRK3") ) { timeMethod = TIME_SPLIT_SSPRK3; }
+    if      ( !strcmp(strloc.c_str(),"SSPRK3") ) { timeMethod = TIME_SSPRK3; }
+    else if ( !strcmp(strloc.c_str(),"ADER"  ) ) { timeMethod = TIME_ADER  ; }
     else  {
       std::cout << "Error: unrecognized timeMethod " << str << " in file " << fNameIn << "\n";
       exit(-1);
