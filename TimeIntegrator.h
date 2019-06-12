@@ -72,7 +72,7 @@ public :
       tend.compEulerTendADER_X(state.state, state.hyDensCells, state.hyDensThetaCells, dom, exch, par, tendArr);
       applyTendencies( state.state , 1._fp , state.state , 0._fp , state.state , 1._fp , tendArr, dom);
     }
-    applyHeatingCooling(state.state,state.hyDensCells,par,dom);
+    // applyHeatingCooling(state.state,state.hyDensCells,par,dom);
   }
 
 
