@@ -17,3 +17,9 @@ Some attributes of the numerical scheme:
 * Includes a __2-D__ option to simulate the traditional NH atmospheric test cases
 * Uses __MPI__ (nearest neighbor communication) for off-node parallelism
 * Uses __Kokkos__ for on-node parallelism
+
+## Future Work
+The most pressing developments needed are:
+1) A more efficient handling of fast acoustics, particularly in the vertical direction. This could include implicit, multi-level, and Lagrangian treatments.
+2) A variable vertical grid spacing (simply a matter of altering the SageMath scripts to compute Vandermonde matrices that respond to grid spacing and inverting those at model initialization).
+3) A plan for incorporating moisture, possibly through an equivalent potential temperature.
