@@ -11,7 +11,7 @@ ylen       : 20000.  // Domain length in the y-direction (m)
 zlen       : 10000.  // Domain length in the z-direction (m)
 cfl        : 0.7     // CFL value to use
 simLength  : 700.    // How long to simulation (s)
-parNx      : 4       // Number of parallel tasks in the x-direction
+parNx      : 8       // Number of parallel tasks in the x-direction
 parNy      : 1       // Number of parallel tasks in the y-direction
 outFreq    : 10.     // Frequency for output in seconds
 doWeno     : 1

@@ -192,18 +192,20 @@ public:
             real yloc = (par.j_beg + j + 0.5_fp)*dom.dy + gllOrdPoints(jj)*dom.dy;
             real zloc = (k + 0.5_fp)*dom.dz + gllOrdPoints(kk)*dom.dz;
             real const t0 = 300._fp;
-            real r, t;
+            real r0, r, t;
 
             if (dom.run2d) yloc = dom.ylen/2;
 
-            hydro::hydroConstTheta( t0 , zloc , r );
+            hydro::hydroConstTheta( t0 , zloc , r0 );
             t  = ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, 2000, 2000, 2000, 2000,  20);
-
-            hydro::hydroConstTheta( t0 , zloc , r );
             t += ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, 8000, 2000, 2000, 2000, -20);
 
+            // Set the initial density such that pressure is constant (to get rid of distracting acoustic waves)
+            r = r0*(t0/(t0+t)-1._fp);
+
             real wt = gllOrdWeights(ii)*gllOrdWeights(jj)*gllOrdWeights(kk);
-            state.state(idRT,hs+k,hs+j,hs+i) += wt * r*t;
+            state.state(idR ,hs+k,hs+j,hs+i) += wt * r  ;
+            state.state(idRT,hs+k,hs+j,hs+i) += wt * ( (r0+r)*(t0+t) - r0*t0 );
           }
         }
       }
