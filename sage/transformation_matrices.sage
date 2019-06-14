@@ -28,6 +28,18 @@ def stencil_to_coefs(N) :
     return constr_to_coefs,coefs_to_constr
 
 
+#Matrices that convert N stencil averages centered about zero with dx grid spacing into Nth-order-accurate polynomial coefficients and vice versa
+def coefs_to_stencil_var(N) :
+    var('x')
+    hs = (N-1)/2
+    locs = coefs_1d(N+1,0,'locs')
+    coefs = coefs_1d(N,0,'a')
+    p = poly_1d(N,coefs,x)
+    constr = vector([ integrate_poly(N,p,x,locs[i],locs[i+1])/(locs[i+1]-locs[i]) for i in range(N) ])
+    coefs_to_constr = jacobian(constr,coefs).simplify_full()
+    return coefs_to_constr
+
+
 #Matrix that converts polynomial coefficients into differentiated polynomial coefficients
 def coefs_to_deriv(N) :
     var('x')

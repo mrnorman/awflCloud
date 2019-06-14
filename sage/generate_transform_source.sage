@@ -64,6 +64,11 @@ for N in range(N1,N2+1) :
         print(add_spaces(2,c_matrix('rslt',N,N,force_fp(p2c,129),'none',200)))
         print('}\n');
 
+        print('inline _HOSTDEV void coefs_to_sten_var(SArray<FP,%s,%s> &rslt, SArray<FP,%s> &locs) {'%(N,N,N+1))
+        c2p = coefs_to_stencil_var(N)
+        print(add_spaces(2,c_matrix('rslt',N,N,force_fp(c2p,129),'locs',200)))
+        print('}\n');
+
         print('inline _HOSTDEV void coefs_to_sten(SArray<FP,%s,%s> &rslt) {'%(N,N))
         p2c,c2p = stencil_to_coefs(N)
         print(add_spaces(2,c_matrix('rslt',N,N,force_fp(c2p,129),'none',200)))
