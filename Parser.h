@@ -20,21 +20,30 @@ public:
   void readParamsFile(std::string fNameIn, Domain &dom, Parallel &par, FileIO &io) {
 
     std::string strTimeMethod;
+    std::string strEqnSet;
+    std::string strDataInit;
 
-    // Initialize all read-in values to -999
+    // Initialize all REQUIRED read-in values to -999
     dom.nx_glob   = 0;
     dom.ny_glob   = 0;
     dom.nz_glob   = 0;
-    dom.xlen      = -999;
-    dom.ylen      = -999;
-    dom.zlen      = -999;
-    dom.cfl       = -999;
     dom.simLength = -999;
     par.nproc_x   = -999;
     par.nproc_y   = -999;
     outFreq       = -999;
-    dom.doWeno    = -999;
-    timeMethod    = -999;
+
+    // Create some default parameters
+    dom.xlen      = 20000;      // 20km default
+    dom.ylen      = 20000;      // 20km default
+    dom.zlen      = 10000;      // 10km default
+    dom.doWeno    = 0;          // WENO off by default
+    dom.cfl       = 0.7;        // Allow for any reasonable range of winds
+    timeMethod    = TIME_ADER;
+    strTimeMethod = "ADER";
+    dom.eqnSet    = EQN_THETA_CONS;
+    strEqnSet     = "theta_cons";
+    dom.dataInit  = DATA_INIT_THERMAL;
+    strDataInit   = "thermal";
 
     // Read in colon-separated key: value file line by line
     std::ifstream fInStream(fNameIn);
@@ -69,42 +78,40 @@ public:
         else if ( !strcmp( "outFreq"   , key.c_str() ) ) { ssVal >> outFreq      ; }
         else if ( !strcmp( "doWeno"    , key.c_str() ) ) { ssVal >> dom.doWeno   ; }
         else if ( !strcmp( "timeMethod", key.c_str() ) ) { ssVal >> strTimeMethod; handleTimeMethod(strTimeMethod,fNameIn); }
+        else if ( !strcmp( "eqnSet"    , key.c_str() ) ) { ssVal >> strEqnSet    ; handleEqnSet    (strEqnSet    ,fNameIn, dom); }
+        else if ( !strcmp( "dataInit"  , key.c_str() ) ) { ssVal >> strDataInit  ; handleDataInit  (strDataInit  ,fNameIn, dom); }
         else {
           std::cout << "Error: key " << key << " not understood in file " << fNameIn << "\n";
-          exit(-1);
         }
       }
     }
 
-    // Test to make sure all values were initialized
+    // Test to make sure all required values were initialized
     if (dom.nx_glob   == 0   ) { std::cout << "Error: key " << "nx"        << " not set."; exit(-1); }
     if (dom.ny_glob   == 0   ) { std::cout << "Error: key " << "ny"        << " not set."; exit(-1); }
     if (dom.nz_glob   == 0   ) { std::cout << "Error: key " << "nz"        << " not set."; exit(-1); }
-    if (dom.xlen      == -999) { std::cout << "Error: key " << "xlen"      << " not set."; exit(-1); }
-    if (dom.ylen      == -999) { std::cout << "Error: key " << "ylen"      << " not set."; exit(-1); }
-    if (dom.zlen      == -999) { std::cout << "Error: key " << "zlen"      << " not set."; exit(-1); }
-    if (dom.cfl       == -999) { std::cout << "Error: key " << "cfl"       << " not set."; exit(-1); }
     if (dom.simLength == -999) { std::cout << "Error: key " << "simLength" << " not set."; exit(-1); }
     if (par.nproc_x   == -999) { std::cout << "Error: key " << "parNx"     << " not set."; exit(-1); }
     if (par.nproc_y   == -999) { std::cout << "Error: key " << "parNy"     << " not set."; exit(-1); }
     if (outFreq       == -999) { std::cout << "Error: key " << "outFreq"   << " not set."; exit(-1); }
-    if (dom.doWeno    == -999) { std::cout << "Error: key " << "doWeno"    << " not set."; exit(-1); }
 
     // Print out the values
     if (par.masterproc) {
-      std::cout << "nx: "         << dom.nx_glob   << "\n";
-      std::cout << "ny: "         << dom.ny_glob   << "\n";
-      std::cout << "nz: "         << dom.nz_glob   << "\n";
-      std::cout << "xlen: "       << dom.xlen      << "\n";
-      std::cout << "ylen: "       << dom.ylen      << "\n";
-      std::cout << "zlen: "       << dom.zlen      << "\n";
-      std::cout << "cfl: "        << dom.cfl       << "\n";
-      std::cout << "simLength: "  << dom.simLength << "\n";
-      std::cout << "parNx: "      << par.nproc_x   << "\n";
-      std::cout << "parNy: "      << par.nproc_y   << "\n";
-      std::cout << "outFreq: "    << outFreq       << "\n";
-      std::cout << "doWeno: "     << dom.doWeno    << "\n";
-      std::cout << "timeMethod: " << timeMethod    << "\n";
+      std::cout << "nx:         " << dom.nx_glob   << "\n";
+      std::cout << "ny:         " << dom.ny_glob   << "\n";
+      std::cout << "nz:         " << dom.nz_glob   << "\n";
+      std::cout << "xlen:       " << dom.xlen      << "\n";
+      std::cout << "ylen:       " << dom.ylen      << "\n";
+      std::cout << "zlen:       " << dom.zlen      << "\n";
+      std::cout << "cfl:        " << dom.cfl       << "\n";
+      std::cout << "simLength:  " << dom.simLength << "\n";
+      std::cout << "parNx:      " << par.nproc_x   << "\n";
+      std::cout << "parNy:      " << par.nproc_y   << "\n";
+      std::cout << "outFreq:    " << outFreq       << "\n";
+      std::cout << "doWeno:     " << dom.doWeno    << "\n";
+      std::cout << "timeMethod: " << strTimeMethod << "\n";
+      std::cout << "eqnSet:     " << strEqnSet     << "\n";
+      std::cout << "dataInit:   " << strDataInit   << "\n";
     }
 
   }
@@ -121,6 +128,38 @@ public:
     else if ( !strcmp(strloc.c_str(),"ADER"  ) ) { timeMethod = TIME_ADER  ; }
     else  {
       std::cout << "Error: unrecognized timeMethod " << str << " in file " << fNameIn << "\n";
+      exit(-1);
+    }
+  }
+
+  void handleEqnSet(std::string &str, std::string &fNameIn, Domain &dom) {
+    size_t splitloc = str.find("//",0);
+    std::string strloc;
+    if (splitloc != std::string::npos){
+      strloc = str.substr(0,splitloc);
+    } else {
+      strloc = str;
+    }
+    if      ( !strcmp(strloc.c_str(),"theta_cons") ) { dom.eqnSet = EQN_THETA_CONS; }
+    else if ( !strcmp(strloc.c_str(),"theta_prim") ) { dom.eqnSet = EQN_THETA_PRIM; }
+    else  {
+      std::cout << "Error: unrecognized eqnSet " << str << " in file " << fNameIn << "\n";
+      exit(-1);
+    }
+  }
+
+  void handleDataInit(std::string &str, std::string &fNameIn, Domain &dom) {
+    size_t splitloc = str.find("//",0);
+    std::string strloc;
+    if (splitloc != std::string::npos){
+      strloc = str.substr(0,splitloc);
+    } else {
+      strloc = str;
+    }
+    if      ( !strcmp(strloc.c_str(),"thermal"  ) ) { dom.dataInit = DATA_INIT_THERMAL  ; }
+    else if ( !strcmp(strloc.c_str(),"collision") ) { dom.dataInit = DATA_INIT_COLLISION; }
+    else  {
+      std::cout << "Error: unrecognized dataInit " << str << " in file " << fNameIn << "\n";
       exit(-1);
     }
   }

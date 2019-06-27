@@ -116,10 +116,12 @@ public:
 
     state.hyDensCells      = real1d( "hyCellsR"  , dom.nz+2*hs );
     state.hyDensThetaCells = real1d( "hyCellsRT" , dom.nz+2*hs );
+    state.hyThetaCells     = real1d( "hyCellsT"  , dom.nz+2*hs );
     state.hyPressureCells  = real1d( "hyCellsp"  , dom.nz+2*hs );
 
     state.hyDensGLL      = real2d( "hyGLLR"  , dom.nz , tord );
     state.hyDensThetaGLL = real2d( "hyGLLRT" , dom.nz , tord );
+    state.hyThetaGLL     = real2d( "hyGLLT"  , dom.nz , tord );
     state.hyPressureGLL  = real2d( "hyGLLp"  , dom.nz , tord );
 
     // Initialize the hydrostatic background state for cell averages
@@ -131,15 +133,17 @@ public:
       // Perform ord-point GLL quadrature for the cell averages
       for (int kk=0; kk<ord; kk++) {
         real zloc = (k + 0.5_fp)*dom.dz + gllOrdPoints(kk)*dom.dz;
-        real const t0 = 300._fp;
-        real r, t;
+        real r0, t0;
 
-        hydro::hydroConstTheta( t0 , zloc , r );
-        t = t0;
+        if (dom.dataInit == DATA_INIT_THERMAL || dom.dataInit == DATA_INIT_COLLISION) {
+          t0 = 300._fp;
+          hydro::hydroConstTheta( t0 , zloc , r0 );
+        }
 
-        state.hyDensCells     (hs+k) += gllOrdWeights(kk) * r;
-        state.hyDensThetaCells(hs+k) += gllOrdWeights(kk) * r*t;
-        state.hyPressureCells (hs+k) += gllOrdWeights(kk) * mypow( r*t , GAMMA );
+        state.hyDensCells     (hs+k) += gllOrdWeights(kk) * r0;
+        state.hyDensThetaCells(hs+k) += gllOrdWeights(kk) * r0*t0;
+        state.hyThetaCells    (hs+k) += gllOrdWeights(kk) * t0;
+        state.hyPressureCells (hs+k) += gllOrdWeights(kk) * mypow( r0*t0 , GAMMA );
       }
     });
 
@@ -148,9 +152,11 @@ public:
     Kokkos::parallel_for( "boundariesHydroCells" , hs , KOKKOS_LAMBDA (int const ii) {
       state.hyDensCells     (ii) = state.hyDensCells     (hs);
       state.hyDensThetaCells(ii) = state.hyDensThetaCells(hs);
+      state.hyThetaCells    (ii) = state.hyThetaCells    (hs);
       state.hyPressureCells (ii) = state.hyPressureCells (hs);
       state.hyDensCells     (dom.nz+hs+ii) = state.hyDensCells     (dom.nz+hs-1);
       state.hyDensThetaCells(dom.nz+hs+ii) = state.hyDensThetaCells(dom.nz+hs-1);
+      state.hyThetaCells    (dom.nz+hs+ii) = state.hyThetaCells    (dom.nz+hs-1);
       state.hyPressureCells (dom.nz+hs+ii) = state.hyPressureCells (dom.nz+hs-1);
     });
 
@@ -162,15 +168,17 @@ public:
       int k, kk;
       unpackIndices(iGlob,dom.nz,tord,k,kk);
       real zloc = (k + 0.5_fp)*dom.dz + gllTordPoints(kk)*dom.dz;
-      real const t0 = 300._fp;
-      real r, t;
+      real r0, t0;
 
-      hydro::hydroConstTheta( t0 , zloc , r );
-      t = t0;
+      if (dom.dataInit == DATA_INIT_THERMAL || dom.dataInit == DATA_INIT_COLLISION) {
+        t0 = 300._fp;
+        hydro::hydroConstTheta( t0 , zloc , r0 );
+      }
 
-      state.hyDensGLL     (k,kk) = r;
-      state.hyDensThetaGLL(k,kk) = r*t;
-      state.hyPressureGLL (k,kk) = mypow( r*t , GAMMA );
+      state.hyDensGLL     (k,kk) = r0;
+      state.hyDensThetaGLL(k,kk) = r0*t0;
+      state.hyThetaGLL    (k,kk) = t0;
+      state.hyPressureGLL (k,kk) = mypow( r0*t0 , GAMMA );
     });
 
     // Initialize the state
@@ -191,21 +199,34 @@ public:
             real xloc = (par.i_beg + i + 0.5_fp)*dom.dx + gllOrdPoints(ii)*dom.dx;
             real yloc = (par.j_beg + j + 0.5_fp)*dom.dy + gllOrdPoints(jj)*dom.dy;
             real zloc = (k + 0.5_fp)*dom.dz + gllOrdPoints(kk)*dom.dz;
-            real const t0 = 300._fp;
-            real r0, r, t;
+            real r0, t0, r, t;
 
             if (dom.run2d) yloc = dom.ylen/2;
 
-            hydro::hydroConstTheta( t0 , zloc , r0 );
-            t  = ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, 2000, 2000, 2000, 2000,  20);
-            t += ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, 8000, 2000, 2000, 2000, -20);
+            if (dom.dataInit == DATA_INIT_THERMAL || dom.dataInit == DATA_INIT_COLLISION) {
+              t0 = 300._fp;
+              hydro::hydroConstTheta( t0 , zloc , r0 );
+            }
+
+            if        (dom.dataInit == DATA_INIT_COLLISION) {
+              t  = ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, 2000, 2000, 2000, 2000,  20);
+              t += ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, 8000, 2000, 2000, 2000, -20);
+            } else if (dom.dataInit == DATA_INIT_THERMAL  ) {
+              t  = ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, 2000, 2000, 2000, 2000, 2  );
+            }
 
             // Set the initial density such that pressure is constant (to get rid of distracting acoustic waves)
             r = r0*(t0/(t0+t)-1._fp);
 
             real wt = gllOrdWeights(ii)*gllOrdWeights(jj)*gllOrdWeights(kk);
-            state.state(idR ,hs+k,hs+j,hs+i) += wt * r  ;
-            state.state(idRT,hs+k,hs+j,hs+i) += wt * ( (r0+r)*(t0+t) - r0*t0 );
+
+            if        (dom.eqnSet == EQN_THETA_CONS) {
+              state.state(idR ,hs+k,hs+j,hs+i) += wt * r  ;
+              state.state(idRT,hs+k,hs+j,hs+i) += wt * ( (r0+r)*(t0+t) - r0*t0 );
+            } else if (dom.eqnSet == EQN_THETA_PRIM) {
+              state.state(idR ,hs+k,hs+j,hs+i) += wt * r;
+              state.state(idRT,hs+k,hs+j,hs+i) += wt * t;
+            }
           }
         }
       }
