@@ -135,7 +135,7 @@ public:
         real zloc = (k + 0.5_fp)*dom.dz + gllOrdPoints(kk)*dom.dz;
         real r0, t0;
 
-        if (dom.dataInit == DATA_INIT_THERMAL || dom.dataInit == DATA_INIT_COLLISION) {
+        if (dom.dataInit == DATA_INIT_THERMAL || dom.dataInit == DATA_INIT_COLLISION || dom.dataInit == DATA_INIT_STRAKA) {
           t0 = 300._fp;
           hydro::hydroConstTheta( t0 , zloc , r0 );
         }
@@ -143,7 +143,7 @@ public:
         state.hyDensCells     (hs+k) += gllOrdWeights(kk) * r0;
         state.hyDensThetaCells(hs+k) += gllOrdWeights(kk) * r0*t0;
         state.hyThetaCells    (hs+k) += gllOrdWeights(kk) * t0;
-        state.hyPressureCells (hs+k) += gllOrdWeights(kk) * mypow( r0*t0 , GAMMA );
+        state.hyPressureCells (hs+k) += gllOrdWeights(kk) * pow( r0*t0 , GAMMA );
       }
     });
 
@@ -170,7 +170,7 @@ public:
       real zloc = (k + 0.5_fp)*dom.dz + gllTordPoints(kk)*dom.dz;
       real r0, t0;
 
-      if (dom.dataInit == DATA_INIT_THERMAL || dom.dataInit == DATA_INIT_COLLISION) {
+      if (dom.dataInit == DATA_INIT_THERMAL || dom.dataInit == DATA_INIT_COLLISION || dom.dataInit == DATA_INIT_STRAKA) {
         t0 = 300._fp;
         hydro::hydroConstTheta( t0 , zloc , r0 );
       }
@@ -178,7 +178,7 @@ public:
       state.hyDensGLL     (k,kk) = r0;
       state.hyDensThetaGLL(k,kk) = r0*t0;
       state.hyThetaGLL    (k,kk) = t0;
-      state.hyPressureGLL (k,kk) = mypow( r0*t0 , GAMMA );
+      state.hyPressureGLL (k,kk) = pow( r0*t0 , GAMMA );
     });
 
     // Initialize the state
@@ -203,7 +203,7 @@ public:
 
             if (dom.run2d) yloc = dom.ylen/2;
 
-            if (dom.dataInit == DATA_INIT_THERMAL || dom.dataInit == DATA_INIT_COLLISION) {
+            if (dom.dataInit == DATA_INIT_THERMAL || dom.dataInit == DATA_INIT_COLLISION || dom.dataInit == DATA_INIT_STRAKA) {
               t0 = 300._fp;
               hydro::hydroConstTheta( t0 , zloc , r0 );
             }
@@ -213,6 +213,8 @@ public:
               t += ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, 8000, 2000, 2000, 2000, -20);
             } else if (dom.dataInit == DATA_INIT_THERMAL  ) {
               t  = ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, 2000, 2000, 2000, 2000, 2  );
+            } else if (dom.dataInit == DATA_INIT_STRAKA   ) {
+              t  = ellipsoid_cosine(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, 3000, 4000, 4000, 2000, -15 , 1 );
             }
 
             // Set the initial density such that pressure is constant (to get rid of distracting acoustic waves)
@@ -246,11 +248,11 @@ public:
       real v = state.state(idRV,hs+k,hs+j,hs+i) / r;
       real w = state.state(idRW,hs+k,hs+j,hs+i) / r;
       real t = ( state.state(idRT,hs+k,hs+j,hs+i) + state.hyDensThetaCells(hs+k) ) / r;
-      real p = C0 * mypow( r*t , GAMMA );
-      real cs = mysqrt( GAMMA * p / r );
+      real p = C0 * pow( r*t , GAMMA );
+      real cs = sqrt( GAMMA * p / r );
 
       // Compute the max wave
-      real maxWave = max( max( myfabs(u) , myfabs(v)) , myfabs(w)) + cs;
+      real maxWave = max( max( fabs(u) , fabs(v)) , fabs(w)) + cs;
 
       // Compute the time step
       real mindx = min( min(dom.dx,dom.dy) , dom.dz);
@@ -285,8 +287,22 @@ public:
     real xn = (x-x0)/xrad;
     real yn = (y-y0)/yrad;
     real zn = (z-z0)/zrad;
-    real dist = mysqrt( xn*xn + yn*yn + zn*zn );
+    real dist = sqrt( xn*xn + yn*yn + zn*zn );
     return amp * max( 1._fp - dist , 0._fp );
+  }
+
+  inline _HOSTDEV real ellipsoid_cosine(real const x   , real const y   , real const z ,
+                                        real const x0  , real const y0  , real const z0,
+                                        real const xrad, real const yrad, real const zrad, real const amp, real const pwr) {
+    real val = 0;
+    real xn = (x-x0)/xrad;
+    real yn = (y-y0)/yrad;
+    real zn = (z-z0)/zrad;
+    real dist = sqrt( xn*xn + yn*yn + zn*zn );
+    if (dist <= 1._fp) {
+      val = amp * pow( (cos(PI*dist)+1)/2 , pwr );
+    }
+    return val;
   }
 
 };

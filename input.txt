@@ -3,16 +3,16 @@
 // Legal syntax is key : value
 // You can end input key:value lines with comments
 
-nx         : 200        // Number of cells in the x-direction
+nx         : 1060       // Number of cells in the x-direction
 ny         : 1          // Number of cells in the y-direction
-nz         : 100        // Number of cells in the z-direction
+nz         : 128        // Number of cells in the z-direction
 
-xlen       : 20000.     // Domain length in the x-direction (m)
-ylen       : 20000.     // Domain length in the y-direction (m)
-zlen       : 10000.     // Domain length in the z-direction (m)
+xlen       : 53000.     // Domain length in the x-direction (m)
+ylen       : 53000.     // Domain length in the y-direction (m)
+zlen       : 6400.      // Domain length in the z-direction (m)
 
-cfl        : 0.7        // CFL value to use
-simLength  : 1000.      // How long to simulation (s)
+cfl        : 0.8        // CFL value to use
+simLength  : 900.       // How long to simulation (s)
 
 parNx      : 1          // Number of parallel tasks in the x-direction
 parNy      : 1          // Number of parallel tasks in the y-direction
@@ -24,7 +24,8 @@ doWeno     : 1          // Whether to do WENO
 // Initial data to use
 //   thermal  : Rising thermal (neutral atmosphere)
 //   collision: Colliding cold and warm bubbles (neutral atmosphere)
-dataInit   : collision
+//   straka   : Falling cold bubble
+dataInit : straka
 
 // Temporal discretization to use:
 //   ADER: ADER with Differential Transforms  (max cfl = 1)

@@ -158,6 +158,7 @@ public:
     }
     if      ( !strcmp(strloc.c_str(),"thermal"  ) ) { dom.dataInit = DATA_INIT_THERMAL  ; }
     else if ( !strcmp(strloc.c_str(),"collision") ) { dom.dataInit = DATA_INIT_COLLISION; }
+    else if ( !strcmp(strloc.c_str(),"straka"   ) ) { dom.dataInit = DATA_INIT_STRAKA   ; }
     else  {
       std::cout << "Error: unrecognized dataInit " << str << " in file " << fNameIn << "\n";
       exit(-1);

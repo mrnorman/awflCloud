@@ -295,7 +295,7 @@ public :
         real v = gllState(idRV,ii) / r;
         real w = gllState(idRW,ii) / r;
         real t = gllState(idRT,ii) / r;
-        real p = C0 * mypow( r*t , GAMMA );
+        real p = C0 * pow( r*t , GAMMA );
 
         gllFlux(idR ,ii) = r*u;
         gllFlux(idRU,ii) = r*u*u + p;
@@ -350,7 +350,7 @@ public :
         real v = gllState(idRV,ii) / r;
         real w = gllState(idRW,ii) / r;
         real t = gllState(idRT,ii) / r;
-        real p = C0 * mypow( r*t , GAMMA );
+        real p = C0 * pow( r*t , GAMMA );
 
         gllFlux(idR ,ii) = r*v;
         gllFlux(idRU,ii) = r*v*u;
@@ -410,12 +410,12 @@ public :
         real v = gllState(idRV,ii) / r;
         real w = gllState(idRW,ii) / r;
         real t = gllState(idRT,ii) / r;
-        real p = C0 * mypow( r*t , GAMMA );
+        real p = C0 * pow( r*t , GAMMA );
 
         gllFlux(idR ,ii) = r*w;
         gllFlux(idRU,ii) = r*w*u;
         gllFlux(idRV,ii) = r*w*v;
-        gllFlux(idRW,ii) = r*w*w + p - C0*mypow(hyDensThetaGLL(k,ii),GAMMA);
+        gllFlux(idRW,ii) = r*w*w + p - C0*pow(hyDensThetaGLL(k,ii),GAMMA);
         gllFlux(idRT,ii) = r*w*t;
       }
 

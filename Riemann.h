@@ -18,8 +18,8 @@ inline _HOSTDEV void godunovLinearX(SArray<real,numState> &s1, SArray<real,numSt
   real v = 0.5_fp * ( s1(idRV) + s2(idRV) ) / r;
   real w = 0.5_fp * ( s1(idRW) + s2(idRW) ) / r;
   real t = 0.5_fp * ( s1(idRT) + s2(idRT) ) / r;
-  real p = C0 * mypow( r*t , GAMMA );
-  real cs = mysqrt( GAMMA * p / r );
+  real p = C0 * pow( r*t , GAMMA );
+  real cs = sqrt( GAMMA * p / r );
 
   // Compute left and right characteristic variables
   ch1(0) =  u*f1(0)/(2*cs) - f1(1)/(2*cs) + f1(4)/(2*t);
@@ -72,8 +72,8 @@ inline _HOSTDEV void godunovLinearY(SArray<real,numState> &s1, SArray<real,numSt
   real v = 0.5_fp * ( s1(idRV) + s2(idRV) ) / r;
   real w = 0.5_fp * ( s1(idRW) + s2(idRW) ) / r;
   real t = 0.5_fp * ( s1(idRT) + s2(idRT) ) / r;
-  real p = C0 * mypow( r*t , GAMMA );
-  real cs = mysqrt( GAMMA * p / r );
+  real p = C0 * pow( r*t , GAMMA );
+  real cs = sqrt( GAMMA * p / r );
 
   // Compute left and right characteristic variables
   ch1(0) =  v*f1(0)/(2*cs) - f1(2)/(2*cs) + f1(4)/(2*t);
@@ -126,8 +126,8 @@ inline _HOSTDEV void godunovLinearZ(SArray<real,numState> &s1, SArray<real,numSt
   real v = 0.5_fp * ( s1(idRV) + s2(idRV) ) / r;
   real w = 0.5_fp * ( s1(idRW) + s2(idRW) ) / r;
   real t = 0.5_fp * ( s1(idRT) + s2(idRT) ) / r;
-  real p = C0 * mypow( r*t , GAMMA );
-  real cs = mysqrt( GAMMA * p / r );
+  real p = C0 * pow( r*t , GAMMA );
+  real cs = sqrt( GAMMA * p / r );
 
   // Compute left and right characteristic variables
   ch1(0) = f1(0) - f1(4)/t;

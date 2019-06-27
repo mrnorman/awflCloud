@@ -287,8 +287,8 @@ public:
     Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
       int k, j, i;
       unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
-      data(iGlob) = C0*mypow(state.state(idRT,hs+k,hs+j,hs+i)+state.hyDensThetaCells(hs+k),GAMMA) -
-                    C0*mypow(state.hyDensThetaCells(hs+k),GAMMA);
+      data(iGlob) = C0*pow(state.state(idRT,hs+k,hs+j,hs+i)+state.hyDensThetaCells(hs+k),GAMMA) -
+                    C0*pow(state.hyDensThetaCells(hs+k),GAMMA);
     });
     Kokkos::fence();
     #ifdef __NVCC__

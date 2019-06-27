@@ -29,7 +29,7 @@
       ruv    (0,ii) = r*u*v;
       ruw    (0,ii) = r*u*w;
       rut    (0,ii) = r*u*t;
-      rtgamma(0,ii) = mypow( r*t , GAMMA );
+      rtgamma(0,ii) = pow( r*t , GAMMA );
 
       flux(idR ,0,ii) = r*u;
       flux(idRU,0,ii) = ruu(0,ii) + C0*rtgamma(0,ii);
@@ -109,7 +109,7 @@
       rvv    (0,ii) = r*v*v;
       rvw    (0,ii) = r*v*w;
       rvt    (0,ii) = r*v*t;
-      rtgamma(0,ii) = mypow( r*t , GAMMA );
+      rtgamma(0,ii) = pow( r*t , GAMMA );
 
       flux(idR ,0,ii) = r*v;
       flux(idRU,0,ii) = rvu(0,ii);
@@ -190,12 +190,12 @@
       rwv    (0,ii) = r*w*v;
       rww    (0,ii) = r*w*w;
       rwt    (0,ii) = r*w*t;
-      rtgamma(0,ii) = mypow( r*t , GAMMA );
+      rtgamma(0,ii) = pow( r*t , GAMMA );
 
       flux(idR ,0,ii) = r*w;
       flux(idRU,0,ii) = rwu(0,ii);
       flux(idRV,0,ii) = rwv(0,ii);
-      flux(idRW,0,ii) = rww(0,ii) + C0*rtgamma(0,ii) - C0*mypow(hyRHOT(ii),GAMMA);
+      flux(idRW,0,ii) = rww(0,ii) + C0*rtgamma(0,ii) - C0*pow(hyRHOT(ii),GAMMA);
       flux(idRT,0,ii) = rwt(0,ii);
 
       source(0,ii) = -( state(idR,0,ii) - hyRHO(ii) )*GRAV;

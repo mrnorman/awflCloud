@@ -10,6 +10,7 @@ int const EQN_THETA_PRIM = 2;
 
 int const DATA_INIT_COLLISION = 1;
 int const DATA_INIT_THERMAL   = 2;
+int const DATA_INIT_STRAKA    = 3;
 
 real outFreq;
 int  timeMethod;
