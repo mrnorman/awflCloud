@@ -21,6 +21,8 @@ outFreq    : 10.        // Frequency for output in seconds
 
 doWeno     : 1          // Whether to do WENO
 
+strakaVisc : 1          // Whether to apply Straka 2nd-order viscosity
+
 // Initial data to use
 //   thermal  : Rising thermal (neutral atmosphere)
 //   collision: Colliding cold and warm bubbles (neutral atmosphere)

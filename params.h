@@ -14,5 +14,6 @@ int const DATA_INIT_STRAKA    = 3;
 
 real outFreq;
 int  timeMethod;
+int  strakaVisc;
 
 #endif

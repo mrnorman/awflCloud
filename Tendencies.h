@@ -797,6 +797,73 @@ public :
   }
 
 
+  inline void computeStrakaTend(real4d &state, Domain &dom, Exchange &exch, Parallel const &par, real4d &tend, real1d const &hyDensCells, real1d const &hyDensThetaCells) {
+    //Exchange halos in the x-direction
+    exch.haloInit      ();
+    exch.haloPackN_x   (dom, state, numState);
+    exch.haloExchange_x(dom, par);
+    exch.haloUnpackN_x (dom, state, numState);
+
+    //Exchange halos in the y-direction
+    exch.haloInit      ();
+    exch.haloPackN_x   (dom, state, numState);
+    exch.haloExchange_x(dom, par);
+    exch.haloUnpackN_x (dom, state, numState);
+    
+    // Boundaries for the fluid state in the z-direction
+    stateBoundariesZ(state, dom);
+
+    // for (int k=0; k<dom.nz; k++) {
+    //   for (int j=0; j<dom.ny; j++) {
+    //     for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      real r = ( state(idR,hs+k,hs+j,hs+i) + hyDensCells(hs+k) );
+      SArray<real,numState,3> sten;
+
+      tend(idR,k,j,i) = 0.;
+
+      real dx2 = dom.dx*dom.dx;
+      for (int l=1; l<numState; l++) {
+        for (int ii=-1; ii<=1; ii++) {
+          if (l == idRT) {
+            sten(l,ii+1) = ( state(l,hs+k,hs+j,hs+i+ii) + hyDensThetaCells(hs+k) ) / ( state(idR,hs+k,hs+j,hs+i+ii) + hyDensCells(hs+k) );
+          } else {
+            sten(l,ii+1) = state(l,hs+k,hs+j,hs+i+ii) / ( state(idR,hs+k,hs+j,hs+i+ii) + hyDensCells(hs+k) );
+          }
+        }
+        tend(l,k,j,i)  = 75 * r * ( sten(l,2) - 2*sten(l,1) + sten(l,0) ) / dx2;
+      }
+
+      real dy2 = dom.dy*dom.dy;
+      for (int l=1; l<numState; l++) {
+        for (int ii=-1; ii<=1; ii++) {
+          if (l == idRT) {
+            sten(l,ii+1) = ( state(l,hs+k,hs+j+ii,hs+i) + hyDensThetaCells(hs+k) ) / ( state(idR,hs+k,hs+j+ii,hs+i) + hyDensCells(hs+k) );
+          } else {
+            sten(l,ii+1) = state(l,hs+k,hs+j+ii,hs+i) / ( state(idR,hs+k,hs+j+ii,hs+i) + hyDensCells(hs+k) );
+          }
+        }
+        tend(l,k,j,i) += 75 * r * ( sten(l,2) - 2*sten(l,1) + sten(l,0) ) / dy2;
+      }
+
+      real dz2 = dom.dz*dom.dz;
+      for (int l=1; l<numState; l++) {
+        for (int ii=-1; ii<=1; ii++) {
+          if (l == idRT) {
+            sten(l,ii+1) = ( state(l,hs+k+ii,hs+j,hs+i) + hyDensThetaCells(hs+k+ii) ) / ( state(idR,hs+k+ii,hs+j,hs+i) + hyDensCells(hs+k+ii) );
+          } else {
+            sten(l,ii+1) = state(l,hs+k+ii,hs+j,hs+i) / ( state(idR,hs+k+ii,hs+j,hs+i) + hyDensCells(hs+k+ii) );
+          }
+        }
+        tend(l,k,j,i) += 75 * r * ( sten(l,2) - 2*sten(l,1) + sten(l,0) ) / dz2;
+      }
+    });
+
+  }
+
 };
 
 #endif
+

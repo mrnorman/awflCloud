@@ -44,6 +44,7 @@ public:
     strEqnSet     = "theta_cons";
     dom.dataInit  = DATA_INIT_THERMAL;
     strDataInit   = "thermal";
+    strakaVisc    = 0;          // Turn off Straka viscosity by default
 
     // Read in colon-separated key: value file line by line
     std::ifstream fInStream(fNameIn);
@@ -77,6 +78,7 @@ public:
         else if ( !strcmp( "parNy"     , key.c_str() ) ) { ssVal >> par.nproc_y  ; }
         else if ( !strcmp( "outFreq"   , key.c_str() ) ) { ssVal >> outFreq      ; }
         else if ( !strcmp( "doWeno"    , key.c_str() ) ) { ssVal >> dom.doWeno   ; }
+        else if ( !strcmp( "strakaVisc", key.c_str() ) ) { ssVal >> strakaVisc   ; }
         else if ( !strcmp( "timeMethod", key.c_str() ) ) { ssVal >> strTimeMethod; handleTimeMethod(strTimeMethod,fNameIn); }
         else if ( !strcmp( "eqnSet"    , key.c_str() ) ) { ssVal >> strEqnSet    ; handleEqnSet    (strEqnSet    ,fNameIn, dom); }
         else if ( !strcmp( "dataInit"  , key.c_str() ) ) { ssVal >> strDataInit  ; handleDataInit  (strDataInit  ,fNameIn, dom); }
@@ -112,6 +114,7 @@ public:
       std::cout << "timeMethod: " << strTimeMethod << "\n";
       std::cout << "eqnSet:     " << strEqnSet     << "\n";
       std::cout << "dataInit:   " << strDataInit   << "\n";
+      std::cout << "strakaVisc: " << strakaVisc    << "\n";
     }
 
   }

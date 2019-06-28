@@ -39,6 +39,10 @@ public :
       std::cout << "Error: Unrecognized timeMethod\n";
       exit(-1);
     }
+    if (strakaVisc) {
+      tend.computeStrakaTend(state.state, dom, exch, par, tendArr, state.hyDensCells, state.hyDensThetaCells);
+      applyTendencies( state.state , 1._fp , state.state , 0._fp , state.state , 1._fp , tendArr, dom);
+    }
   }
 
 
