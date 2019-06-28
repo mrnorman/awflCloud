@@ -244,13 +244,23 @@ public:
       int k, j, i;
       unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       // Grab state variables
-      real r = state(idR ,hs+k,hs+j,hs+i) + dom.hyDensCells(hs+k);
-      real u = state(idRU,hs+k,hs+j,hs+i) / r;
-      real v = state(idRV,hs+k,hs+j,hs+i) / r;
-      real w = state(idRW,hs+k,hs+j,hs+i) / r;
-      real t = ( state(idRT,hs+k,hs+j,hs+i) + dom.hyDensThetaCells(hs+k) ) / r;
-      real p = C0 * pow( r*t , GAMMA );
-      real cs = sqrt( GAMMA * p / r );
+      real r, u, v, w, t, p, cs;
+      if (dom.eqnSet == EQN_THETA_CONS) {
+        r = state(idR ,hs+k,hs+j,hs+i) + dom.hyDensCells(hs+k);
+        u = state(idRU,hs+k,hs+j,hs+i) / r;
+        v = state(idRV,hs+k,hs+j,hs+i) / r;
+        w = state(idRW,hs+k,hs+j,hs+i) / r;
+        t = ( state(idRT,hs+k,hs+j,hs+i) + dom.hyDensThetaCells(hs+k) ) / r;
+        p = C0 * pow( r*t , GAMMA );
+      } else if (dom.eqnSet == EQN_THETA_PRIM) {
+        r = state(idR,hs+k,hs+j,hs+i) + dom.hyDensCells(hs+k);
+        u = state(idU,hs+k,hs+j,hs+i);
+        v = state(idV,hs+k,hs+j,hs+i);
+        w = state(idW,hs+k,hs+j,hs+i);
+        t = state(idT,hs+k,hs+j,hs+i) + dom.hyThetaCells(hs+k);
+        p = C0 * pow( r*t , GAMMA );
+      }
+      cs = sqrt( GAMMA * p / r );
 
       // Compute the max wave
       real maxWave = max( max( fabs(u) , fabs(v)) , fabs(w)) + cs;
