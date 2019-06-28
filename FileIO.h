@@ -14,7 +14,7 @@ protected:
   real outTimer;
   int ncid, numOut;
   int tDim, xDim, yDim, zDim;
-  int tVar, xVar, yVar, zVar, rVar, uVar, vVar, wVar, thVar, hyrVar, hyrtVar, pVar;
+  int tVar, xVar, yVar, zVar, rVar, uVar, vVar, wVar, thVar, hyrVar, hyrtVar, hypVar, pVar;
 
 public:
 
@@ -77,6 +77,7 @@ public:
     dimids[0] = zDim;
     ncwrap( ncmpi_def_var( ncid , "hyDens"      , NC_FLOAT , 1 , dimids , &hyrVar  ) , __LINE__ );
     ncwrap( ncmpi_def_var( ncid , "hyDensTheta" , NC_FLOAT , 1 , dimids , &hyrtVar ) , __LINE__ );
+    ncwrap( ncmpi_def_var( ncid , "hyPressure"  , NC_FLOAT , 1 , dimids , &hypVar  ) , __LINE__ );
 
     // End "define" mode
     ncwrap( ncmpi_enddef( ncid ) , __LINE__ );
@@ -139,6 +140,17 @@ public:
     #endif
     ncwrap( ncmpi_put_vara_float( ncid , hyrtVar , st , ct , zCoord_cpu ) , __LINE__ );
 
+    // for (int k=0; k<dom.nz; k++) {
+    Kokkos::parallel_for( dom.nz , KOKKOS_LAMBDA (int const k) {
+      zCoord(k) = dom.hyPressureCells(hs+k);
+    });
+    Kokkos::fence();
+    #ifdef __NVCC__
+      cudaMemcpyAsync( zCoord_cpu , zCoord.data() , dom.nz*sizeof(real) , cudaMemcpyDeviceToHost );
+      cudaDeviceSynchronize();
+    #endif
+    ncwrap( ncmpi_put_vara_float( ncid , hypVar , st , ct , zCoord_cpu ) , __LINE__ );
+
     ncwrap( ncmpi_end_indep_data(ncid) , __LINE__ );
 
     writeState(state, dom, par);
@@ -184,6 +196,138 @@ public:
 
 
   void writeState(real4d &state, Domain const &dom, Parallel const &par) {
+    if        (dom.eqnSet == EQN_THETA_CONS) {
+      writeStateThetaCons(state, dom, par);
+    } else if (dom.eqnSet == EQN_THETA_PRIM) {
+      writeStateThetaPrim(state, dom, par);
+    }
+  }
+
+
+  void writeStateThetaPrim(real4d &state, Domain const &dom, Parallel const &par) {
+    MPI_Offset st[4], ct[4];
+    real1d data("data",dom.nz*dom.ny*dom.nx);
+    real *data_cpu;
+
+    #ifdef __NVCC__
+      cudaMallocHost( &data_cpu , dom.nz*dom.ny*dom.nx*sizeof(real) );
+    #else
+      data_cpu = data.data();
+    #endif
+
+    st[0] = numOut; st[1] = 0     ; st[2] = par.j_beg; st[3] = par.i_beg;
+    ct[0] = 1     ; ct[1] = dom.nz; ct[2] = dom.ny   ; ct[3] = dom.nx   ;
+
+    // Write out density perturbation
+    // for (int k=0; k<dom.nz; k++) {
+    //   for (int j=0; j<dom.ny; j++) {
+    //     for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      data(iGlob) = state(idR,hs+k,hs+j,hs+i);
+    });
+    Kokkos::fence();
+    #ifdef __NVCC__
+      cudaMemcpyAsync( data_cpu , data.data() , dom.nz*dom.ny*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
+      cudaDeviceSynchronize();
+    #endif
+    ncwrap( ncmpi_put_vara_float_all( ncid , rVar , st , ct , data_cpu ) , __LINE__ );
+
+    // Write out u wind
+    // for (int k=0; k<dom.nz; k++) {
+    //   for (int j=0; j<dom.ny; j++) {
+    //     for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      data(iGlob) = state(idU,hs+k,hs+j,hs+i);
+    });
+    Kokkos::fence();
+    #ifdef __NVCC__
+      cudaMemcpyAsync( data_cpu , data.data() , dom.nz*dom.ny*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
+      cudaDeviceSynchronize();
+    #endif
+    ncwrap( ncmpi_put_vara_float_all( ncid , uVar , st , ct , data_cpu ) , __LINE__ );
+
+    // Write out v wind
+    // for (int k=0; k<dom.nz; k++) {
+    //   for (int j=0; j<dom.ny; j++) {
+    //     for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      data(iGlob) = state(idV,hs+k,hs+j,hs+i);
+    });
+    Kokkos::fence();
+    #ifdef __NVCC__
+      cudaMemcpyAsync( data_cpu , data.data() , dom.nz*dom.ny*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
+      cudaDeviceSynchronize();
+    #endif
+    ncwrap( ncmpi_put_vara_float_all( ncid , vVar , st , ct , data_cpu ) , __LINE__ );
+
+    // Write out w wind
+    // for (int k=0; k<dom.nz; k++) {
+    //   for (int j=0; j<dom.ny; j++) {
+    //     for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      data(iGlob) = state(idW,hs+k,hs+j,hs+i);
+    });
+    Kokkos::fence();
+    #ifdef __NVCC__
+      cudaMemcpyAsync( data_cpu , data.data() , dom.nz*dom.ny*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
+      cudaDeviceSynchronize();
+    #endif
+    ncwrap( ncmpi_put_vara_float_all( ncid , wVar , st , ct , data_cpu ) , __LINE__ );
+
+    // Write out potential temperature perturbations
+    // for (int k=0; k<dom.nz; k++) {
+    //   for (int j=0; j<dom.ny; j++) {
+    //     for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      data(iGlob) = state(idT,hs+k,hs+j,hs+i);
+    });
+    Kokkos::fence();
+    #ifdef __NVCC__
+      cudaMemcpyAsync( data_cpu , data.data() , dom.nz*dom.ny*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
+      cudaDeviceSynchronize();
+    #endif
+    ncwrap( ncmpi_put_vara_float_all( ncid , thVar , st , ct , data_cpu ) , __LINE__ );
+
+    // Write out perturbation pressure
+    // for (int k=0; k<dom.nz; k++) {
+    //   for (int j=0; j<dom.ny; j++) {
+    //     for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      data(iGlob) = C0*pow( ( state(idR,hs+k,hs+j,hs+i)+dom.hyDensCells (hs+k) ) *
+                            ( state(idT,hs+k,hs+j,hs+i)+dom.hyThetaCells(hs+k) ) , GAMMA ) -
+                    dom.hyPressureCells(hs+k);
+    });
+    Kokkos::fence();
+    #ifdef __NVCC__
+      cudaMemcpyAsync( data_cpu , data.data() , dom.nz*dom.ny*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
+      cudaDeviceSynchronize();
+    #endif
+    ncwrap( ncmpi_put_vara_float_all( ncid , pVar , st , ct , data_cpu ) , __LINE__ );
+
+    ncwrap( ncmpi_begin_indep_data(ncid) , __LINE__ );
+    st[0] = numOut;
+    ncwrap( ncmpi_put_var1_float( ncid , tVar , st , &(dom.etime) ) , __LINE__ );
+    ncwrap( ncmpi_end_indep_data(ncid) , __LINE__ );
+
+    #ifdef __NVCC__
+      cudaFree( data_cpu );
+    #endif
+  }
+
+
+  void writeStateThetaCons(real4d &state, Domain const &dom, Parallel const &par) {
     MPI_Offset st[4], ct[4];
     real1d data("data",dom.nz*dom.ny*dom.nx);
     real *data_cpu;

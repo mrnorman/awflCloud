@@ -37,5 +37,5 @@ timeMethod : ADER
 // Equation set to use:
 //   theta_cons: q={rho,rho*u,rho*v,rho*w,rho*theta}, conservative
 //   theta_prim: q={rho,u,v,w,theta}, non-conservative
-eqnSet : theta_cons
+eqnSet : theta_prim
 

@@ -144,7 +144,7 @@ public:
         dom.hyDensCells     (hs+k) += gllOrdWeights(kk) * r0;
         dom.hyDensThetaCells(hs+k) += gllOrdWeights(kk) * r0*t0;
         dom.hyThetaCells    (hs+k) += gllOrdWeights(kk) * t0;
-        dom.hyPressureCells (hs+k) += gllOrdWeights(kk) * pow( r0*t0 , GAMMA );
+        dom.hyPressureCells (hs+k) += gllOrdWeights(kk) * C0*pow( r0*t0 , GAMMA );
       }
     });
 
@@ -179,7 +179,7 @@ public:
       dom.hyDensGLL     (k,kk) = r0;
       dom.hyDensThetaGLL(k,kk) = r0*t0;
       dom.hyThetaGLL    (k,kk) = t0;
-      dom.hyPressureGLL (k,kk) = pow( r0*t0 , GAMMA );
+      dom.hyPressureGLL (k,kk) = C0*pow( r0*t0 , GAMMA );
     });
 
     // Initialize the state
@@ -227,8 +227,8 @@ public:
               state(idR ,hs+k,hs+j,hs+i) += wt * r  ;
               state(idRT,hs+k,hs+j,hs+i) += wt * ( (r0+r)*(t0+t) - r0*t0 );
             } else if (dom.eqnSet == EQN_THETA_PRIM) {
-              state(idR ,hs+k,hs+j,hs+i) += wt * r;
-              state(idRT,hs+k,hs+j,hs+i) += wt * t;
+              state(idR,hs+k,hs+j,hs+i) += wt * r;
+              state(idT,hs+k,hs+j,hs+i) += wt * t;
             }
           }
         }

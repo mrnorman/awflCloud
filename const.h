@@ -49,6 +49,11 @@ inline _HOSTDEV real operator"" _fp( long double x ) {
 #define idRW 3
 #define idRT 4
 
+#define idU 1
+#define idV 2
+#define idW 3
+#define idT 4
+
 // Some physical constants
 real const PI    = 3.1415926535897932384626433832795028842;
 real const GRAV  = 9.8;
