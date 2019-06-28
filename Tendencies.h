@@ -93,8 +93,7 @@ public :
   }
 
 
-  inline void compEulerTendSD_X(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
-                                Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+  inline void compEulerTendSD_X(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
 
 
     //Exchange halos in the x-direction
@@ -104,7 +103,7 @@ public :
     exch.haloUnpackN_x (dom, state, numState);
 
     // Reconstruct to tord GLL points in the x-direction
-    reconSD_X(state, hyDensCells, hyDensThetaCells, dom, wenoRecon, to_gll, stateLimits, fluxLimits, wenoIdl, wenoSigma);
+    reconSD_X(state, dom.hyDensCells, dom.hyDensThetaCells, dom, wenoRecon, to_gll, stateLimits, fluxLimits, wenoIdl, wenoSigma);
 
     //Reconcile the edge fluxes via MPI exchange.
     exch.haloInit      ();
@@ -122,8 +121,7 @@ public :
   }
 
 
-  inline void compEulerTendSD_Y(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
-                                Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+  inline void compEulerTendSD_Y(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
 
     //Exchange halos in the y-direction
     exch.haloInit      ();
@@ -132,7 +130,7 @@ public :
     exch.haloUnpackN_y (dom, state, numState);
 
     // Reconstruct to tord GLL points in the y-direction
-    reconSD_Y(state, hyDensCells, hyDensThetaCells, dom, wenoRecon, to_gll, stateLimits, fluxLimits, wenoIdl, wenoSigma);
+    reconSD_Y(state, dom.hyDensCells, dom.hyDensThetaCells, dom, wenoRecon, to_gll, stateLimits, fluxLimits, wenoIdl, wenoSigma);
 
     //Reconcile the edge fluxes via MPI exchange.
     exch.haloInit      ();
@@ -150,14 +148,13 @@ public :
   }
 
 
-  inline void compEulerTendSD_Z(real4d &state, real2d const &hyDensGLL, real2d const &hyDensThetaGLL,
-                                Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+  inline void compEulerTendSD_Z(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
 
     // Boundaries for the fluid state in the z-direction
     stateBoundariesZ(state, dom);
 
     // Reconstruct to tord GLL points in the x-direction
-    reconSD_Z(state, hyDensGLL, hyDensThetaGLL, dom, wenoRecon, to_gll, stateLimits, fluxLimits, wenoIdl, wenoSigma);
+    reconSD_Z(state, dom.hyDensGLL, dom.hyDensThetaGLL, dom, wenoRecon, to_gll, stateLimits, fluxLimits, wenoIdl, wenoSigma);
 
     // Apply boundary conditions to fluxes and state values
     edgeBoundariesZ(stateLimits, fluxLimits, dom);
@@ -187,8 +184,7 @@ public :
   }
 
 
-  inline void compEulerTendADER_X(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
-                                  Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+  inline void compEulerTendADER_X(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
 
     //Exchange halos in the x-direction
     exch.haloInit      ();
@@ -197,7 +193,7 @@ public :
     exch.haloUnpackN_x (dom, state, numState);
 
     // Reconstruct to tord GLL points in the x-direction
-    reconAder_X(state, hyDensCells, hyDensThetaCells, dom, wenoRecon, to_gll, stateLimits, fluxLimits, wenoIdl, wenoSigma, aderDerivX, stateGLL);
+    reconAder_X(state, dom.hyDensCells, dom.hyDensThetaCells, dom, wenoRecon, to_gll, stateLimits, fluxLimits, wenoIdl, wenoSigma, aderDerivX, stateGLL);
 
     //Reconcile the edge fluxes via MPI exchange.
     exch.haloInit      ();
@@ -215,8 +211,7 @@ public :
   }
 
 
-  inline void compEulerTendADER_Y(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
-                                  Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+  inline void compEulerTendADER_Y(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
 
     //Exchange halos in the y-direction
     exch.haloInit      ();
@@ -225,7 +220,7 @@ public :
     exch.haloUnpackN_y (dom, state, numState);
 
     // Reconstruct to tord GLL points in the y-direction
-    reconAder_Y(state, hyDensCells, hyDensThetaCells, dom, wenoRecon, to_gll, stateLimits, fluxLimits, wenoIdl, wenoSigma, aderDerivY, stateGLL);
+    reconAder_Y(state, dom.hyDensCells, dom.hyDensThetaCells, dom, wenoRecon, to_gll, stateLimits, fluxLimits, wenoIdl, wenoSigma, aderDerivY, stateGLL);
 
     //Reconcile the edge fluxes via MPI exchange.
     exch.haloInit      ();
@@ -243,14 +238,13 @@ public :
   }
 
 
-  inline void compEulerTendADER_Z(real4d &state, real2d const &hyDensGLL, real2d const &hyDensThetaGLL,
-                                  Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+  inline void compEulerTendADER_Z(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
 
     // Boundaries for the fluid state in the z-direction
     stateBoundariesZ(state, dom);
 
     // Reconstruct tord GLL points in the z-direction
-    reconAder_Z(state, hyDensGLL, hyDensThetaGLL, dom, wenoRecon, to_gll, stateLimits, fluxLimits, src, wenoIdl, wenoSigma, aderDerivZ, gllWts, stateGLL);
+    reconAder_Z(state, dom.hyDensGLL, dom.hyDensThetaGLL, dom, wenoRecon, to_gll, stateLimits, fluxLimits, src, wenoIdl, wenoSigma, aderDerivZ, gllWts, stateGLL);
 
     // Apply boundary conditions to fluxes and state values
     edgeBoundariesZ(stateLimits, fluxLimits, dom);
@@ -284,8 +278,8 @@ public :
         for (int ii=0; ii<tord; ii++) { gllState(l,ii) = gllPts(ii); }
       }
       for (int ii=0; ii<tord; ii++) {
-        gllState(idR ,ii) += hyDensCells     (hs+k);
-        gllState(idRT,ii) += hyDensThetaCells(hs+k);
+        gllState(idR ,ii) += dom.hyDensCells     (hs+k);
+        gllState(idRT,ii) += dom.hyDensThetaCells(hs+k);
       }
 
       // Compute fluxes and at the GLL points
@@ -797,7 +791,7 @@ public :
   }
 
 
-  inline void computeStrakaTend(real4d &state, Domain &dom, Exchange &exch, Parallel const &par, real4d &tend, real1d const &hyDensCells, real1d const &hyDensThetaCells) {
+  inline void computeStrakaTend(real4d &state, Domain &dom, Exchange &exch, Parallel const &par, real4d &tend) {
     //Exchange halos in the x-direction
     exch.haloInit      ();
     exch.haloPackN_x   (dom, state, numState);
@@ -819,7 +813,7 @@ public :
     Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
       int k, j, i;
       unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
-      real r = ( state(idR,hs+k,hs+j,hs+i) + hyDensCells(hs+k) );
+      real r = ( state(idR,hs+k,hs+j,hs+i) + dom.hyDensCells(hs+k) );
       SArray<real,numState,3> sten;
 
       tend(idR,k,j,i) = 0.;
@@ -828,9 +822,9 @@ public :
       for (int l=1; l<numState; l++) {
         for (int ii=-1; ii<=1; ii++) {
           if (l == idRT) {
-            sten(l,ii+1) = ( state(l,hs+k,hs+j,hs+i+ii) + hyDensThetaCells(hs+k) ) / ( state(idR,hs+k,hs+j,hs+i+ii) + hyDensCells(hs+k) );
+            sten(l,ii+1) = ( state(l,hs+k,hs+j,hs+i+ii) + dom.hyDensThetaCells(hs+k) ) / ( state(idR,hs+k,hs+j,hs+i+ii) + dom.hyDensCells(hs+k) );
           } else {
-            sten(l,ii+1) = state(l,hs+k,hs+j,hs+i+ii) / ( state(idR,hs+k,hs+j,hs+i+ii) + hyDensCells(hs+k) );
+            sten(l,ii+1) = state(l,hs+k,hs+j,hs+i+ii) / ( state(idR,hs+k,hs+j,hs+i+ii) + dom.hyDensCells(hs+k) );
           }
         }
         tend(l,k,j,i)  = 75 * r * ( sten(l,2) - 2*sten(l,1) + sten(l,0) ) / dx2;
@@ -840,9 +834,9 @@ public :
       for (int l=1; l<numState; l++) {
         for (int ii=-1; ii<=1; ii++) {
           if (l == idRT) {
-            sten(l,ii+1) = ( state(l,hs+k,hs+j+ii,hs+i) + hyDensThetaCells(hs+k) ) / ( state(idR,hs+k,hs+j+ii,hs+i) + hyDensCells(hs+k) );
+            sten(l,ii+1) = ( state(l,hs+k,hs+j+ii,hs+i) + dom.hyDensThetaCells(hs+k) ) / ( state(idR,hs+k,hs+j+ii,hs+i) + dom.hyDensCells(hs+k) );
           } else {
-            sten(l,ii+1) = state(l,hs+k,hs+j+ii,hs+i) / ( state(idR,hs+k,hs+j+ii,hs+i) + hyDensCells(hs+k) );
+            sten(l,ii+1) = state(l,hs+k,hs+j+ii,hs+i) / ( state(idR,hs+k,hs+j+ii,hs+i) + dom.hyDensCells(hs+k) );
           }
         }
         tend(l,k,j,i) += 75 * r * ( sten(l,2) - 2*sten(l,1) + sten(l,0) ) / dy2;
@@ -852,9 +846,9 @@ public :
       for (int l=1; l<numState; l++) {
         for (int ii=-1; ii<=1; ii++) {
           if (l == idRT) {
-            sten(l,ii+1) = ( state(l,hs+k+ii,hs+j,hs+i) + hyDensThetaCells(hs+k+ii) ) / ( state(idR,hs+k+ii,hs+j,hs+i) + hyDensCells(hs+k+ii) );
+            sten(l,ii+1) = ( state(l,hs+k+ii,hs+j,hs+i) + dom.hyDensThetaCells(hs+k+ii) ) / ( state(idR,hs+k+ii,hs+j,hs+i) + dom.hyDensCells(hs+k+ii) );
           } else {
-            sten(l,ii+1) = state(l,hs+k+ii,hs+j,hs+i) / ( state(idR,hs+k+ii,hs+j,hs+i) + hyDensCells(hs+k+ii) );
+            sten(l,ii+1) = state(l,hs+k+ii,hs+j,hs+i) / ( state(idR,hs+k+ii,hs+j,hs+i) + dom.hyDensCells(hs+k+ii) );
           }
         }
         tend(l,k,j,i) += 75 * r * ( sten(l,2) - 2*sten(l,1) + sten(l,0) ) / dz2;

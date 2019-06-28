@@ -6,7 +6,6 @@
 #include "Domain.h"
 #include "Parallel.h"
 #include "Parser.h"
-#include "State.h"
 #include "Initializer.h"
 #include "TimeIntegrator.h"
 #include "FileIO.h"
@@ -25,7 +24,7 @@ int main(int argc, char** argv) {
 
   {
     // Create the model objects
-    State          state;
+    real4d         state;
     Domain         dom;
     Parallel       par;
     Parser         parser;

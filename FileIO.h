@@ -3,7 +3,6 @@
 #define _FILEIO_H_
 
 #include "const.h"
-#include "State.h"
 #include "pnetcdf.h"
 #include "Indexing.h"
 #include "mpi.h"
@@ -19,7 +18,7 @@ protected:
 
 public:
 
-  void outputInit(State &state, Domain const &dom, Parallel const &par) {
+  void outputInit(real4d &state, Domain const &dom, Parallel const &par) {
     int dimids[4];
     MPI_Offset st[1], ct[1];
     real1d xCoord("xCoord",dom.nx);
@@ -120,7 +119,7 @@ public:
 
     // for (int k=0; k<dom.nz; k++) {
     Kokkos::parallel_for( dom.nz , KOKKOS_LAMBDA (int const k) {
-      zCoord(k) = state.hyDensCells     (hs+k);
+      zCoord(k) = dom.hyDensCells     (hs+k);
     });
     Kokkos::fence();
     #ifdef __NVCC__
@@ -131,7 +130,7 @@ public:
 
     // for (int k=0; k<dom.nz; k++) {
     Kokkos::parallel_for( dom.nz , KOKKOS_LAMBDA (int const k) {
-      zCoord(k) = state.hyDensThetaCells(hs+k);
+      zCoord(k) = dom.hyDensThetaCells(hs+k);
     });
     Kokkos::fence();
     #ifdef __NVCC__
@@ -156,7 +155,7 @@ public:
   }
 
 
-  void output(State &state, Domain const &dom, Parallel const &par) {
+  void output(real4d &state, Domain const &dom, Parallel const &par) {
     int dimids[4];
     MPI_Offset st[1], ct[1];
 
@@ -184,7 +183,7 @@ public:
   }
 
 
-  void writeState(State &state, Domain const &dom, Parallel const &par) {
+  void writeState(real4d &state, Domain const &dom, Parallel const &par) {
     MPI_Offset st[4], ct[4];
     real1d data("data",dom.nz*dom.ny*dom.nx);
     real *data_cpu;
@@ -205,7 +204,7 @@ public:
     Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
       int k, j, i;
       unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
-      data(iGlob) = state.state(idR,hs+k,hs+j,hs+i);
+      data(iGlob) = state(idR,hs+k,hs+j,hs+i);
     });
     Kokkos::fence();
     #ifdef __NVCC__
@@ -221,7 +220,7 @@ public:
     Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
       int k, j, i;
       unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
-      data(iGlob) = state.state(idRU,hs+k,hs+j,hs+i) / ( state.state(idR,hs+k,hs+j,hs+i) + state.hyDensCells(hs+k) );
+      data(iGlob) = state(idRU,hs+k,hs+j,hs+i) / ( state(idR,hs+k,hs+j,hs+i) + dom.hyDensCells(hs+k) );
     });
     Kokkos::fence();
     #ifdef __NVCC__
@@ -237,7 +236,7 @@ public:
     Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
       int k, j, i;
       unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
-      data(iGlob) = state.state(idRV,hs+k,hs+j,hs+i) / ( state.state(idR,hs+k,hs+j,hs+i) + state.hyDensCells(hs+k) );
+      data(iGlob) = state(idRV,hs+k,hs+j,hs+i) / ( state(idR,hs+k,hs+j,hs+i) + dom.hyDensCells(hs+k) );
     });
     Kokkos::fence();
     #ifdef __NVCC__
@@ -253,7 +252,7 @@ public:
     Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
       int k, j, i;
       unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
-      data(iGlob) = state.state(idRW,hs+k,hs+j,hs+i) / ( state.state(idR,hs+k,hs+j,hs+i) + state.hyDensCells(hs+k) );
+      data(iGlob) = state(idRW,hs+k,hs+j,hs+i) / ( state(idR,hs+k,hs+j,hs+i) + dom.hyDensCells(hs+k) );
     });
     Kokkos::fence();
     #ifdef __NVCC__
@@ -269,9 +268,9 @@ public:
     Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
       int k, j, i;
       unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
-      data(iGlob) = ( state.state(idRT,hs+k,hs+j,hs+i) + state.hyDensThetaCells(hs+k) ) /
-                    ( state.state(idR ,hs+k,hs+j,hs+i) + state.hyDensCells     (hs+k) ) -
-                    state.hyDensThetaCells(hs+k) / state.hyDensCells(hs+k);
+      data(iGlob) = ( state(idRT,hs+k,hs+j,hs+i) + dom.hyDensThetaCells(hs+k) ) /
+                    ( state(idR ,hs+k,hs+j,hs+i) + dom.hyDensCells     (hs+k) ) -
+                    dom.hyDensThetaCells(hs+k) / dom.hyDensCells(hs+k);
     });
     Kokkos::fence();
     #ifdef __NVCC__
@@ -287,8 +286,8 @@ public:
     Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
       int k, j, i;
       unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
-      data(iGlob) = C0*pow(state.state(idRT,hs+k,hs+j,hs+i)+state.hyDensThetaCells(hs+k),GAMMA) -
-                    C0*pow(state.hyDensThetaCells(hs+k),GAMMA);
+      data(iGlob) = C0*pow(state(idRT,hs+k,hs+j,hs+i)+dom.hyDensThetaCells(hs+k),GAMMA) -
+                    C0*pow(dom.hyDensThetaCells(hs+k),GAMMA);
     });
     Kokkos::fence();
     #ifdef __NVCC__
