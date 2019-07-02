@@ -10,9 +10,9 @@
 class TimeIntegrator {
 
   real4d stateTmp;
-  real4d tendArr;
-  real4d tendArrTmp;
-  Tendencies tend;
+  real4d tend;
+  real4d tendTmp;
+  Tendencies tendencies;
   int dsSwitch;
 
 public :
@@ -20,11 +20,11 @@ public :
 
   inline void initialize(Domain &dom) {
     if (timeMethod == TIME_SSPRK3) {
-      stateTmp   = real4d("stateTmp"  ,numState,dom.nz+2*hs,dom.ny+2*hs,dom.nx+2*hs);
-      tendArrTmp = real4d("tendArrTmp",numState,dom.nz,dom.ny,dom.nx);
+      stateTmp = real4d("stateTmp",numState,dom.nz+2*hs,dom.ny+2*hs,dom.nx+2*hs);
+      tendTmp  = real4d("tendTmp" ,numState,dom.nz,dom.ny,dom.nx);
     }
-    tendArr = real4d("tendArr",numState,dom.nz,dom.ny,dom.nx);
-    tend.initialize(dom);
+    tend = real4d("tend",numState,dom.nz,dom.ny,dom.nx);
+    tendencies.initialize(dom);
     dsSwitch = 1;
   }
 
@@ -33,14 +33,14 @@ public :
     if (timeMethod == TIME_SSPRK3) {
       stepForwardSSPRK3(state, dom, exch, par);
     } else if (timeMethod == TIME_ADER) {
-      stepForwardADER(state, dom, exch, par);
+      stepForwardADER  (state, dom, exch, par);
     } else {
       std::cout << "Error: Unrecognized timeMethod\n";
       exit(-1);
     }
     if (strakaVisc) {
-      tend.computeStrakaTend(state, dom, exch, par, tendArr);
-      applyTendencies( state , 1._fp , state , 0._fp , state , 1._fp , tendArr, dom);
+      tendencies.compStrakaTend(state, dom, exch, par, tend);
+      applyTendencies( state , 1._fp , state , 0._fp , state , 1._fp , tend, dom);
     }
   }
 
@@ -48,32 +48,32 @@ public :
   inline void stepForwardADER(real4d &state, Domain &dom, Exchange &exch, Parallel const &par) {
     if (dsSwitch) {
       dsSwitch = 0;
-      tend.compEulerTendADER_X(state, dom, exch, par, tendArr);
-      applyTendencies( state , 1._fp , state , 0._fp , state , 1._fp , tendArr, dom);
+      tendencies.compEulerTend_X(state, dom, exch, par, tend);
+      applyTendencies( state , 1._fp , state , 0._fp , state , 1._fp , tend, dom);
       if (!dom.run2d) {
-        tend.compEulerTendADER_Y(state, dom, exch, par, tendArr);
-        applyTendencies( state , 1._fp , state , 0._fp , state , 1._fp , tendArr, dom);
+        tendencies.compEulerTend_Y(state, dom, exch, par, tend);
+        applyTendencies( state , 1._fp , state , 0._fp , state , 1._fp , tend, dom);
       }
       dom.dt /= 2;
-      tend.compEulerTendADER_Z(state, dom, exch, par, tendArr);
-      applyTendencies( state , 1._fp , state , 0._fp , state , 1._fp , tendArr, dom);
-      tend.compEulerTendADER_Z(state, dom, exch, par, tendArr);
-      applyTendencies( state , 1._fp , state , 0._fp , state , 1._fp , tendArr, dom);
+      tendencies.compEulerTend_Z(state, dom, exch, par, tend);
+      applyTendencies( state , 1._fp , state , 0._fp , state , 1._fp , tend, dom);
+      tendencies.compEulerTend_Z(state, dom, exch, par, tend);
+      applyTendencies( state , 1._fp , state , 0._fp , state , 1._fp , tend, dom);
       dom.dt *= 2;
     } else {
       dsSwitch = 1;
       dom.dt /= 2;
-      tend.compEulerTendADER_Z(state, dom, exch, par, tendArr);
-      applyTendencies( state , 1._fp , state , 0._fp , state , 1._fp , tendArr, dom);
-      tend.compEulerTendADER_Z(state, dom, exch, par, tendArr);
-      applyTendencies( state , 1._fp , state , 0._fp , state , 1._fp , tendArr, dom);
+      tendencies.compEulerTend_Z(state, dom, exch, par, tend);
+      applyTendencies( state , 1._fp , state , 0._fp , state , 1._fp , tend, dom);
+      tendencies.compEulerTend_Z(state, dom, exch, par, tend);
+      applyTendencies( state , 1._fp , state , 0._fp , state , 1._fp , tend, dom);
       dom.dt *= 2;
       if (!dom.run2d) {
-        tend.compEulerTendADER_Y(state, dom, exch, par, tendArr);
-        applyTendencies( state , 1._fp , state , 0._fp , state , 1._fp , tendArr, dom);
+        tendencies.compEulerTend_Y(state, dom, exch, par, tend);
+        applyTendencies( state , 1._fp , state , 0._fp , state , 1._fp , tend, dom);
       }
-      tend.compEulerTendADER_X(state, dom, exch, par, tendArr);
-      applyTendencies( state , 1._fp , state , 0._fp , state , 1._fp , tendArr, dom);
+      tendencies.compEulerTend_X(state, dom, exch, par, tend);
+      applyTendencies( state , 1._fp , state , 0._fp , state , 1._fp , tend, dom);
     }
     // applyHeatingCooling(state,par,dom);
   }
@@ -81,31 +81,31 @@ public :
 
   inline void stepForwardSSPRK3(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par) {
     // Stage 1
-    tend.compEulerTendSD_X(state, dom, exch, par, tendArr   );
+    tendencies.compEulerTend_X(state, dom, exch, par, tend   );
     if (!dom.run2d) {
-      tend.compEulerTendSD_Y(state, dom, exch, par, tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
+      tendencies.compEulerTend_Y(state, dom, exch, par, tendTmp); appendTendencies(tend, tendTmp, dom);
     }
-    tend.compEulerTendSD_Z(state, dom, exch, par, tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
-    tend.compEulerTendSD_S(state,                                        dom,            tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
-    applyTendencies( stateTmp , 1._fp , state , 0._fp , stateTmp , 1._fp , tendArr, dom);
+    tendencies.compEulerTend_Z(state, dom, exch, par, tendTmp); appendTendencies(tend, tendTmp, dom);
+    tendencies.compEulerTend_S(state, dom, exch, par, tendTmp); appendTendencies(tend, tendTmp, dom);
+    applyTendencies( stateTmp , 1._fp , state , 0._fp , stateTmp , 1._fp , tend, dom);
 
     // Stage 2
-    tend.compEulerTendSD_X(stateTmp, dom, exch, par, tendArr   );
+    tendencies.compEulerTend_X(stateTmp, dom, exch, par, tend   );
     if (!dom.run2d) {
-      tend.compEulerTendSD_Y(stateTmp, dom, exch, par, tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
+      tendencies.compEulerTend_Y(stateTmp, dom, exch, par, tendTmp); appendTendencies(tend, tendTmp, dom);
     }
-    tend.compEulerTendSD_Z(stateTmp, dom, exch, par, tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
-    tend.compEulerTendSD_S(stateTmp,                                        dom,            tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
-    applyTendencies( stateTmp , 0.75_fp , state , 0.25_fp , stateTmp , 0.25_fp , tendArr, dom);
+    tendencies.compEulerTend_Z(stateTmp, dom, exch, par, tendTmp); appendTendencies(tend, tendTmp, dom);
+    tendencies.compEulerTend_S(stateTmp, dom, exch, par, tendTmp); appendTendencies(tend, tendTmp, dom);
+    applyTendencies( stateTmp , 0.75_fp , state , 0.25_fp , stateTmp , 0.25_fp , tend, dom);
 
     // Stage 3
-    tend.compEulerTendSD_X(stateTmp, dom, exch, par, tendArr   );
+    tendencies.compEulerTend_X(stateTmp, dom, exch, par, tend   );
     if (!dom.run2d) {
-      tend.compEulerTendSD_Y(stateTmp, dom, exch, par, tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
+      tendencies.compEulerTend_Y(stateTmp, dom, exch, par, tendTmp); appendTendencies(tend, tendTmp, dom);
     }
-    tend.compEulerTendSD_Z(stateTmp, dom, exch, par, tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
-    tend.compEulerTendSD_S(stateTmp,                                        dom,            tendArrTmp); appendTendencies(tendArr, tendArrTmp, dom);
-    applyTendencies( state , 1._fp/3._fp , state , 2._fp/3._fp , stateTmp , 2._fp/3._fp , tendArr , dom);
+    tendencies.compEulerTend_Z(stateTmp, dom, exch, par, tendTmp); appendTendencies(tend, tendTmp, dom);
+    tendencies.compEulerTend_S(stateTmp, dom, exch, par, tendTmp); appendTendencies(tend, tendTmp, dom);
+    applyTendencies( state , 1._fp/3._fp , state , 2._fp/3._fp , stateTmp , 2._fp/3._fp , tend , dom);
   }
 
 
