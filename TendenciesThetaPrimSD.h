@@ -14,6 +14,7 @@
 
 class TendenciesThetaPrimSD {
 
+  real4d stateFast;
   real5d stateLimits;
   real5d fluxLimits;
   real4d flux;
@@ -21,6 +22,9 @@ class TendenciesThetaPrimSD {
   real5d stateGLL;
   SArray<real,tord> gllWts;
   SArray<real,ord,tord> to_gll;
+  SArray<real,ord,tord> to_derivX_gll;
+  SArray<real,ord,tord> to_derivY_gll;
+  SArray<real,ord,tord> to_derivZ_gll;
   SArray<real,ord,ord,ord> wenoRecon;
   SArray<real,hs+2> wenoIdl;
   real wenoSigma;
@@ -31,6 +35,7 @@ public :
   inline void initialize(Domain const &dom) {
     TransformMatrices<real> trans;
 
+    stateFast   = real5d("stateFast" ,3,dom.nz+2*hs,dom.ny+2*hs,dom.nx+2*hs);
     fluxLimits  = real5d("fluxLimits",numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
     stateLimits = real5d("srcLimits" ,numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
     flux        = real4d("flux"      ,numState  ,dom.nz+1,dom.ny+1,dom.nx+1);
@@ -38,6 +43,27 @@ public :
     stateGLL    = real5d("stateGLL"  ,numState,dom.nz,dom.ny,dom.nx,tord);
 
     SArray<real,ord,ord,ord> to_gll_tmp;
+
+    // Setup the matrix to transform a stenicl (or coefs) into tord derivative GLL points
+    SArray<real,ord,ord> s2c_ho;
+    SArray<real,ord,ord> c2d_ho;
+    trans.sten_to_coefs (s2c_ho);
+    trans.coefs_to_deriv(c2d_ho);
+    trans.coefs_to_gll_lower( to_gll_tmp );
+    for (int j=0; j<ord; j++) {
+      for (int i=0; i<tord; i++) {
+        to_gll(j,i) = to_gll_tmp(tord-1,j,i);
+      }
+    }
+    if (dom.doWeno) {
+      to_derivX_gll = (to_gll * c2d_ho) / dom.dx;
+      to_derivY_gll = (to_gll * c2d_ho) / dom.dy;
+      to_derivZ_gll = (to_gll * c2d_ho) / dom.dz;
+    } else {
+      to_derivX_gll = (to_gll * c2d_ho * s2c_ho) / dom.dx;
+      to_derivY_gll = (to_gll * c2d_ho * s2c_ho) / dom.dy;
+      to_derivZ_gll = (to_gll * c2d_ho * s2c_ho) / dom.dz;
+    }
 
     // Setup the matrix to transform a stencil of ord cell averages into tord GLL points
     if (dom.doWeno) {
@@ -84,23 +110,114 @@ public :
 
   inline void compEulerTend_X(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
 
-
     //Exchange halos in the x-direction
     exch.haloInit      ();
     exch.haloPackN_x   (dom, state, numState);
     exch.haloExchange_x(dom, par);
     exch.haloUnpackN_x (dom, state, numState);
 
+    ////////////////////////////////////////////////////////////
+    // FAST SOLVE
+    ////////////////////////////////////////////////////////////
+
+    // Compute and store the fast-solve state values
+    // for (int k=0; k<dom.nz; k++) {
+    //   for (int j=0; j<dom.ny; j++) {
+    //     for (int i=0; i<dom.nx+2*hs; i++) {
+    Kokkos::parallel_for( dom.nz*dom.ny*(dom.nx+2*hs) , KOKKOS_LAMBDA (int const iGlob) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx+2*hs,k,j,i);
+      real rh = dom.hyDensCells (hs+k);
+      real th = dom.hyThetaCells(hs+k);
+      real r = state(idR,hs+k,hs+j,i) + rh;
+      real t = state(idT,hs+k,hs+j,i) + th;
+      stateFast(0,hs+k,hs+j,i) = state(idR,hs+k,hs+j,i);  // rho'
+      stateFast(1,hs+k,hs+j,i) = state(idU,hs+k,hs+j,i);  // u
+      stateFast(2,hs+k,hs+j,i) = C0*pow(r*t,GAMMA);       // p
+    });
+
     // Reconstruct to tord GLL points in the x-direction
-    reconSD_X(state, dom.hyDensCells, dom.hyDensThetaCells, dom, wenoRecon, to_gll, stateLimits, fluxLimits, wenoIdl, wenoSigma);
+    // for (int k=0; k<dom.nz; k++) {
+    //   for (int j=0; j<dom.ny; j++) {
+    //     for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      SArray<real,ord> stencil;
+      SArray<real,tord> rGLL,  uGLL, pGLL, dudxGLL, dpdxGLL;
+
+      // Compute rho
+      for (int ii=0; ii<ord; ii++) {
+        stencil(ii) = stateFast(0,hs+k,hs+j,i+ii);
+      }
+      reconStencil(stencil, rGLL, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
+      for (int ii=0; ii<tord; ii++) {
+        rGLL(ii) += dom.hyDensCells(hs+k);
+      }
+
+      // Compute u
+      for (int ii=0; ii<ord; ii++) {
+        stencil(ii) = stateFast(1,hs+k,hs+j,i+ii);
+      }
+      reconStencil(stencil, uGLL, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
+
+      // Compute p
+      for (int ii=0; ii<ord; ii++) {
+        stencil(ii) = stateFast(2,hs+k,hs+j,i+ii);
+      }
+      reconStencil(stencil, pGLL, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
+
+      // Compute du/dx
+      for (int ii=0; ii<ord; ii++) {
+        stencil(ii) = stateFast(1,hs+k,hs+j,i+ii);
+      }
+      reconStencil(stencil, dudxGLL, dom.doWeno, wenoRecon, to_derivX_gll, wenoIdl, wenoSigma);
+
+      // Compute dp/dx
+      for (int ii=0; ii<ord; ii++) {
+        stencil(ii) = stateFast(2,hs+k,hs+j,i+ii);
+      }
+      reconStencil(stencil, dpdxGLL, dom.doWeno, wenoRecon, to_derivX_gll, wenoIdl, wenoSigma);
+
+      // Compute GLL integral of (df/dq)*(dq/dx)
+      for (int l=0; l<3; l++) {
+        tend(l,k,j,i) = 0;
+      }
+      for (int ii=0; ii<tord; ii++) {
+        real r = rGLL(ii);
+        real p = pGLL(ii);
+        real dudx = dudxGLL(ii);
+        real dpdx = dpdxGLL(ii);
+        real cs2 = GAMMA*p/r;
+
+        tend(0,k,j,i) += (r*dudx    ) * gllWts(ii);
+        tend(1,k,j,i) += (dpdx/r    ) * gllWts(ii);
+        tend(2,k,j,i) += (r*cs2*dudx) * gllWts(ii);
+      }
+
+      // Compute the integral of (df/dq)*(dq/dx) over the GLL points
+      SArray<real,tord> dqdt;
+      for (int l=0; l<3; l++) {
+        dqdt(l) = 0;
+        for (int ii=0; ii<tord; ii++) {
+          dqdt(l) += A_dqdx(l,ii) * gllWts(ii);
+        }
+      }
+
+      // Store state limits into a globally indexed array
+      stateLimits(0,1,k,j,i  ) = rGLL(0     );
+      stateLimits(0,0,k,j,i+1) = rGLL(tord-1);
+      stateLimits(1,1,k,j,i  ) = uGLL(0     );
+      stateLimits(1,0,k,j,i+1) = uGLL(tord-1);
+      stateLimits(2,1,k,j,i  ) = pGLL(0     );
+      stateLimits(2,0,k,j,i+1) = pGLL(tord-1);
+    });
 
     //Reconcile the edge fluxes via MPI exchange.
     exch.haloInit      ();
-    exch.edgePackN_x   (dom, stateLimits, numState);
-    exch.edgePackN_x   (dom, fluxLimits , numState);
+    exch.edgePackN_x   (dom, stateLimits, 3);
     exch.edgeExchange_x(dom, par);
-    exch.edgeUnpackN_x (dom, stateLimits, numState);
-    exch.edgeUnpackN_x (dom, fluxLimits , numState);
+    exch.edgeUnpackN_x (dom, fluxLimits , 3);
 
     // Riemann solver
     computeFlux_X(stateLimits, fluxLimits, flux, dom);
