@@ -31,5 +31,6 @@ ln -s build/[whatever_machine].inc mach.inc
 make
 ```
 
-* Note that you'll need to have the kokkos repo (github.com/kokkos/kokkos) cloned somewhere and pointed to by your mach.inc file. See the existing files for examples.
+* Note that you'll need to have the kokkos repo (https://github.com/kokkos/kokkos) cloned somewhere and pointed to by your mach.inc file. See the existing files for examples.
+* Requires an MPI library (that provides mpic++) as well as parallel-netcdf (https://trac.mcs.anl.gov/projects/parallel-netcdf)
 
