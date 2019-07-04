@@ -24,3 +24,10 @@ The most pressing developments needed are:
 2) A variable vertical grid spacing (simply a matter of altering the SageMath scripts to compute Vandermonde matrices that respond to grid spacing and inverting those at model initialization).
 3) Add tracer transport routines
 4) Create a plan for incorporating moisture, possibly through an equivalent potential temperature.
+
+## How to Build
+ln -s build/[whatever_machine].inc mach.inc
+make
+
+* Note that you'll need to have the kokkos repo (github.com/kokkos/kokkos) cloned somewhere and pointed to by your mach.inc file. See the existing files for examples.
+
