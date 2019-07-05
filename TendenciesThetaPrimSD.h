@@ -531,6 +531,128 @@ public :
       }
     }
 
+    //////////////////////////////////////////////////////////////////////////
+    // COMPUTE SLOOOOWWWW TENDENCIES
+    //////////////////////////////////////////////////////////////////////////
+    
+    // Compute tend = -A*(qR - qL)/dz, and store cell-edge state vectors for fast solve
+    for (int k=0; k<dom.nz; k++) {
+      for (int j=0; j<dom.ny; j++) {
+        for (int i=0; i<dom.nx; i++) {
+          SArray<real,numState,tord> gllState;  // GLL state values
+
+          // Compute tord GLL points of the state vector
+          for (int l=0; l<numState; l++) {
+            SArray<real,ord> stencil;
+            SArray<real,tord> gllPts;
+            for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,k+ii,hs+j,hs+i); }
+            reconStencil(stencil, gllPts, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
+            for (int ii=0; ii<tord; ii++) { gllState(l,ii) = gllPts(ii); }
+          }
+          for (int ii=0; ii<tord; ii++) {
+            gllState(idR,ii) += dom.hyDensGLL (k,ii);
+            gllState(idT,ii) += dom.hyThetaGLL(k,ii);
+          }
+
+          // Compute dq   (qR - qL)
+          SArray<real,numState> dq;
+          for (int l=0; l<numState; l++) {
+            dq(l) = gllState(l,tord-1) - gllState(l,0);
+          }
+
+          // Compute cell-average-based values for flux Jacobian, A
+          real w = state(idW,hs+k,hs+j,hs+i);
+
+          // Compute tend = -A*dq/dx (A is sparse, so this is more efficient to do by hand)
+          tend(0,k,j,i) += - ( w*dq(0) ) / dom.dz;
+          tend(1,k,j,i) += - ( w*dq(1) ) / dom.dz;
+          tend(2,k,j,i) += - ( w*dq(2) ) / dom.dz;
+          tend(3,k,j,i) += - ( w*dq(3) ) / dom.dz;
+          tend(4,k,j,i) += - ( w*dq(4) ) / dom.dz;
+
+          // Store the state vector in stateLimits to compute fwaves from cell-interface state jumps
+          for (int l=0; l<numState; l++) {
+            stateLimits(l,1,k  ,j,i) = gllState(l,0     );
+            stateLimits(l,0,k+1,j,i) = gllState(l,tord-1);
+          }
+        }
+      }
+    }
+
+    // Enforce boundary conditions
+    for (int j=0; j<dom.ny; j++) {
+      for (int i=0; i<dom.nx; i++) {
+        stateLimits(idR,0,0     ,j,i) = stateLimits(idR,1,0     ,j,i);
+        stateLimits(idU,0,0     ,j,i) = stateLimits(idU,1,0     ,j,i);
+        stateLimits(idV,0,0     ,j,i) = stateLimits(idV,1,0     ,j,i);
+        stateLimits(idW,0,0     ,j,i) = 0;
+        stateLimits(idW,1,0     ,j,i) = 0;
+        stateLimits(idT,0,0     ,j,i) = stateLimits(idT,1,0     ,j,i);
+
+        stateLimits(idR,1,dom.nz,j,i) = stateLimits(idR,0,dom.nz,j,i);
+        stateLimits(idU,1,dom.nz,j,i) = stateLimits(idU,0,dom.nz,j,i);
+        stateLimits(idV,1,dom.nz,j,i) = stateLimits(idV,0,dom.nz,j,i);
+        stateLimits(idW,0,dom.nz,j,i) = 0;
+        stateLimits(idW,1,dom.nz,j,i) = 0;
+        stateLimits(idT,1,dom.nz,j,i) = stateLimits(idT,0,dom.nz,j,i);
+      }
+    }
+
+    // Compute the fwaves from the cell interface jumps
+    for (int k=0; k<dom.nz+1; k++) {
+      for (int j=0; j<dom.ny; j++) {
+        for (int i=0; i<dom.nx; i++) {
+          // Compute averaged values for the flux Jacobian diagonalization
+          real w = 0.5_fp * ( stateLimits(idW,0,k,j,i) + stateLimits(idW,1,k,j,i) );
+
+          // Compute the state jump over the interface
+          SArray<real,numState> dq;
+          for (int l=0; l<numState; l++) {
+            dq(l) = stateLimits(l,1,k,j,i) - stateLimits(l,0,k,j,i);
+          }
+
+          // Compute df = A*dq
+          SArray<real,numState> df;
+          df(0) = w*dq(0);
+          df(1) = w*dq(1);
+          df(2) = w*dq(2);
+          df(3) = w*dq(3);
+          df(4) = w*dq(4);
+
+          // Compute fwaves
+          for (int l=0; l<numState; l++) {
+            fwaves(l,0,k,j,i) = 0;
+            fwaves(l,1,k,j,i) = 0;
+          }
+
+          if (w > 0) {
+            fwaves(0,1,k,j,i) += df(0);
+            fwaves(1,1,k,j,i) += df(1);
+            fwaves(2,1,k,j,i) += df(2);
+            fwaves(3,1,k,j,i) += df(3);
+            fwaves(4,1,k,j,i) += df(4);
+          } else {
+            fwaves(0,0,k,j,i) += df(0);
+            fwaves(1,0,k,j,i) += df(1);
+            fwaves(2,0,k,j,i) += df(2);
+            fwaves(3,0,k,j,i) += df(3);
+            fwaves(4,0,k,j,i) += df(4);
+          }
+        }
+      }
+    }
+
+    // Apply the fwaves to the tendencies
+    for (int l=0; l<numState; l++) {
+      for (int k=0; k<dom.nz; k++) {
+        for (int j=0; j<dom.ny; j++) {
+          for (int i=0; i<dom.nx; i++) {
+            tend(l,k,j,i) += - ( fwaves(l,1,k,j,i) + fwaves(l,0,k+1,j,i) ) / dom.dz;
+          }
+        }
+      }
+    }
+
   }
 
 
