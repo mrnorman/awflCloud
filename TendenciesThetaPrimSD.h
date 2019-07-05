@@ -14,7 +14,6 @@
 
 class TendenciesThetaPrimSD {
 
-  real4d stateFast;
   real5d stateLimits;
   real5d fwaves;
   real3d src;
@@ -34,7 +33,6 @@ public :
   inline void initialize(Domain const &dom) {
     TransformMatrices<real> trans;
 
-    stateFast   = real4d("stateFast" ,3,dom.nz+2*hs,dom.ny+2*hs,dom.nx+2*hs);
     stateLimits = real5d("srcLimits" ,numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
     fwaves      = real5d("fwaves"    ,numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
     src         = real3d("src"       ,dom.nz,dom.ny,dom.nx);
@@ -143,7 +141,7 @@ public :
           real r = state(idR,hs+k,hs+j,hs+i) + dom.hyDensCells (hs+k);
           real u = state(idU,hs+k,hs+j,hs+i);
           real t = state(idT,hs+k,hs+j,hs+i) + dom.hyThetaCells(hs+k);
-          real p = pow(r*t,GAMMA);
+          real p = C0*pow(r*t,GAMMA);
           real cs2 = GAMMA*p/r;
 
           // Compute tend = -A*dq/dx (A is sparse, so this is more efficient to do by hand)
@@ -176,7 +174,7 @@ public :
           real r = 0.5_fp * ( stateLimits(idR,0,k,j,i) + stateLimits(idR,1,k,j,i) );
           real u = 0.5_fp * ( stateLimits(idU,0,k,j,i) + stateLimits(idU,1,k,j,i) );
           real t = 0.5_fp * ( stateLimits(idT,0,k,j,i) + stateLimits(idT,1,k,j,i) );
-          real p = pow(r*t,GAMMA);
+          real p = C0*pow(r*t,GAMMA);
           real cs = sqrt(GAMMA*p/r);
           real cs2 = cs*cs;
 
@@ -258,7 +256,7 @@ public :
     exch.haloExchange_y(dom, par);
     exch.haloUnpackN_y (dom, state, numState);
 
-    // Compute tend = -A*(qR - qL)/dx, and store cell-edge state vectors
+    // Compute tend = -A*(qR - qL)/dy, and store cell-edge state vectors
     for (int k=0; k<dom.nz; k++) {
       for (int j=0; j<dom.ny; j++) {
         for (int i=0; i<dom.nx; i++) {
@@ -287,7 +285,7 @@ public :
           real r = state(idR,hs+k,hs+j,hs+i) + dom.hyDensCells (hs+k);
           real v = state(idV,hs+k,hs+j,hs+i);
           real t = state(idT,hs+k,hs+j,hs+i) + dom.hyThetaCells(hs+k);
-          real p = pow(r*t,GAMMA);
+          real p = C0*pow(r*t,GAMMA);
           real cs2 = GAMMA*p/r;
 
           // Compute tend = -A*dq/dx (A is sparse, so this is more efficient to do by hand)
@@ -320,7 +318,7 @@ public :
           real r = 0.5_fp * ( stateLimits(idR,0,k,j,i) + stateLimits(idR,1,k,j,i) );
           real v = 0.5_fp * ( stateLimits(idV,0,k,j,i) + stateLimits(idV,1,k,j,i) );
           real t = 0.5_fp * ( stateLimits(idT,0,k,j,i) + stateLimits(idT,1,k,j,i) );
-          real p = pow(r*t,GAMMA);
+          real p = C0*pow(r*t,GAMMA);
           real cs = sqrt(GAMMA*p/r);
           real cs2 = cs*cs;
 
@@ -395,6 +393,7 @@ public :
 
 
   inline void compEulerTend_Z(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+
     for (int l=0; l<numState; l++) {
       for (int k=0; k<dom.nz; k++) {
         for (int j=0; j<dom.ny; j++) {
@@ -404,6 +403,134 @@ public :
         }
       }
     }
+
+    // Apply BCs to state boundaries
+    stateBoundariesZ(state, dom);
+
+    //////////////////////////////////////////////////////////////////////////
+    // COMPUTE FAST TENDENCIES
+    //////////////////////////////////////////////////////////////////////////
+    
+    // Compute tend = -A*(qR - qL)/dz, and store cell-edge state vectors for fast solve
+    for (int k=0; k<dom.nz; k++) {
+      for (int j=0; j<dom.ny; j++) {
+        for (int i=0; i<dom.nx; i++) {
+          SArray<real,3,tord> gllState;  // GLL state values
+          SArray<real,ord> stencil;
+          SArray<real,tord> gllPts;
+          // Reconstruct density
+          for (int ii=0; ii<ord; ii++) { stencil(ii) = state(idR,k+ii,hs+j,hs+i); }
+          reconStencil(stencil, gllPts, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
+          for (int ii=0; ii<tord; ii++) { gllState(0,ii) = gllPts(ii) + dom.hyDensGLL(k,ii); }
+
+          // Reconstruct w
+          for (int ii=0; ii<ord; ii++) { stencil(ii) = state(idW,k+ii,hs+j,hs+i); }
+          reconStencil(stencil, gllPts, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
+          for (int ii=0; ii<tord; ii++) { gllState(1,ii) = gllPts(ii); }
+
+          // Reconstruct theta
+          for (int ii=0; ii<ord; ii++) { stencil(ii) = state(idT,k+ii,hs+j,hs+i); }
+          reconStencil(stencil, gllPts, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
+          for (int ii=0; ii<tord; ii++) { gllState(2,ii) = gllPts(ii) + dom.hyThetaGLL(k,ii); }
+
+          // Replace theta with perturbation pressure
+          for (int ii=0; ii<tord; ii++) {
+            real r = gllState(0,ii);
+            real t = gllState(2,ii);
+            gllState(2,ii) = C0*pow(r*t,GAMMA) - dom.hyPressureGLL(k,ii);
+          }
+
+          // Compute dq   (qR - qL)
+          SArray<real,3> dq;
+          for (int l=0; l<3; l++) {
+            dq(l) = gllState(l,tord-1) - gllState(l,0);
+          }
+
+          // Compute cell-average-based values for flux Jacobian, A
+          real r = state(idR,hs+k,hs+j,hs+i) + dom.hyDensCells(hs+k);
+
+          // Compute tend = -A*dq/dx (A is sparse, so this is more efficient to do by hand)
+          tend(idR,k,j,i) = - ( r*dq(1) ) / dom.dz;
+          tend(idW,k,j,i) = - ( dq(2)/r ) / dom.dz;
+
+          // Store the state vector in stateLimits to compute fwaves from cell-interface state jumps
+          for (int l=0; l<3; l++) {
+            stateLimits(l,1,k  ,j,i) = gllState(l,0     );
+            stateLimits(l,0,k+1,j,i) = gllState(l,tord-1);
+          }
+        }
+      }
+    }
+
+    // Enforce boundary conditions on the state limits
+    for (int j=0; j<dom.ny; j++) {
+      for (int i=0; i<dom.nx; i++) {
+        stateLimits(0,0,0     ,j,i) = stateLimits(0,1,0     ,j,i);
+        stateLimits(1,0,0     ,j,i) = 0;
+        stateLimits(1,1,0     ,j,i) = 0;
+        stateLimits(2,0,0     ,j,i) = stateLimits(2,1,0     ,j,i);
+
+        stateLimits(0,1,dom.nz,j,i) = stateLimits(0,0,dom.nz,j,i);
+        stateLimits(1,0,dom.nz,j,i) = 0;
+        stateLimits(1,1,dom.nz,j,i) = 0;
+        stateLimits(2,1,dom.nz,j,i) = stateLimits(2,0,dom.nz,j,i);
+      }
+    }
+
+    // Compute the fwaves from the cell interface jumps
+    for (int k=0; k<dom.nz+1; k++) {
+      for (int j=0; j<dom.ny; j++) {
+        for (int i=0; i<dom.nx; i++) {
+          // Compute averaged values for the flux Jacobian diagonalization
+          real r = 0.5_fp * ( stateLimits(0,0,k,j,i) + stateLimits(0,1,k,j,i) );
+          real p = 0.5_fp * ( stateLimits(2,0,k,j,i) + stateLimits(2,1,k,j,i) );
+          if (k < dom.nz) {
+            p += dom.hyPressureGLL(k,0);
+          } else {
+            p += dom.hyPressureGLL(dom.nz-1,tord-1);
+          }
+          real cs = sqrt(GAMMA*p/r);
+          real cs2 = cs*cs;
+
+          // Compute the state jump over the interface
+          SArray<real,3> dq;
+          for (int l=0; l<3; l++) {
+            dq(l) = stateLimits(l,1,k,j,i) - stateLimits(l,0,k,j,i);
+          }
+
+          // Compute df = A*dq
+          SArray<real,3> df;
+          df(0) = r*dq(1);
+          df(1) = dq(2)/r;
+          df(2) = r*cs2*dq(1);
+
+          // Compute characteristic variables (L*df)
+          SArray<real,2> ch;
+          ch(0) = -r*df(1)/(2*cs) + df(2)/(2*cs2);
+          ch(1) =  r*df(1)/(2*cs) + df(2)/(2*cs2);
+
+          // Compute fwaves
+          // First wave (-cs); always negative wave speed
+          fwaves(0,0,k,j,i) = (ch(0));
+          fwaves(1,0,k,j,i) = (-cs*ch(0)/r);
+
+          // Second wave (+cs); always positive wave speed
+          fwaves(0,1,k,j,i) = (ch(1));
+          fwaves(1,1,k,j,i) = ( cs*ch(1)/r);
+        }
+      }
+    }
+
+    // Apply the fwaves to the tendencies
+    for (int k=0; k<dom.nz; k++) {
+      for (int j=0; j<dom.ny; j++) {
+        for (int i=0; i<dom.nx; i++) {
+          tend(idR,k,j,i) += - ( fwaves(0,1,k,j,i) + fwaves(0,0,k+1,j,i) ) / dom.dz;
+          tend(idW,k,j,i) += - ( fwaves(1,1,k,j,i) + fwaves(1,0,k+1,j,i) ) / dom.dz;
+        }
+      }
+    }
+
   }
 
 
@@ -412,140 +539,14 @@ public :
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    // Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
-    //   int k, j, i;
-    //   unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
-    //   tend(idR ,k,j,i) = 0;
-    //   tend(idRU,k,j,i) = 0;
-    //   tend(idRV,k,j,i) = 0;
-    //   tend(idRW,k,j,i) = -state(idR,hs+k,hs+j,hs+i) * GRAV;
-    //   tend(idRT,k,j,i) = 0;
-    // });
-
-    for (int l=0; l<numState; l++) {
-      for (int k=0; k<dom.nz; k++) {
-        for (int j=0; j<dom.ny; j++) {
-          for (int i=0; i<dom.nx; i++) {
-            tend(l,k,j,i)  = 0;
-          }
-        }
-      }
-    }
-  }
-
-
-  inline void reconSD_Y(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
-                        Domain const &dom, SArray<real,ord,ord,ord> const &wenoRecon, SArray<real,ord,tord> const &to_gll, 
-                        real5d &stateLimits, real5d &fluxLimits, SArray<real,hs+2> const &wenoIdl, real &wenoSigma) {
-    // for (int k=0; k<dom.nz; k++) {
-    //   for (int j=0; j<dom.ny; j++) {
-    //     for (int i=0; i<dom.nx; i++) {
     Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
       int k, j, i;
       unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
-      SArray<real,numState,tord> gllState;
-      SArray<real,numState,tord> gllFlux;
-
-      // Compute GLL points from cell averages
-      for (int l=0; l<numState; l++) {
-        SArray<real,ord> stencil;
-        SArray<real,tord> gllPts;
-        for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,hs+k,j+ii,hs+i); }
-        reconStencil(stencil, gllPts, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
-        for (int ii=0; ii<tord; ii++) { gllState(l,ii) = gllPts(ii); }
-      }
-      for (int ii=0; ii<tord; ii++) {
-        gllState(idR ,ii) += hyDensCells     (hs+k);
-        gllState(idRT,ii) += hyDensThetaCells(hs+k);
-      }
-
-      // Compute fluxes and at the GLL points
-      for (int ii=0; ii<tord; ii++) {
-        real r = gllState(idR ,ii);
-        real u = gllState(idRU,ii) / r;
-        real v = gllState(idRV,ii) / r;
-        real w = gllState(idRW,ii) / r;
-        real t = gllState(idRT,ii) / r;
-        real p = C0 * pow( r*t , GAMMA );
-
-        gllFlux(idR ,ii) = r*v;
-        gllFlux(idRU,ii) = r*v*u;
-        gllFlux(idRV,ii) = r*v*v + p;
-        gllFlux(idRW,ii) = r*v*w;
-        gllFlux(idRT,ii) = r*v*t;
-      }
-
-      // Store state and flux limits into a globally indexed array
-      for (int l=0; l<numState; l++) {
-        // Store the left cell edge state and flux estimates
-        stateLimits(l,1,k,j  ,i) = gllState(l,0);
-        fluxLimits (l,1,k,j  ,i) = gllFlux (l,0);
-
-        // Store the Right cell edge state and flux estimates
-        stateLimits(l,0,k,j+1,i) = gllState(l,tord-1);
-        fluxLimits (l,0,k,j+1,i) = gllFlux (l,tord-1);
-      }
-
-    });
-  }
-
-
-  inline void reconSD_Z(real4d &state, real2d const &hyDensGLL, real2d const &hyDensThetaGLL,
-                        Domain const &dom, SArray<real,ord,ord,ord> const &wenoRecon, SArray<real,ord,tord> const &to_gll, 
-                        real5d &stateLimits, real5d &fluxLimits, SArray<real,hs+2> const &wenoIdl, real &wenoSigma) {
-    // for (int k=0; k<dom.nz; k++) {
-    //   for (int j=0; j<dom.ny; j++) {
-    //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
-      int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
-      SArray<real,numState,tord> gllState;
-      SArray<real,numState,tord> gllFlux;
-
-      // Compute GLL points from cell averages
-      for (int l=0; l<numState; l++) {
-        SArray<real,ord> stencil;
-        SArray<real,tord> gllPts;
-        for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,k+ii,hs+j,hs+i); }
-        reconStencil(stencil, gllPts, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
-        for (int ii=0; ii<tord; ii++) { gllState(l,ii) = gllPts(ii); }
-      }
-      for (int ii=0; ii<tord; ii++) {
-        gllState(idR ,ii) += hyDensGLL     (k,ii);
-        gllState(idRT,ii) += hyDensThetaGLL(k,ii);
-      }
-
-      // Boundary conditions
-      if (k == 0       ) { gllState(idRW,0     ) = 0; }
-      if (k == dom.nz-1) { gllState(idRW,tord-1) = 0; }
-
-      // Compute fluxes and at the GLL points
-      for (int ii=0; ii<tord; ii++) {
-        real r = gllState(idR ,ii);
-        real u = gllState(idRU,ii) / r;
-        real v = gllState(idRV,ii) / r;
-        real w = gllState(idRW,ii) / r;
-        real t = gllState(idRT,ii) / r;
-        real p = C0 * pow( r*t , GAMMA );
-
-        gllFlux(idR ,ii) = r*w;
-        gllFlux(idRU,ii) = r*w*u;
-        gllFlux(idRV,ii) = r*w*v;
-        gllFlux(idRW,ii) = r*w*w + p - C0*pow(hyDensThetaGLL(k,ii),GAMMA);
-        gllFlux(idRT,ii) = r*w*t;
-      }
-
-      // Store state and flux limits into a globally indexed array
-      for (int l=0; l<numState; l++) {
-        // Store the left cell edge state and flux estimates
-        stateLimits(l,1,k  ,j,i) = gllState(l,0);
-        fluxLimits (l,1,k  ,j,i) = gllFlux (l,0);
-
-        // Store the Right cell edge state and flux estimates
-        stateLimits(l,0,k+1,j,i) = gllState(l,tord-1);
-        fluxLimits (l,0,k+1,j,i) = gllFlux (l,tord-1);
-      }
-
+      tend(idR ,k,j,i) = 0;
+      tend(idU,k,j,i) = 0;
+      tend(idV,k,j,i) = 0;
+      tend(idW,k,j,i) = -state(idR,hs+k,hs+j,hs+i) / (state(idR,hs+k,hs+j,hs+i) + dom.hyDensCells(hs+k)) * GRAV;
+      tend(idT,k,j,i) = 0;
     });
   }
 

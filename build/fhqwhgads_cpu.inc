@@ -9,7 +9,7 @@ default: main
 CXX = mpic++
 LINK = ${CXX}
 # CFLAGS = -DARRAY_DEBUG -O1 -g -I${PNETCDF_PATH}/include
-CXXFLAGS = -O3 -I${PNETCDF_PATH}/include
+CXXFLAGS = -DARRAY_DEBUG -O3 -I${PNETCDF_PATH}/include
 LDFLAGS = -L${PNETCDF_PATH}/lib -lpnetcdf
 
 KOKKOS_DEVICES = "Serial"
