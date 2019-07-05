@@ -219,7 +219,8 @@ public:
             }
 
             // Set the initial density such that pressure is constant (to get rid of distracting acoustic waves)
-            r = r0*(t0/(t0+t)-1._fp);
+            // r = r0*(t0/(t0+t)-1._fp);
+            r = 0;
 
             real wt = gllOrdWeights(ii)*gllOrdWeights(jj)*gllOrdWeights(kk);
 

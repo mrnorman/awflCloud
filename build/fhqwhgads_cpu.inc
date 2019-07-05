@@ -13,6 +13,7 @@ CXXFLAGS = -O3 -I${PNETCDF_PATH}/include
 LDFLAGS = -L${PNETCDF_PATH}/lib -lpnetcdf
 
 KOKKOS_DEVICES = "Serial"
+KOKKOS_DEBUG = "yes"
 
 DEPFLAGS = -M
 OBJ = $(notdir $(SRC:.cpp=.o))
