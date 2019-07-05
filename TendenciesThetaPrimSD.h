@@ -108,7 +108,7 @@ public :
 
   inline void compEulerTend_X(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
 
-    // Exchange halos in the y-direction
+    // Exchange halos in the x-direction
     exch.haloInit      ();
     exch.haloPackN_x   (dom, state, numState);
     exch.haloExchange_x(dom, par);
@@ -251,11 +251,142 @@ public :
 
 
   inline void compEulerTend_Y(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+
+    // Exchange halos in the y-direction
+    exch.haloInit      ();
+    exch.haloPackN_y   (dom, state, numState);
+    exch.haloExchange_y(dom, par);
+    exch.haloUnpackN_y (dom, state, numState);
+
+    // Compute tend = -A*(qR - qL)/dx, and store cell-edge state vectors
+    for (int k=0; k<dom.nz; k++) {
+      for (int j=0; j<dom.ny; j++) {
+        for (int i=0; i<dom.nx; i++) {
+          SArray<real,numState,tord> gllState;  // GLL state values
+
+          // Compute tord GLL points of the state vector
+          for (int l=0; l<numState; l++) {
+            SArray<real,ord> stencil;
+            SArray<real,tord> gllPts;
+            for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,hs+k,j+ii,hs+i); }
+            reconStencil(stencil, gllPts, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
+            for (int ii=0; ii<tord; ii++) { gllState(l,ii) = gllPts(ii); }
+          }
+          for (int ii=0; ii<tord; ii++) {
+            gllState(idR,ii) += dom.hyDensCells (hs+k);
+            gllState(idT,ii) += dom.hyThetaCells(hs+k);
+          }
+
+          // Compute dq   (qR - qL)
+          SArray<real,numState> dq;
+          for (int l=0; l<numState; l++) {
+            dq(l) = gllState(l,tord-1) - gllState(l,0);
+          }
+
+          // Compute cell-average-based values for flux Jacobian, A
+          real r = state(idR,hs+k,hs+j,hs+i) + dom.hyDensCells (hs+k);
+          real v = state(idV,hs+k,hs+j,hs+i);
+          real t = state(idT,hs+k,hs+j,hs+i) + dom.hyThetaCells(hs+k);
+          real p = pow(r*t,GAMMA);
+          real cs2 = GAMMA*p/r;
+
+          // Compute tend = -A*dq/dx (A is sparse, so this is more efficient to do by hand)
+          tend(0,k,j,i) = - ( v    *dq(0)           + r*dq(2)                         ) / dom.dy;
+          tend(1,k,j,i) = - (               v*dq(1)                                   ) / dom.dy;
+          tend(2,k,j,i) = - ( cs2/r*dq(0)           + v*dq(2)           + cs2/t*dq(4) ) / dom.dy;
+          tend(3,k,j,i) = - (                                 + v*dq(3)               ) / dom.dy;
+          tend(4,k,j,i) = - (                                           + v    *dq(4) ) / dom.dy;
+
+          // Store the state vector in stateLimits to compute fwaves from cell-interface state jumps
+          for (int l=0; l<numState; l++) {
+            stateLimits(l,1,k,j  ,i) = gllState(l,0     );
+            stateLimits(l,0,k,j+1,i) = gllState(l,tord-1);
+          }
+        }
+      }
+    }
+
+    // Reconcile the edge state via MPI exchange.
+    exch.haloInit      ();
+    exch.edgePackN_y   (dom, stateLimits, numState);
+    exch.edgeExchange_y(dom, par);
+    exch.edgeUnpackN_y (dom, stateLimits, numState);
+
+    // Compute the fwaves from the cell interface jumps
+    for (int k=0; k<dom.nz; k++) {
+      for (int j=0; j<dom.ny+1; j++) {
+        for (int i=0; i<dom.nx; i++) {
+          // Compute averaged values for the flux Jacobian diagonalization
+          real r = 0.5_fp * ( stateLimits(idR,0,k,j,i) + stateLimits(idR,1,k,j,i) );
+          real v = 0.5_fp * ( stateLimits(idV,0,k,j,i) + stateLimits(idV,1,k,j,i) );
+          real t = 0.5_fp * ( stateLimits(idT,0,k,j,i) + stateLimits(idT,1,k,j,i) );
+          real p = pow(r*t,GAMMA);
+          real cs = sqrt(GAMMA*p/r);
+          real cs2 = cs*cs;
+
+          // Compute the state jump over the interface
+          SArray<real,numState> dq;
+          for (int l=0; l<numState; l++) {
+            dq(l) = stateLimits(l,1,k,j,i) - stateLimits(l,0,k,j,i);
+          }
+
+          // Compute df = A*dq
+          SArray<real,numState> df;
+          df(0) = v    *dq(0)           + r*dq(2)                        ;
+          df(1) =             + v*dq(1)                                  ;
+          df(2) = cs2/r*dq(0)           + v*dq(2)           + cs2/t*dq(4);
+          df(3) =                                 + v*dq(3)              ;
+          df(4) =                                           + v    *dq(4);
+
+          // Compute characteristic variables (L*dq)
+          SArray<real,numState> ch;
+          ch(0) = 0.5_fp*df(0) - r/(2*cs)*df(2) + r/(2*t)*df(4);
+          ch(1) = 0.5_fp*df(0) + r/(2*cs)*df(2) + r/(2*t)*df(4);
+          ch(2) =                                 -r/t   *df(4);
+          ch(3) = df(1);
+          ch(4) = df(3);
+
+          // Compute fwaves
+          for (int l=0; l<numState; l++) {
+            fwaves(l,0,k,j,i) = 0;
+            fwaves(l,1,k,j,i) = 0;
+          }
+
+          // First wave (v-cs); always negative wave speed
+          fwaves(0,0,k,j,i) += ch(0);
+          fwaves(2,0,k,j,i) += -cs/r*ch(0);
+
+          // Second wave (v+cs); always positive wave speed
+          fwaves(0,1,k,j,i) += ch(1);
+          fwaves(2,1,k,j,i) += cs/r*ch(1);
+
+          if (v > 0) {
+            // Third wave
+            fwaves(0,1,k,j,i) += ch(2);
+            fwaves(4,1,k,j,i) += -t/r*ch(2);
+            // Fourth wave
+            fwaves(1,1,k,j,i) += ch(3);
+            // Fifth Wave
+            fwaves(3,1,k,j,i) += ch(4);
+          } else {
+            // Third wave
+            fwaves(0,0,k,j,i) += ch(2);
+            fwaves(4,0,k,j,i) += -t/r*ch(2);
+            // Fourth wave
+            fwaves(1,0,k,j,i) += ch(3);
+            // Fifth Wave
+            fwaves(3,0,k,j,i) += ch(4);
+          }
+        }
+      }
+    }
+
+    // Apply the fwaves to the tendencies
     for (int l=0; l<numState; l++) {
       for (int k=0; k<dom.nz; k++) {
         for (int j=0; j<dom.ny; j++) {
           for (int i=0; i<dom.nx; i++) {
-            tend(l,k,j,i)  = 0;
+            tend(l,k,j,i) += - ( fwaves(l,1,k,j,i) + fwaves(l,0,k,j+1,i) ) / dom.dy;
           }
         }
       }
