@@ -40,18 +40,11 @@ public :
     src         = real3d("src"       ,dom.nz,dom.ny,dom.nx);
     stateGLL    = real5d("stateGLL"  ,numState,dom.nz,dom.ny,dom.nx,tord);
 
-    SArray<real,ord,ord,ord> to_gll_tmp;
-
     // Setup the matrix to transform a stencil of ord cell averages into tord GLL points
     if (dom.doWeno) {
-      trans.coefs_to_gll_lower( to_gll_tmp );
+      trans.coefs_to_gll_lower( to_gll );
     } else {
-      trans.sten_to_gll_lower( to_gll_tmp );
-    }
-    for (int j=0; j<ord; j++) {
-      for (int i=0; i<tord; i++) {
-        to_gll(j,i) = to_gll_tmp(tord-1,j,i);
-      }
+      trans.sten_to_gll_lower( to_gll );
     }
 
     trans.weno_sten_to_coefs(wenoRecon);

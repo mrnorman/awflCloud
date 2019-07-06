@@ -74,15 +74,17 @@ for N in range(N1,N2+1) :
         print(add_spaces(2,c_matrix('rslt',N,N,force_fp(c2p,129),'none',200)))
         print('}\n');
 
-        print('inline _HOSTDEV void sten_to_gll_lower(SArray<FP,%s,%s,%s> &rslt) {'%(N,N,N))
         s2g = sten_to_gll_lower(N)
-        print(add_spaces(2,c_3d('rslt',N,N,N,s2g,'none',200)))
-        print('}\n');
+        for M in range(1,N+1) :
+            print('inline _HOSTDEV void sten_to_gll_lower(SArray<FP,%s,%s> &rslt) {'%(N,M))
+            print(add_spaces(2,c_matrix_aoa('rslt',M,N,s2g[M-1],'none',200)))
+            print('}\n');
 
-        print('inline _HOSTDEV void coefs_to_gll_lower(SArray<FP,%s,%s,%s> &rslt) {'%(N,N,N))
         c2g = coefs_to_gll_lower(N)
-        print(add_spaces(2,c_3d('rslt',N,N,N,c2g,'none',200)))
-        print('}\n');
+        for M in range(1,N+1) :
+            print('inline _HOSTDEV void coefs_to_gll_lower(SArray<FP,%s,%s> &rslt) {'%(N,M))
+            print(add_spaces(2,c_matrix_aoa('rslt',M,N,c2g[M-1],'none',200)))
+            print('}\n');
 
         print('inline _HOSTDEV void weno_sten_to_coefs(SArray<FP,%s,%s,%s> &rslt) {'%(N,N,N))
         weno = weno_sten_to_coefs(N)
