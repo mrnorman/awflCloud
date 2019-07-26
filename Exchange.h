@@ -126,9 +126,9 @@ public:
 
 
   inline void haloPackN_x(Domain const &dom, real4d const &a, int const n) {
-    haloPackN_x_ext(dom,a,n,haloSendBufW,haloSendBufE,nPack);
-  }
-  inline void haloPackN_x_ext(Domain const &dom, real4d const &a, int const n, real1d &haloSendBufW, real1d &haloSendBufE, int &nPack) {
+    real1d &haloSendBufW = this->haloSendBufW;
+    real1d &haloSendBufE = this->haloSendBufE;
+    int    &nPack        = this->nPack       ;
     Kokkos::parallel_for( n*dom.nz*dom.ny*hs , KOKKOS_LAMBDA (int iGlob) {
       int v, k, j, ii;
       unpackIndices(iGlob,n,dom.nz,dom.ny,hs,v,k,j,ii);
@@ -141,9 +141,9 @@ public:
 
 
   inline void haloPackN_y(Domain const &dom, real4d const &a, int const n) {
-    haloPackN_y_ext(dom,a,n,haloSendBufS,haloSendBufN,nPack);
-  }
-  inline void haloPackN_y_ext(Domain const &dom, real4d const &a, int const n, real1d &haloSendBufS, real1d &haloSendBufN, int &nPack) {
+    real1d &haloSendBufS = this->haloSendBufS;
+    real1d &haloSendBufN = this->haloSendBufN;
+    int    &nPack        = this->nPack       ;
     Kokkos::parallel_for( n*dom.nz*hs*dom.nx , KOKKOS_LAMBDA (int iGlob) {
       int v, k, ii, i;
       unpackIndices(iGlob,n,dom.nz,hs,dom.nx,v,k,ii,i);
@@ -156,9 +156,9 @@ public:
 
 
   inline void haloUnpackN_x(Domain const &dom, real4d &a, int const n) {
-    haloUnpackN_x_ext(dom, a, n, haloRecvBufW, haloRecvBufE, nUnpack);
-  }
-  inline void haloUnpackN_x_ext(Domain const &dom, real4d &a, int const n, real1d const &haloRecvBufW, real1d const &haloRecvBufE, int &nUnpack) {
+    real1d &haloRecvBufW = this->haloRecvBufW;
+    real1d &haloRecvBufE = this->haloRecvBufE;
+    int    &nUnpack      = this->nUnpack     ;
     Kokkos::parallel_for( n*dom.nz*dom.ny*hs , KOKKOS_LAMBDA (int iGlob) {
       int v, k, j, ii;
       unpackIndices(iGlob,n,dom.nz,dom.ny,hs,v,k,j,ii);
@@ -171,9 +171,9 @@ public:
 
 
   inline void haloUnpackN_y(Domain const &dom, real4d &a, int const n) {
-    haloUnpackN_y_ext(dom, a, n, haloRecvBufS, haloRecvBufN, nUnpack);
-  }
-  inline void haloUnpackN_y_ext(Domain const &dom, real4d &a, int const n, real1d const &haloRecvBufS, real1d const &haloRecvBufN, int &nUnpack) {
+    real1d &haloRecvBufS = this->haloRecvBufS;
+    real1d &haloRecvBufN = this->haloRecvBufN;
+    int    &nUnpack      = this->nUnpack     ;
     Kokkos::parallel_for( n*dom.nz*hs*dom.nx , KOKKOS_LAMBDA (int iGlob) {
       int v, k, ii, i;
       unpackIndices(iGlob,n,dom.nz,hs,dom.nx,v,k,ii,i);
@@ -270,9 +270,9 @@ public:
 
 
   inline void edgePackN_x(Domain const &dom, real5d const &a, int const n) {
-    edgePackN_x_ext(dom,a,n,edgeSendBufW,edgeSendBufE,nPack);
-  }
-  inline void edgePackN_x_ext(Domain const &dom, real5d const &a, int const n, real1d &edgeSendBufW, real1d &edgeSendBufE, int &nPack) {
+    real1d &edgeSendBufW = this->edgeSendBufW;
+    real1d &edgeSendBufE = this->edgeSendBufE;
+    int    &nPack        = this->nPack       ;
     // for (int v=0; v<n; v++) {
     //   for (int k=0; k<dom.nz; k++) {
     //     for (int j=0; j<dom.ny; j++) {
@@ -288,9 +288,9 @@ public:
 
 
   inline void edgePackN_y(Domain const &dom, real5d const &a, int const n) {
-    edgePackN_y_ext(dom,a,n,edgeSendBufS,edgeSendBufN,nPack);
-  }
-  inline void edgePackN_y_ext(Domain const &dom, real5d const &a, int const n, real1d &edgeSendBufS, real1d &edgeSendBufN, int &nPack) {
+    real1d &edgeSendBufS = this->edgeSendBufS;
+    real1d &edgeSendBufN = this->edgeSendBufN;
+    int    &nPack        = this->nPack       ;
     // for (int v=0; v<n; v++) {
     //   for (int k=0; k<dom.nz; k++) {
     //     for (int i=0; i<dom.nx; i++) {
@@ -306,9 +306,9 @@ public:
 
 
   inline void edgeUnpackN_x(Domain const &dom, real5d &a, int const n) {
-    edgeUnpackN_x_ext(dom, a, n, edgeRecvBufW, edgeRecvBufE, nUnpack);
-  }
-  inline void edgeUnpackN_x_ext(Domain const &dom, real5d &a, int const n, real1d const &edgeRecvBufW, real1d const &edgeRecvBufE, int &nUnpack) {
+    real1d &edgeRecvBufW = this->edgeRecvBufW;
+    real1d &edgeRecvBufE = this->edgeRecvBufE;
+    int    &nUnpack      = this->nUnpack     ;
     // for (int v=0; v<n; v++) {
     //   for (int k=0; k<dom.nz; k++) {
     //     for (int j=0; j<dom.ny; j++) {
@@ -324,9 +324,9 @@ public:
 
 
   inline void edgeUnpackN_y(Domain const &dom, real5d &a, int const n) {
-    edgeUnpackN_y_ext(dom, a, n, edgeRecvBufS, edgeRecvBufN, nUnpack);
-  }
-  inline void edgeUnpackN_y_ext(Domain const &dom, real5d &a, int const n, real1d const &edgeRecvBufS, real1d const &edgeRecvBufN, int &nUnpack) {
+    real1d &edgeRecvBufS = this->edgeRecvBufS;
+    real1d &edgeRecvBufN = this->edgeRecvBufN;
+    int    &nUnpack      = this->nUnpack     ;
     // for (int v=0; v<n; v++) {
     //   for (int k=0; k<dom.nz; k++) {
     //     for (int i=0; i<dom.nx; i++) {
