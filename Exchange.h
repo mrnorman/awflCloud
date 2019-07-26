@@ -126,9 +126,9 @@ public:
 
 
   inline void haloPackN_x(Domain const &dom, real4d const &a, int const n) {
-    real1d &haloSendBufW = this->haloSendBufW;
-    real1d &haloSendBufE = this->haloSendBufE;
-    int    &nPack        = this->nPack       ;
+    auto &haloSendBufW = this->haloSendBufW;
+    auto &haloSendBufE = this->haloSendBufE;
+    auto &nPack        = this->nPack       ;
     Kokkos::parallel_for( n*dom.nz*dom.ny*hs , KOKKOS_LAMBDA (int iGlob) {
       int v, k, j, ii;
       unpackIndices(iGlob,n,dom.nz,dom.ny,hs,v,k,j,ii);
@@ -141,9 +141,9 @@ public:
 
 
   inline void haloPackN_y(Domain const &dom, real4d const &a, int const n) {
-    real1d &haloSendBufS = this->haloSendBufS;
-    real1d &haloSendBufN = this->haloSendBufN;
-    int    &nPack        = this->nPack       ;
+    auto &haloSendBufS = this->haloSendBufS;
+    auto &haloSendBufN = this->haloSendBufN;
+    auto &nPack        = this->nPack       ;
     Kokkos::parallel_for( n*dom.nz*hs*dom.nx , KOKKOS_LAMBDA (int iGlob) {
       int v, k, ii, i;
       unpackIndices(iGlob,n,dom.nz,hs,dom.nx,v,k,ii,i);
@@ -156,9 +156,9 @@ public:
 
 
   inline void haloUnpackN_x(Domain const &dom, real4d &a, int const n) {
-    real1d &haloRecvBufW = this->haloRecvBufW;
-    real1d &haloRecvBufE = this->haloRecvBufE;
-    int    &nUnpack      = this->nUnpack     ;
+    auto &haloRecvBufW = this->haloRecvBufW;
+    auto &haloRecvBufE = this->haloRecvBufE;
+    auto &nUnpack      = this->nUnpack     ;
     Kokkos::parallel_for( n*dom.nz*dom.ny*hs , KOKKOS_LAMBDA (int iGlob) {
       int v, k, j, ii;
       unpackIndices(iGlob,n,dom.nz,dom.ny,hs,v,k,j,ii);
@@ -171,9 +171,9 @@ public:
 
 
   inline void haloUnpackN_y(Domain const &dom, real4d &a, int const n) {
-    real1d &haloRecvBufS = this->haloRecvBufS;
-    real1d &haloRecvBufN = this->haloRecvBufN;
-    int    &nUnpack      = this->nUnpack     ;
+    auto &haloRecvBufS = this->haloRecvBufS;
+    auto &haloRecvBufN = this->haloRecvBufN;
+    auto &nUnpack      = this->nUnpack     ;
     Kokkos::parallel_for( n*dom.nz*hs*dom.nx , KOKKOS_LAMBDA (int iGlob) {
       int v, k, ii, i;
       unpackIndices(iGlob,n,dom.nz,hs,dom.nx,v,k,ii,i);
@@ -270,9 +270,9 @@ public:
 
 
   inline void edgePackN_x(Domain const &dom, real5d const &a, int const n) {
-    real1d &edgeSendBufW = this->edgeSendBufW;
-    real1d &edgeSendBufE = this->edgeSendBufE;
-    int    &nPack        = this->nPack       ;
+    auto &edgeSendBufW = this->edgeSendBufW;
+    auto &edgeSendBufE = this->edgeSendBufE;
+    auto &nPack        = this->nPack       ;
     // for (int v=0; v<n; v++) {
     //   for (int k=0; k<dom.nz; k++) {
     //     for (int j=0; j<dom.ny; j++) {
@@ -288,9 +288,9 @@ public:
 
 
   inline void edgePackN_y(Domain const &dom, real5d const &a, int const n) {
-    real1d &edgeSendBufS = this->edgeSendBufS;
-    real1d &edgeSendBufN = this->edgeSendBufN;
-    int    &nPack        = this->nPack       ;
+    auto &edgeSendBufS = this->edgeSendBufS;
+    auto &edgeSendBufN = this->edgeSendBufN;
+    auto &nPack        = this->nPack       ;
     // for (int v=0; v<n; v++) {
     //   for (int k=0; k<dom.nz; k++) {
     //     for (int i=0; i<dom.nx; i++) {
@@ -306,9 +306,9 @@ public:
 
 
   inline void edgeUnpackN_x(Domain const &dom, real5d &a, int const n) {
-    real1d &edgeRecvBufW = this->edgeRecvBufW;
-    real1d &edgeRecvBufE = this->edgeRecvBufE;
-    int    &nUnpack      = this->nUnpack     ;
+    auto &edgeRecvBufW = this->edgeRecvBufW;
+    auto &edgeRecvBufE = this->edgeRecvBufE;
+    auto &nUnpack      = this->nUnpack     ;
     // for (int v=0; v<n; v++) {
     //   for (int k=0; k<dom.nz; k++) {
     //     for (int j=0; j<dom.ny; j++) {
@@ -324,9 +324,9 @@ public:
 
 
   inline void edgeUnpackN_y(Domain const &dom, real5d &a, int const n) {
-    real1d &edgeRecvBufS = this->edgeRecvBufS;
-    real1d &edgeRecvBufN = this->edgeRecvBufN;
-    int    &nUnpack      = this->nUnpack     ;
+    auto &edgeRecvBufS = this->edgeRecvBufS;
+    auto &edgeRecvBufN = this->edgeRecvBufN;
+    auto &nUnpack      = this->nUnpack     ;
     // for (int v=0; v<n; v++) {
     //   for (int k=0; k<dom.nz; k++) {
     //     for (int i=0; i<dom.nx; i++) {
