@@ -248,6 +248,15 @@ public :
 
 
   inline void compEulerTend_Y(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+    auto stateLimits = this->stateLimits;
+    auto fwaves      = this->fwaves     ;
+    auto src         = this->src        ;
+    auto stateGLL    = this->stateGLL   ;
+    auto gllWts      = this->gllWts     ;
+    auto to_gll      = this->to_gll     ;
+    auto wenoRecon   = this->wenoRecon  ;
+    auto wenoIdl     = this->wenoIdl    ;
+    auto wenoSigma   = this->wenoSigma  ;
 
     // Exchange halos in the y-direction
     exch.haloInit      ();
@@ -394,16 +403,25 @@ public :
 
 
   inline void compEulerTend_Z(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+    auto stateLimits = this->stateLimits;
+    auto fwaves      = this->fwaves     ;
+    auto src         = this->src        ;
+    auto stateGLL    = this->stateGLL   ;
+    auto gllWts      = this->gllWts     ;
+    auto to_gll      = this->to_gll     ;
+    auto wenoRecon   = this->wenoRecon  ;
+    auto wenoIdl     = this->wenoIdl    ;
+    auto wenoSigma   = this->wenoSigma  ;
 
-    for (int l=0; l<numState; l++) {
-      for (int k=0; k<dom.nz; k++) {
-        for (int j=0; j<dom.ny; j++) {
-          for (int i=0; i<dom.nx; i++) {
-            tend(l,k,j,i)  = 0;
-          }
-        }
-      }
-    }
+    // for (int l=0; l<numState; l++) {
+    //   for (int k=0; k<dom.nz; k++) {
+    //     for (int j=0; j<dom.ny; j++) {
+    //       for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( numState*dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int l, k, j, i;
+      unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
+      tend(l,k,j,i)  = 0;
+    });
 
     // Apply BCs to state boundaries
     stateBoundariesZ(state, dom);
@@ -413,246 +431,255 @@ public :
     //////////////////////////////////////////////////////////////////////////
     
     // Compute tend = -A*(qR - qL)/dz, and store cell-edge state vectors for fast solve
-    for (int k=0; k<dom.nz; k++) {
-      for (int j=0; j<dom.ny; j++) {
-        for (int i=0; i<dom.nx; i++) {
-          SArray<real,3,tord> gllState;  // GLL state values
-          SArray<real,ord> stencil;
-          SArray<real,tord> gllPts;
-          // Reconstruct density
-          for (int ii=0; ii<ord; ii++) { stencil(ii) = state(idR,k+ii,hs+j,hs+i); }
-          reconStencil(stencil, gllPts, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
-          for (int ii=0; ii<tord; ii++) { gllState(0,ii) = gllPts(ii) + dom.hyDensGLL(k,ii); }
+    // for (int k=0; k<dom.nz; k++) {
+    //   for (int j=0; j<dom.ny; j++) {
+    //     for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      SArray<real,3,tord> gllState;  // GLL state values
+      SArray<real,ord> stencil;
+      SArray<real,tord> gllPts;
+      // Reconstruct density
+      for (int ii=0; ii<ord; ii++) { stencil(ii) = state(idR,k+ii,hs+j,hs+i); }
+      reconStencil(stencil, gllPts, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
+      for (int ii=0; ii<tord; ii++) { gllState(0,ii) = gllPts(ii) + dom.hyDensGLL(k,ii); }
 
-          // Reconstruct w
-          for (int ii=0; ii<ord; ii++) { stencil(ii) = state(idW,k+ii,hs+j,hs+i); }
-          reconStencil(stencil, gllPts, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
-          for (int ii=0; ii<tord; ii++) { gllState(1,ii) = gllPts(ii); }
+      // Reconstruct w
+      for (int ii=0; ii<ord; ii++) { stencil(ii) = state(idW,k+ii,hs+j,hs+i); }
+      reconStencil(stencil, gllPts, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
+      for (int ii=0; ii<tord; ii++) { gllState(1,ii) = gllPts(ii); }
 
-          // Reconstruct theta
-          for (int ii=0; ii<ord; ii++) { stencil(ii) = state(idT,k+ii,hs+j,hs+i); }
-          reconStencil(stencil, gllPts, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
-          for (int ii=0; ii<tord; ii++) { gllState(2,ii) = gllPts(ii) + dom.hyThetaGLL(k,ii); }
+      // Reconstruct theta
+      for (int ii=0; ii<ord; ii++) { stencil(ii) = state(idT,k+ii,hs+j,hs+i); }
+      reconStencil(stencil, gllPts, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
+      for (int ii=0; ii<tord; ii++) { gllState(2,ii) = gllPts(ii) + dom.hyThetaGLL(k,ii); }
 
-          // Replace theta with perturbation pressure
-          for (int ii=0; ii<tord; ii++) {
-            real r = gllState(0,ii);
-            real t = gllState(2,ii);
-            gllState(2,ii) = C0*pow(r*t,GAMMA) - dom.hyPressureGLL(k,ii);
-          }
-
-          // Compute dq   (qR - qL)
-          SArray<real,3> dq;
-          for (int l=0; l<3; l++) {
-            dq(l) = gllState(l,tord-1) - gllState(l,0);
-          }
-
-          // Compute cell-average-based values for flux Jacobian, A
-          real r = state(idR,hs+k,hs+j,hs+i) + dom.hyDensCells(hs+k);
-
-          // Compute tend = -A*dq/dx (A is sparse, so this is more efficient to do by hand)
-          tend(idR,k,j,i) = - ( r*dq(1) ) / dom.dz;
-          tend(idW,k,j,i) = - ( dq(2)/r ) / dom.dz;
-
-          // Store the state vector in stateLimits to compute fwaves from cell-interface state jumps
-          for (int l=0; l<3; l++) {
-            stateLimits(l,1,k  ,j,i) = gllState(l,0     );
-            stateLimits(l,0,k+1,j,i) = gllState(l,tord-1);
-          }
-        }
+      // Replace theta with perturbation pressure
+      for (int ii=0; ii<tord; ii++) {
+        real r = gllState(0,ii);
+        real t = gllState(2,ii);
+        gllState(2,ii) = C0*pow(r*t,GAMMA) - dom.hyPressureGLL(k,ii);
       }
-    }
+
+      // Compute dq   (qR - qL)
+      SArray<real,3> dq;
+      for (int l=0; l<3; l++) {
+        dq(l) = gllState(l,tord-1) - gllState(l,0);
+      }
+
+      // Compute cell-average-based values for flux Jacobian, A
+      real r = state(idR,hs+k,hs+j,hs+i) + dom.hyDensCells(hs+k);
+
+      // Compute tend = -A*dq/dx (A is sparse, so this is more efficient to do by hand)
+      tend(idR,k,j,i) = - ( r*dq(1) ) / dom.dz;
+      tend(idW,k,j,i) = - ( dq(2)/r ) / dom.dz;
+
+      // Store the state vector in stateLimits to compute fwaves from cell-interface state jumps
+      for (int l=0; l<3; l++) {
+        stateLimits(l,1,k  ,j,i) = gllState(l,0     );
+        stateLimits(l,0,k+1,j,i) = gllState(l,tord-1);
+      }
+    });
 
     // Enforce boundary conditions on the state limits
-    for (int j=0; j<dom.ny; j++) {
-      for (int i=0; i<dom.nx; i++) {
-        stateLimits(0,0,0     ,j,i) = stateLimits(0,1,0     ,j,i);
-        stateLimits(1,0,0     ,j,i) = 0;
-        stateLimits(1,1,0     ,j,i) = 0;
-        stateLimits(2,0,0     ,j,i) = stateLimits(2,1,0     ,j,i);
+    // for (int j=0; j<dom.ny; j++) {
+    //   for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int j, i;
+      unpackIndices(iGlob,dom.ny,dom.nx,j,i);
+      stateLimits(0,0,0     ,j,i) = stateLimits(0,1,0     ,j,i);
+      stateLimits(1,0,0     ,j,i) = 0;
+      stateLimits(1,1,0     ,j,i) = 0;
+      stateLimits(2,0,0     ,j,i) = stateLimits(2,1,0     ,j,i);
 
-        stateLimits(0,1,dom.nz,j,i) = stateLimits(0,0,dom.nz,j,i);
-        stateLimits(1,0,dom.nz,j,i) = 0;
-        stateLimits(1,1,dom.nz,j,i) = 0;
-        stateLimits(2,1,dom.nz,j,i) = stateLimits(2,0,dom.nz,j,i);
-      }
-    }
+      stateLimits(0,1,dom.nz,j,i) = stateLimits(0,0,dom.nz,j,i);
+      stateLimits(1,0,dom.nz,j,i) = 0;
+      stateLimits(1,1,dom.nz,j,i) = 0;
+      stateLimits(2,1,dom.nz,j,i) = stateLimits(2,0,dom.nz,j,i);
+    });
 
     // Compute the fwaves from the cell interface jumps
-    for (int k=0; k<dom.nz+1; k++) {
-      for (int j=0; j<dom.ny; j++) {
-        for (int i=0; i<dom.nx; i++) {
-          // Compute averaged values for the flux Jacobian diagonalization
-          real r = 0.5_fp * ( stateLimits(0,0,k,j,i) + stateLimits(0,1,k,j,i) );
-          real p = 0.5_fp * ( stateLimits(2,0,k,j,i) + stateLimits(2,1,k,j,i) );
-          if (k < dom.nz) {
-            p += dom.hyPressureGLL(k,0);
-          } else {
-            p += dom.hyPressureGLL(dom.nz-1,tord-1);
-          }
-          real cs = sqrt(GAMMA*p/r);
-          real cs2 = cs*cs;
-
-          // Compute the state jump over the interface
-          SArray<real,3> dq;
-          for (int l=0; l<3; l++) {
-            dq(l) = stateLimits(l,1,k,j,i) - stateLimits(l,0,k,j,i);
-          }
-
-          // Compute df = A*dq
-          SArray<real,3> df;
-          df(0) = r*dq(1);
-          df(1) = dq(2)/r;
-          df(2) = r*cs2*dq(1);
-
-          // Compute characteristic variables (L*df)
-          SArray<real,2> ch;
-          ch(0) = -r*df(1)/(2*cs) + df(2)/(2*cs2);
-          ch(1) =  r*df(1)/(2*cs) + df(2)/(2*cs2);
-
-          // Compute fwaves
-          // First wave (-cs); always negative wave speed
-          fwaves(0,0,k,j,i) = (ch(0));
-          fwaves(1,0,k,j,i) = (-cs*ch(0)/r);
-
-          // Second wave (+cs); always positive wave speed
-          fwaves(0,1,k,j,i) = (ch(1));
-          fwaves(1,1,k,j,i) = ( cs*ch(1)/r);
-        }
+    // for (int k=0; k<dom.nz+1; k++) {
+    //   for (int j=0; j<dom.ny; j++) {
+    //     for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( (dom.nz+1)*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz+1,dom.ny,dom.nx,k,j,i);
+      // Compute averaged values for the flux Jacobian diagonalization
+      real r = 0.5_fp * ( stateLimits(0,0,k,j,i) + stateLimits(0,1,k,j,i) );
+      real p = 0.5_fp * ( stateLimits(2,0,k,j,i) + stateLimits(2,1,k,j,i) );
+      if (k < dom.nz) {
+        p += dom.hyPressureGLL(k,0);
+      } else {
+        p += dom.hyPressureGLL(dom.nz-1,tord-1);
       }
-    }
+      real cs = sqrt(GAMMA*p/r);
+      real cs2 = cs*cs;
+
+      // Compute the state jump over the interface
+      SArray<real,3> dq;
+      for (int l=0; l<3; l++) {
+        dq(l) = stateLimits(l,1,k,j,i) - stateLimits(l,0,k,j,i);
+      }
+
+      // Compute df = A*dq
+      SArray<real,3> df;
+      df(0) = r*dq(1);
+      df(1) = dq(2)/r;
+      df(2) = r*cs2*dq(1);
+
+      // Compute characteristic variables (L*df)
+      SArray<real,2> ch;
+      ch(0) = -r*df(1)/(2*cs) + df(2)/(2*cs2);
+      ch(1) =  r*df(1)/(2*cs) + df(2)/(2*cs2);
+
+      // Compute fwaves
+      // First wave (-cs); always negative wave speed
+      fwaves(0,0,k,j,i) = (ch(0));
+      fwaves(1,0,k,j,i) = (-cs*ch(0)/r);
+
+      // Second wave (+cs); always positive wave speed
+      fwaves(0,1,k,j,i) = (ch(1));
+      fwaves(1,1,k,j,i) = ( cs*ch(1)/r);
+    });
 
     // Apply the fwaves to the tendencies
-    for (int k=0; k<dom.nz; k++) {
-      for (int j=0; j<dom.ny; j++) {
-        for (int i=0; i<dom.nx; i++) {
-          tend(idR,k,j,i) += - ( fwaves(0,1,k,j,i) + fwaves(0,0,k+1,j,i) ) / dom.dz;
-          tend(idW,k,j,i) += - ( fwaves(1,1,k,j,i) + fwaves(1,0,k+1,j,i) ) / dom.dz;
-        }
-      }
-    }
+    // for (int k=0; k<dom.nz; k++) {
+    //   for (int j=0; j<dom.ny; j++) {
+    //     for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      tend(idR,k,j,i) += - ( fwaves(0,1,k,j,i) + fwaves(0,0,k+1,j,i) ) / dom.dz;
+      tend(idW,k,j,i) += - ( fwaves(1,1,k,j,i) + fwaves(1,0,k+1,j,i) ) / dom.dz;
+    });
 
     //////////////////////////////////////////////////////////////////////////
     // COMPUTE SLOOOOWWWW TENDENCIES
     //////////////////////////////////////////////////////////////////////////
     
     // Compute tend = -A*(qR - qL)/dz, and store cell-edge state vectors for fast solve
-    for (int k=0; k<dom.nz; k++) {
-      for (int j=0; j<dom.ny; j++) {
-        for (int i=0; i<dom.nx; i++) {
-          SArray<real,numState,tord> gllState;  // GLL state values
+    // for (int k=0; k<dom.nz; k++) {
+    //   for (int j=0; j<dom.ny; j++) {
+    //     for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      SArray<real,numState,tord> gllState;  // GLL state values
 
-          // Compute tord GLL points of the state vector
-          for (int l=0; l<numState; l++) {
-            SArray<real,ord> stencil;
-            SArray<real,tord> gllPts;
-            for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,k+ii,hs+j,hs+i); }
-            reconStencil(stencil, gllPts, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
-            for (int ii=0; ii<tord; ii++) { gllState(l,ii) = gllPts(ii); }
-          }
-          for (int ii=0; ii<tord; ii++) {
-            gllState(idR,ii) += dom.hyDensGLL (k,ii);
-            gllState(idT,ii) += dom.hyThetaGLL(k,ii);
-          }
-
-          // Compute dq   (qR - qL)
-          SArray<real,numState> dq;
-          for (int l=0; l<numState; l++) {
-            dq(l) = gllState(l,tord-1) - gllState(l,0);
-          }
-
-          // Compute cell-average-based values for flux Jacobian, A
-          real w = state(idW,hs+k,hs+j,hs+i);
-
-          // Compute tend = -A*dq/dx (A is sparse, so this is more efficient to do by hand)
-          tend(0,k,j,i) += - ( w*dq(0) ) / dom.dz;
-          tend(1,k,j,i) += - ( w*dq(1) ) / dom.dz;
-          tend(2,k,j,i) += - ( w*dq(2) ) / dom.dz;
-          tend(3,k,j,i) += - ( w*dq(3) ) / dom.dz;
-          tend(4,k,j,i) += - ( w*dq(4) ) / dom.dz;
-
-          // Store the state vector in stateLimits to compute fwaves from cell-interface state jumps
-          for (int l=0; l<numState; l++) {
-            stateLimits(l,1,k  ,j,i) = gllState(l,0     );
-            stateLimits(l,0,k+1,j,i) = gllState(l,tord-1);
-          }
-        }
+      // Compute tord GLL points of the state vector
+      for (int l=0; l<numState; l++) {
+        SArray<real,ord> stencil;
+        SArray<real,tord> gllPts;
+        for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,k+ii,hs+j,hs+i); }
+        reconStencil(stencil, gllPts, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
+        for (int ii=0; ii<tord; ii++) { gllState(l,ii) = gllPts(ii); }
       }
-    }
+      for (int ii=0; ii<tord; ii++) {
+        gllState(idR,ii) += dom.hyDensGLL (k,ii);
+        gllState(idT,ii) += dom.hyThetaGLL(k,ii);
+      }
+
+      // Compute dq   (qR - qL)
+      SArray<real,numState> dq;
+      for (int l=0; l<numState; l++) {
+        dq(l) = gllState(l,tord-1) - gllState(l,0);
+      }
+
+      // Compute cell-average-based values for flux Jacobian, A
+      real w = state(idW,hs+k,hs+j,hs+i);
+
+      // Compute tend = -A*dq/dx (A is sparse, so this is more efficient to do by hand)
+      tend(0,k,j,i) += - ( w*dq(0) ) / dom.dz;
+      tend(1,k,j,i) += - ( w*dq(1) ) / dom.dz;
+      tend(2,k,j,i) += - ( w*dq(2) ) / dom.dz;
+      tend(3,k,j,i) += - ( w*dq(3) ) / dom.dz;
+      tend(4,k,j,i) += - ( w*dq(4) ) / dom.dz;
+
+      // Store the state vector in stateLimits to compute fwaves from cell-interface state jumps
+      for (int l=0; l<numState; l++) {
+        stateLimits(l,1,k  ,j,i) = gllState(l,0     );
+        stateLimits(l,0,k+1,j,i) = gllState(l,tord-1);
+      }
+    });
 
     // Enforce boundary conditions
-    for (int j=0; j<dom.ny; j++) {
-      for (int i=0; i<dom.nx; i++) {
-        stateLimits(idR,0,0     ,j,i) = stateLimits(idR,1,0     ,j,i);
-        stateLimits(idU,0,0     ,j,i) = stateLimits(idU,1,0     ,j,i);
-        stateLimits(idV,0,0     ,j,i) = stateLimits(idV,1,0     ,j,i);
-        stateLimits(idW,0,0     ,j,i) = 0;
-        stateLimits(idW,1,0     ,j,i) = 0;
-        stateLimits(idT,0,0     ,j,i) = stateLimits(idT,1,0     ,j,i);
+    // for (int j=0; j<dom.ny; j++) {
+    //   for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int j, i;
+      unpackIndices(iGlob,dom.ny,dom.nx,j,i);
+      stateLimits(idR,0,0     ,j,i) = stateLimits(idR,1,0     ,j,i);
+      stateLimits(idU,0,0     ,j,i) = stateLimits(idU,1,0     ,j,i);
+      stateLimits(idV,0,0     ,j,i) = stateLimits(idV,1,0     ,j,i);
+      stateLimits(idW,0,0     ,j,i) = 0;
+      stateLimits(idW,1,0     ,j,i) = 0;
+      stateLimits(idT,0,0     ,j,i) = stateLimits(idT,1,0     ,j,i);
 
-        stateLimits(idR,1,dom.nz,j,i) = stateLimits(idR,0,dom.nz,j,i);
-        stateLimits(idU,1,dom.nz,j,i) = stateLimits(idU,0,dom.nz,j,i);
-        stateLimits(idV,1,dom.nz,j,i) = stateLimits(idV,0,dom.nz,j,i);
-        stateLimits(idW,0,dom.nz,j,i) = 0;
-        stateLimits(idW,1,dom.nz,j,i) = 0;
-        stateLimits(idT,1,dom.nz,j,i) = stateLimits(idT,0,dom.nz,j,i);
-      }
-    }
+      stateLimits(idR,1,dom.nz,j,i) = stateLimits(idR,0,dom.nz,j,i);
+      stateLimits(idU,1,dom.nz,j,i) = stateLimits(idU,0,dom.nz,j,i);
+      stateLimits(idV,1,dom.nz,j,i) = stateLimits(idV,0,dom.nz,j,i);
+      stateLimits(idW,0,dom.nz,j,i) = 0;
+      stateLimits(idW,1,dom.nz,j,i) = 0;
+      stateLimits(idT,1,dom.nz,j,i) = stateLimits(idT,0,dom.nz,j,i);
+    });
 
     // Compute the fwaves from the cell interface jumps
-    for (int k=0; k<dom.nz+1; k++) {
-      for (int j=0; j<dom.ny; j++) {
-        for (int i=0; i<dom.nx; i++) {
-          // Compute averaged values for the flux Jacobian diagonalization
-          real w = 0.5_fp * ( stateLimits(idW,0,k,j,i) + stateLimits(idW,1,k,j,i) );
+    // for (int k=0; k<dom.nz+1; k++) {
+    //   for (int j=0; j<dom.ny; j++) {
+    //     for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( (dom.nz+1)*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz+1,dom.ny,dom.nx,k,j,i);
+      // Compute averaged values for the flux Jacobian diagonalization
+      real w = 0.5_fp * ( stateLimits(idW,0,k,j,i) + stateLimits(idW,1,k,j,i) );
 
-          // Compute the state jump over the interface
-          SArray<real,numState> dq;
-          for (int l=0; l<numState; l++) {
-            dq(l) = stateLimits(l,1,k,j,i) - stateLimits(l,0,k,j,i);
-          }
-
-          // Compute df = A*dq
-          SArray<real,numState> df;
-          df(0) = w*dq(0);
-          df(1) = w*dq(1);
-          df(2) = w*dq(2);
-          df(3) = w*dq(3);
-          df(4) = w*dq(4);
-
-          // Compute fwaves
-          for (int l=0; l<numState; l++) {
-            fwaves(l,0,k,j,i) = 0;
-            fwaves(l,1,k,j,i) = 0;
-          }
-
-          if (w > 0) {
-            fwaves(0,1,k,j,i) += df(0);
-            fwaves(1,1,k,j,i) += df(1);
-            fwaves(2,1,k,j,i) += df(2);
-            fwaves(3,1,k,j,i) += df(3);
-            fwaves(4,1,k,j,i) += df(4);
-          } else {
-            fwaves(0,0,k,j,i) += df(0);
-            fwaves(1,0,k,j,i) += df(1);
-            fwaves(2,0,k,j,i) += df(2);
-            fwaves(3,0,k,j,i) += df(3);
-            fwaves(4,0,k,j,i) += df(4);
-          }
-        }
+      // Compute the state jump over the interface
+      SArray<real,numState> dq;
+      for (int l=0; l<numState; l++) {
+        dq(l) = stateLimits(l,1,k,j,i) - stateLimits(l,0,k,j,i);
       }
-    }
+
+      // Compute df = A*dq
+      SArray<real,numState> df;
+      df(0) = w*dq(0);
+      df(1) = w*dq(1);
+      df(2) = w*dq(2);
+      df(3) = w*dq(3);
+      df(4) = w*dq(4);
+
+      // Compute fwaves
+      for (int l=0; l<numState; l++) {
+        fwaves(l,0,k,j,i) = 0;
+        fwaves(l,1,k,j,i) = 0;
+      }
+
+      if (w > 0) {
+        fwaves(0,1,k,j,i) += df(0);
+        fwaves(1,1,k,j,i) += df(1);
+        fwaves(2,1,k,j,i) += df(2);
+        fwaves(3,1,k,j,i) += df(3);
+        fwaves(4,1,k,j,i) += df(4);
+      } else {
+        fwaves(0,0,k,j,i) += df(0);
+        fwaves(1,0,k,j,i) += df(1);
+        fwaves(2,0,k,j,i) += df(2);
+        fwaves(3,0,k,j,i) += df(3);
+        fwaves(4,0,k,j,i) += df(4);
+      }
+    });
 
     // Apply the fwaves to the tendencies
-    for (int l=0; l<numState; l++) {
-      for (int k=0; k<dom.nz; k++) {
-        for (int j=0; j<dom.ny; j++) {
-          for (int i=0; i<dom.nx; i++) {
-            tend(l,k,j,i) += - ( fwaves(l,1,k,j,i) + fwaves(l,0,k+1,j,i) ) / dom.dz;
-          }
-        }
-      }
-    }
+    // for (int l=0; l<numState; l++) {
+    //   for (int k=0; k<dom.nz; k++) {
+    //     for (int j=0; j<dom.ny; j++) {
+    //       for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( numState*dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int l, k, j, i;
+      unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
+      tend(l,k,j,i) += - ( fwaves(l,1,k,j,i) + fwaves(l,0,k+1,j,i) ) / dom.dz;
+    });
 
   }
 
