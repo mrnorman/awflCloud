@@ -212,7 +212,7 @@ public :
       }
 
       // Compute DTs of the state and flux, and collapse down into a time average
-      diffTransformEulerX( stateDTs , fluxDTs , aderDerivX );
+      diffTransformEulerConsX( stateDTs , fluxDTs , aderDerivX );
       timeAvg( stateDTs , dom );
       timeAvg( fluxDTs  , dom );
 
@@ -271,7 +271,7 @@ public :
       }
 
       // Compute DTs of the state and flux, and collapse down into a time average
-      diffTransformEulerY( stateDTs , fluxDTs , aderDerivY );
+      diffTransformEulerConsY( stateDTs , fluxDTs , aderDerivY );
       timeAvg( stateDTs , dom );
       timeAvg( fluxDTs  , dom );
 
@@ -339,7 +339,7 @@ public :
       if (k == dom.nz-1) { stateDTs(idRW,0,tord-1) = 0; }
 
       // Compute DTs of the state and flux, and collapse down into a time average
-      diffTransformEulerZ( stateDTs , fluxDTs , sourceDTs , aderDerivZ , hyRHOT, hyRHO );
+      diffTransformEulerConsZ( stateDTs , fluxDTs , sourceDTs , aderDerivZ , hyRHOT, hyRHO );
       timeAvg( stateDTs  , dom );
       timeAvg( fluxDTs   , dom );
       timeAvg( sourceDTs , dom );

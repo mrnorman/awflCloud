@@ -10,16 +10,19 @@
 #include "Exchange.h"
 #include "TendenciesThetaConsADER.h"
 #include "TendenciesThetaConsSD.h"
+#include "TendenciesThetaPrimADER.h"
 #include "TendenciesThetaPrimSD.h"
 
 class Tendencies {
   TendenciesThetaConsADER  tendenciesThetaConsADER;
   TendenciesThetaConsSD    tendenciesThetaConsSD  ;
+  TendenciesThetaPrimADER  tendenciesThetaPrimADER;
   TendenciesThetaPrimSD    tendenciesThetaPrimSD  ;
 
   int const useTendThetaConsADER = 1;
   int const useTendThetaConsSD   = 2;
-  int const useTendThetaPrimSD   = 3;
+  int const useTendThetaPrimADER = 3;
+  int const useTendThetaPrimSD   = 4;
 
   int useTend;
 
@@ -36,7 +39,10 @@ public :
         useTend = useTendThetaConsSD;
       }
     } else if (dom.eqnSet == EQN_THETA_PRIM) {
-      if (timeMethod == TIME_SSPRK3) {
+      if (timeMethod == TIME_ADER) {
+        tendenciesThetaPrimADER.initialize(dom);
+        useTend = useTendThetaPrimADER;
+      } else if (timeMethod == TIME_SSPRK3) {
         tendenciesThetaPrimSD.initialize(dom);
         useTend = useTendThetaPrimSD;
       }
@@ -49,6 +55,8 @@ public :
       tendenciesThetaConsADER.compEulerTend_X(state, dom, exch, par, tend);
     } else if (useTend == useTendThetaConsSD  ) {
       tendenciesThetaConsSD  .compEulerTend_X(state, dom, exch, par, tend);
+    } else if (useTend == useTendThetaPrimADER) {
+      tendenciesThetaPrimADER.compEulerTend_X(state, dom, exch, par, tend);
     } else if (useTend == useTendThetaPrimSD  ) {
       tendenciesThetaPrimSD  .compEulerTend_X(state, dom, exch, par, tend);
     }
@@ -60,6 +68,8 @@ public :
       tendenciesThetaConsADER.compEulerTend_Y(state, dom, exch, par, tend);
     } else if (useTend == useTendThetaConsSD  ) {
       tendenciesThetaConsSD  .compEulerTend_Y(state, dom, exch, par, tend);
+    } else if (useTend == useTendThetaPrimADER) {
+      tendenciesThetaPrimADER.compEulerTend_Y(state, dom, exch, par, tend);
     } else if (useTend == useTendThetaPrimSD  ) {
       tendenciesThetaPrimSD  .compEulerTend_Y(state, dom, exch, par, tend);
     }
@@ -71,6 +81,8 @@ public :
       tendenciesThetaConsADER.compEulerTend_Z(state, dom, exch, par, tend);
     } else if (useTend == useTendThetaConsSD  ) {
       tendenciesThetaConsSD  .compEulerTend_Z(state, dom, exch, par, tend);
+    } else if (useTend == useTendThetaPrimADER) {
+      tendenciesThetaPrimADER.compEulerTend_Z(state, dom, exch, par, tend);
     } else if (useTend == useTendThetaPrimSD  ) {
       tendenciesThetaPrimSD  .compEulerTend_Z(state, dom, exch, par, tend);
     }
@@ -82,6 +94,8 @@ public :
       tendenciesThetaConsADER.compEulerTend_S(state, dom, exch, par, tend);
     } else if (useTend == useTendThetaConsSD  ) {
       tendenciesThetaConsSD  .compEulerTend_S(state, dom, exch, par, tend);
+    } else if (useTend == useTendThetaPrimADER) {
+      tendenciesThetaPrimADER.compEulerTend_S(state, dom, exch, par, tend);
     } else if (useTend == useTendThetaPrimSD  ) {
       tendenciesThetaPrimSD  .compEulerTend_S(state, dom, exch, par, tend);
     }
@@ -93,6 +107,8 @@ public :
       tendenciesThetaConsADER.compStrakaTend(state, dom, exch, par, tend);
     } else if (useTend == useTendThetaConsSD  ) {
       tendenciesThetaConsSD  .compStrakaTend(state, dom, exch, par, tend);
+    } else if (useTend == useTendThetaPrimADER) {
+      tendenciesThetaPrimADER.compStrakaTend(state, dom, exch, par, tend);
     } else if (useTend == useTendThetaPrimSD  ) {
       tendenciesThetaPrimSD  .compStrakaTend(state, dom, exch, par, tend);
     }
