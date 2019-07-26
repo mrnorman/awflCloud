@@ -76,7 +76,16 @@ public :
 
 
   inline void compEulerTend_X(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
-
+    auto &stateLimits = this->stateLimits;
+    auto &fluxLimits  = this->fluxLimits ;
+    auto &flux        = this->flux       ;
+    auto &src         = this->src        ;
+    auto &stateGLL    = this->stateGLL   ;
+    auto &gllWts      = this->gllWts     ;
+    auto &to_gll      = this->to_gll     ;
+    auto &wenoRecon   = this->wenoRecon  ;
+    auto &wenoIdl     = this->wenoIdl    ;
+    auto &wenoSigma   = this->wenoSigma  ;
 
     //Exchange halos in the x-direction
     exch.haloInit      ();
@@ -85,90 +94,6 @@ public :
     exch.haloUnpackN_x (dom, state, numState);
 
     // Reconstruct to tord GLL points in the x-direction
-    reconSD_X(state, dom.hyDensCells, dom.hyDensThetaCells, dom, wenoRecon, to_gll, stateLimits, fluxLimits, wenoIdl, wenoSigma);
-
-    //Reconcile the edge fluxes via MPI exchange.
-    exch.haloInit      ();
-    exch.edgePackN_x   (dom, stateLimits, numState);
-    exch.edgePackN_x   (dom, fluxLimits , numState);
-    exch.edgeExchange_x(dom, par);
-    exch.edgeUnpackN_x (dom, stateLimits, numState);
-    exch.edgeUnpackN_x (dom, fluxLimits , numState);
-
-    // Riemann solver
-    computeFlux_X(stateLimits, fluxLimits, flux, dom);
-
-    // Form the tendencies
-    computeTend_X(flux, tend, dom);
-  }
-
-
-  inline void compEulerTend_Y(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
-
-    //Exchange halos in the y-direction
-    exch.haloInit      ();
-    exch.haloPackN_y   (dom, state, numState);
-    exch.haloExchange_y(dom, par);
-    exch.haloUnpackN_y (dom, state, numState);
-
-    // Reconstruct to tord GLL points in the y-direction
-    reconSD_Y(state, dom.hyDensCells, dom.hyDensThetaCells, dom, wenoRecon, to_gll, stateLimits, fluxLimits, wenoIdl, wenoSigma);
-
-    //Reconcile the edge fluxes via MPI exchange.
-    exch.haloInit      ();
-    exch.edgePackN_y   (dom, stateLimits, numState);
-    exch.edgePackN_y   (dom, fluxLimits , numState);
-    exch.edgeExchange_y(dom, par);
-    exch.edgeUnpackN_y (dom, stateLimits, numState);
-    exch.edgeUnpackN_y (dom, fluxLimits , numState);
-
-    // Riemann solver
-    computeFlux_Y(stateLimits, fluxLimits, flux, dom);
-
-    // Form the tendencies
-    computeTend_Y(flux, tend, dom);
-  }
-
-
-  inline void compEulerTend_Z(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
-
-    // Boundaries for the fluid state in the z-direction
-    stateBoundariesZ(state, dom);
-
-    // Reconstruct to tord GLL points in the x-direction
-    reconSD_Z(state, dom.hyDensGLL, dom.hyDensThetaGLL, dom, wenoRecon, to_gll, stateLimits, fluxLimits, wenoIdl, wenoSigma);
-
-    // Apply boundary conditions to fluxes and state values
-    edgeBoundariesZ(stateLimits, fluxLimits, dom);
-
-    // Riemann solver
-    computeFlux_Z(stateLimits, fluxLimits, flux, dom);
-
-    // Form the tendencies
-    computeTend_Z(flux, tend, src, dom);
-  }
-
-
-  inline void compEulerTend_S(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
-    // Form the tendencies
-    // for (int k=0; k<dom.nz; k++) {
-    //   for (int j=0; j<dom.ny; j++) {
-    //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
-      int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
-      tend(idR ,k,j,i) = 0;
-      tend(idRU,k,j,i) = 0;
-      tend(idRV,k,j,i) = 0;
-      tend(idRW,k,j,i) = -state(idR,hs+k,hs+j,hs+i) * GRAV;
-      tend(idRT,k,j,i) = 0;
-    });
-  }
-
-
-  inline void reconSD_X(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
-                        Domain const &dom, SArray<real,ord,ord,ord> const &wenoRecon, SArray<real,ord,tord> const &to_gll, 
-                        real5d &stateLimits, real5d &fluxLimits, SArray<real,hs+2> const &wenoIdl, real &wenoSigma) {
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
@@ -217,14 +142,69 @@ public :
         stateLimits(l,0,k,j,i+1) = gllState(l,tord-1);
         fluxLimits (l,0,k,j,i+1) = gllFlux (l,tord-1);
       }
+    });
 
+    //Reconcile the edge fluxes via MPI exchange.
+    exch.haloInit      ();
+    exch.edgePackN_x   (dom, stateLimits, numState);
+    exch.edgePackN_x   (dom, fluxLimits , numState);
+    exch.edgeExchange_x(dom, par);
+    exch.edgeUnpackN_x (dom, stateLimits, numState);
+    exch.edgeUnpackN_x (dom, fluxLimits , numState);
+
+    // Riemann solver
+    // for (int k=0; k<dom.nz; k++) {
+    //   for (int j=0; j<dom.ny; j++) {
+    //     for (int i=0; i<dom.nx+1; i++) {
+    Kokkos::parallel_for( dom.nz*dom.ny*(dom.nx+1) , KOKKOS_LAMBDA (int const iGlob) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx+1,k,j,i);
+      SArray<real,numState> s1, s2, f1, f2, upw;
+      for (int l=0; l<numState; l++) {
+        s1(l) = stateLimits(l,0,k,j,i);
+        s2(l) = stateLimits(l,1,k,j,i);
+        f1(l) = fluxLimits (l,0,k,j,i);
+        f2(l) = fluxLimits (l,1,k,j,i);
+      }
+      riemannX(s1, s2, f1, f2, upw);
+      for (int l=0; l<numState; l++) {
+        flux(l,k,j,i) = upw(l);
+        // flux(l,k,j,i) = 0.5_fp * ( f2(l) + f1(l) - dom.cfl*dom.dx/dom.dt * (s2(l) - s1(l)) );
+      }
+    });
+
+    // Form the tendencies
+    // for (int l=0; l<numState; l++) {
+    //   for (int k=0; k<dom.nz; k++) {
+    //     for (int j=0; j<dom.ny; j++) {
+    //       for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( numState*dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int l, k, j, i;
+      unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
+      tend(l,k,j,i) = - ( flux(l,k,j,i+1) - flux(l,k,j,i) ) / dom.dx;
     });
   }
 
 
-  inline void reconSD_Y(real4d &state, real1d const &hyDensCells, real1d const &hyDensThetaCells,
-                        Domain const &dom, SArray<real,ord,ord,ord> const &wenoRecon, SArray<real,ord,tord> const &to_gll, 
-                        real5d &stateLimits, real5d &fluxLimits, SArray<real,hs+2> const &wenoIdl, real &wenoSigma) {
+  inline void compEulerTend_Y(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+    auto &stateLimits = this->stateLimits;
+    auto &fluxLimits  = this->fluxLimits ;
+    auto &flux        = this->flux       ;
+    auto &src         = this->src        ;
+    auto &stateGLL    = this->stateGLL   ;
+    auto &gllWts      = this->gllWts     ;
+    auto &to_gll      = this->to_gll     ;
+    auto &wenoRecon   = this->wenoRecon  ;
+    auto &wenoIdl     = this->wenoIdl    ;
+    auto &wenoSigma   = this->wenoSigma  ;
+
+    //Exchange halos in the y-direction
+    exch.haloInit      ();
+    exch.haloPackN_y   (dom, state, numState);
+    exch.haloExchange_y(dom, par);
+    exch.haloUnpackN_y (dom, state, numState);
+
+    // Reconstruct to tord GLL points in the y-direction
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
@@ -243,8 +223,8 @@ public :
         for (int ii=0; ii<tord; ii++) { gllState(l,ii) = gllPts(ii); }
       }
       for (int ii=0; ii<tord; ii++) {
-        gllState(idR ,ii) += hyDensCells     (hs+k);
-        gllState(idRT,ii) += hyDensThetaCells(hs+k);
+        gllState(idR ,ii) += dom.hyDensCells     (hs+k);
+        gllState(idRT,ii) += dom.hyDensThetaCells(hs+k);
       }
 
       // Compute fluxes and at the GLL points
@@ -273,108 +253,17 @@ public :
         stateLimits(l,0,k,j+1,i) = gllState(l,tord-1);
         fluxLimits (l,0,k,j+1,i) = gllFlux (l,tord-1);
       }
-
     });
-  }
 
+    //Reconcile the edge fluxes via MPI exchange.
+    exch.haloInit      ();
+    exch.edgePackN_y   (dom, stateLimits, numState);
+    exch.edgePackN_y   (dom, fluxLimits , numState);
+    exch.edgeExchange_y(dom, par);
+    exch.edgeUnpackN_y (dom, stateLimits, numState);
+    exch.edgeUnpackN_y (dom, fluxLimits , numState);
 
-  inline void reconSD_Z(real4d &state, real2d const &hyDensGLL, real2d const &hyDensThetaGLL,
-                        Domain const &dom, SArray<real,ord,ord,ord> const &wenoRecon, SArray<real,ord,tord> const &to_gll, 
-                        real5d &stateLimits, real5d &fluxLimits, SArray<real,hs+2> const &wenoIdl, real &wenoSigma) {
-    // for (int k=0; k<dom.nz; k++) {
-    //   for (int j=0; j<dom.ny; j++) {
-    //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
-      int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
-      SArray<real,numState,tord> gllState;
-      SArray<real,numState,tord> gllFlux;
-
-      // Compute GLL points from cell averages
-      for (int l=0; l<numState; l++) {
-        SArray<real,ord> stencil;
-        SArray<real,tord> gllPts;
-        for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,k+ii,hs+j,hs+i); }
-        reconStencil(stencil, gllPts, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
-        for (int ii=0; ii<tord; ii++) { gllState(l,ii) = gllPts(ii); }
-      }
-      for (int ii=0; ii<tord; ii++) {
-        gllState(idR ,ii) += hyDensGLL     (k,ii);
-        gllState(idRT,ii) += hyDensThetaGLL(k,ii);
-      }
-
-      // Boundary conditions
-      if (k == 0       ) { gllState(idRW,0     ) = 0; }
-      if (k == dom.nz-1) { gllState(idRW,tord-1) = 0; }
-
-      // Compute fluxes and at the GLL points
-      for (int ii=0; ii<tord; ii++) {
-        real r = gllState(idR ,ii);
-        real u = gllState(idRU,ii) / r;
-        real v = gllState(idRV,ii) / r;
-        real w = gllState(idRW,ii) / r;
-        real t = gllState(idRT,ii) / r;
-        real p = C0 * pow( r*t , GAMMA );
-
-        gllFlux(idR ,ii) = r*w;
-        gllFlux(idRU,ii) = r*w*u;
-        gllFlux(idRV,ii) = r*w*v;
-        gllFlux(idRW,ii) = r*w*w + p - C0*pow(hyDensThetaGLL(k,ii),GAMMA);
-        gllFlux(idRT,ii) = r*w*t;
-      }
-
-      // Store state and flux limits into a globally indexed array
-      for (int l=0; l<numState; l++) {
-        // Store the left cell edge state and flux estimates
-        stateLimits(l,1,k  ,j,i) = gllState(l,0);
-        fluxLimits (l,1,k  ,j,i) = gllFlux (l,0);
-
-        // Store the Right cell edge state and flux estimates
-        stateLimits(l,0,k+1,j,i) = gllState(l,tord-1);
-        fluxLimits (l,0,k+1,j,i) = gllFlux (l,tord-1);
-      }
-
-    });
-  }
-
-
-  inline void computeFlux_X(real5d const &stateLimits, real5d const &fluxLimits, real4d &flux, Domain const &dom ) {
-    // for (int k=0; k<dom.nz; k++) {
-    //   for (int j=0; j<dom.ny; j++) {
-    //     for (int i=0; i<dom.nx+1; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*(dom.nx+1) , KOKKOS_LAMBDA (int const iGlob) {
-      int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx+1,k,j,i);
-      SArray<real,numState> s1, s2, f1, f2, upw;
-      for (int l=0; l<numState; l++) {
-        s1(l) = stateLimits(l,0,k,j,i);
-        s2(l) = stateLimits(l,1,k,j,i);
-        f1(l) = fluxLimits (l,0,k,j,i);
-        f2(l) = fluxLimits (l,1,k,j,i);
-      }
-      riemannX(s1, s2, f1, f2, upw);
-      for (int l=0; l<numState; l++) {
-        flux(l,k,j,i) = upw(l);
-        // flux(l,k,j,i) = 0.5_fp * ( f2(l) + f1(l) - dom.cfl*dom.dx/dom.dt * (s2(l) - s1(l)) );
-      }
-    });
-  }
-
-
-  inline void computeTend_X(real4d const &flux, real4d &tend, Domain const &dom) {
-    // for (int l=0; l<numState; l++) {
-    //   for (int k=0; k<dom.nz; k++) {
-    //     for (int j=0; j<dom.ny; j++) {
-    //       for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( numState*dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
-      int l, k, j, i;
-      unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
-      tend(l,k,j,i) = - ( flux(l,k,j,i+1) - flux(l,k,j,i) ) / dom.dx;
-    });
-  }
-
-
-  inline void computeFlux_Y(real5d const &stateLimits, real5d const &fluxLimits, real4d &flux, Domain const &dom ) {
+    // Riemann solver
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny+1; j++) {
     //     for (int i=0; i<dom.nx; i++) {
@@ -394,10 +283,8 @@ public :
         // flux(l,k,j,i) = 0.5_fp * ( f2(l) + f1(l) - dom.cfl*dom.dy/dom.dt * (s2(l) - s1(l)) );
       }
     });
-  }
 
-
-  inline void computeTend_Y(real4d const &flux, real4d &tend, Domain const &dom) {
+    // Form the tendencies
     // for (int l=0; l<numState; l++) {
     //   for (int k=0; k<dom.nz; k++) {
     //     for (int j=0; j<dom.ny; j++) {
@@ -410,7 +297,80 @@ public :
   }
 
 
-  inline void computeFlux_Z(real5d const &stateLimits, real5d const &fluxLimits, real4d &flux, Domain const &dom ) {
+  inline void compEulerTend_Z(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+    auto &stateLimits = this->stateLimits;
+    auto &fluxLimits  = this->fluxLimits ;
+    auto &flux        = this->flux       ;
+    auto &src         = this->src        ;
+    auto &stateGLL    = this->stateGLL   ;
+    auto &gllWts      = this->gllWts     ;
+    auto &to_gll      = this->to_gll     ;
+    auto &wenoRecon   = this->wenoRecon  ;
+    auto &wenoIdl     = this->wenoIdl    ;
+    auto &wenoSigma   = this->wenoSigma  ;
+
+    // Boundaries for the fluid state in the z-direction
+    stateBoundariesZ(state, dom);
+
+    // Reconstruct to tord GLL points in the x-direction
+    // for (int k=0; k<dom.nz; k++) {
+    //   for (int j=0; j<dom.ny; j++) {
+    //     for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      SArray<real,numState,tord> gllState;
+      SArray<real,numState,tord> gllFlux;
+
+      // Compute GLL points from cell averages
+      for (int l=0; l<numState; l++) {
+        SArray<real,ord> stencil;
+        SArray<real,tord> gllPts;
+        for (int ii=0; ii<ord; ii++) { stencil(ii) = state(l,k+ii,hs+j,hs+i); }
+        reconStencil(stencil, gllPts, dom.doWeno, wenoRecon, to_gll, wenoIdl, wenoSigma);
+        for (int ii=0; ii<tord; ii++) { gllState(l,ii) = gllPts(ii); }
+      }
+      for (int ii=0; ii<tord; ii++) {
+        gllState(idR ,ii) += dom.hyDensGLL     (k,ii);
+        gllState(idRT,ii) += dom.hyDensThetaGLL(k,ii);
+      }
+
+      // Boundary conditions
+      if (k == 0       ) { gllState(idRW,0     ) = 0; }
+      if (k == dom.nz-1) { gllState(idRW,tord-1) = 0; }
+
+      // Compute fluxes and at the GLL points
+      for (int ii=0; ii<tord; ii++) {
+        real r = gllState(idR ,ii);
+        real u = gllState(idRU,ii) / r;
+        real v = gllState(idRV,ii) / r;
+        real w = gllState(idRW,ii) / r;
+        real t = gllState(idRT,ii) / r;
+        real p = C0 * pow( r*t , GAMMA );
+
+        gllFlux(idR ,ii) = r*w;
+        gllFlux(idRU,ii) = r*w*u;
+        gllFlux(idRV,ii) = r*w*v;
+        gllFlux(idRW,ii) = r*w*w + p - C0*pow(dom.hyDensThetaGLL(k,ii),GAMMA);
+        gllFlux(idRT,ii) = r*w*t;
+      }
+
+      // Store state and flux limits into a globally indexed array
+      for (int l=0; l<numState; l++) {
+        // Store the left cell edge state and flux estimates
+        stateLimits(l,1,k  ,j,i) = gllState(l,0);
+        fluxLimits (l,1,k  ,j,i) = gllFlux (l,0);
+
+        // Store the Right cell edge state and flux estimates
+        stateLimits(l,0,k+1,j,i) = gllState(l,tord-1);
+        fluxLimits (l,0,k+1,j,i) = gllFlux (l,tord-1);
+      }
+    });
+
+    // Apply boundary conditions to fluxes and state values
+    edgeBoundariesZ(stateLimits, fluxLimits, dom);
+
+    // Riemann solver
     // for (int k=0; k<dom.nz+1; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
@@ -430,10 +390,8 @@ public :
         // flux(l,k,j,i) = 0.5_fp * ( f2(l) + f1(l) - dom.cfl*dom.dz/dom.dt * (s2(l) - s1(l)) );
       }
     });
-  }
 
-
-  inline void computeTend_Z(real4d const &flux, real4d &tend, real3d &src, Domain const &dom) {
+    // Form the tendencies
     // for (int l=0; l<numState; l++) {
     //   for (int k=0; k<dom.nz; k++) {
     //     for (int j=0; j<dom.ny; j++) {
@@ -445,6 +403,23 @@ public :
       if (l==idRW) {
         tend(l,k,j,i) += src(k,j,i);
       }
+    });
+  }
+
+
+  inline void compEulerTend_S(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+    // Form the tendencies
+    // for (int k=0; k<dom.nz; k++) {
+    //   for (int j=0; j<dom.ny; j++) {
+    //     for (int i=0; i<dom.nx; i++) {
+    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+      int k, j, i;
+      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      tend(idR ,k,j,i) = 0;
+      tend(idRU,k,j,i) = 0;
+      tend(idRV,k,j,i) = 0;
+      tend(idRW,k,j,i) = -state(idR,hs+k,hs+j,hs+i) * GRAV;
+      tend(idRT,k,j,i) = 0;
     });
   }
 
