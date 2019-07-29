@@ -93,15 +93,15 @@ public :
 
 
   inline void compEulerTend_X(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
-    auto stateLimits = this->stateLimits;
-    auto fwaves      = this->fwaves     ;
-    auto src         = this->src        ;
-    auto stateGLL    = this->stateGLL   ;
-    auto gllWts      = this->gllWts     ;
-    auto to_gll      = this->to_gll     ;
-    auto wenoRecon   = this->wenoRecon  ;
-    auto wenoIdl     = this->wenoIdl    ;
-    auto wenoSigma   = this->wenoSigma  ;
+    auto &stateLimits = this->stateLimits;
+    auto &fwaves      = this->fwaves     ;
+    auto &src         = this->src        ;
+    auto &stateGLL    = this->stateGLL   ;
+    auto &gllWts      = this->gllWts     ;
+    auto &to_gll      = this->to_gll     ;
+    auto &wenoRecon   = this->wenoRecon  ;
+    auto &wenoIdl     = this->wenoIdl    ;
+    auto &wenoSigma   = this->wenoSigma  ;
 
     // Exchange halos in the x-direction
     exch.haloInit      ();
@@ -248,15 +248,15 @@ public :
 
 
   inline void compEulerTend_Y(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
-    auto stateLimits = this->stateLimits;
-    auto fwaves      = this->fwaves     ;
-    auto src         = this->src        ;
-    auto stateGLL    = this->stateGLL   ;
-    auto gllWts      = this->gllWts     ;
-    auto to_gll      = this->to_gll     ;
-    auto wenoRecon   = this->wenoRecon  ;
-    auto wenoIdl     = this->wenoIdl    ;
-    auto wenoSigma   = this->wenoSigma  ;
+    auto &stateLimits = this->stateLimits;
+    auto &fwaves      = this->fwaves     ;
+    auto &src         = this->src        ;
+    auto &stateGLL    = this->stateGLL   ;
+    auto &gllWts      = this->gllWts     ;
+    auto &to_gll      = this->to_gll     ;
+    auto &wenoRecon   = this->wenoRecon  ;
+    auto &wenoIdl     = this->wenoIdl    ;
+    auto &wenoSigma   = this->wenoSigma  ;
 
     // Exchange halos in the y-direction
     exch.haloInit      ();
@@ -403,15 +403,15 @@ public :
 
 
   inline void compEulerTend_Z(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
-    auto stateLimits = this->stateLimits;
-    auto fwaves      = this->fwaves     ;
-    auto src         = this->src        ;
-    auto stateGLL    = this->stateGLL   ;
-    auto gllWts      = this->gllWts     ;
-    auto to_gll      = this->to_gll     ;
-    auto wenoRecon   = this->wenoRecon  ;
-    auto wenoIdl     = this->wenoIdl    ;
-    auto wenoSigma   = this->wenoSigma  ;
+    auto &stateLimits = this->stateLimits;
+    auto &fwaves      = this->fwaves     ;
+    auto &src         = this->src        ;
+    auto &stateGLL    = this->stateGLL   ;
+    auto &gllWts      = this->gllWts     ;
+    auto &to_gll      = this->to_gll     ;
+    auto &wenoRecon   = this->wenoRecon  ;
+    auto &wenoIdl     = this->wenoIdl    ;
+    auto &wenoSigma   = this->wenoSigma  ;
 
     // for (int l=0; l<numState; l++) {
     //   for (int k=0; k<dom.nz; k++) {
