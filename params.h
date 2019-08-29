@@ -2,8 +2,9 @@
 #ifndef _PARAMS_H_
 #define _PARAMS_H_
 
-int const TIME_ADER   = 1;
-int const TIME_SSPRK3 = 2;
+int const TIME_ADER     = 1;
+int const TIME_ADER_IMP = 2;
+int const TIME_SSPRK3   = 3;
 
 int const EQN_THETA_CONS = 1;
 int const EQN_THETA_PRIM = 2;
