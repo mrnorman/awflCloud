@@ -116,7 +116,7 @@ public :
     //   for (int k=0; k<dom.nz; k++) {
     //     for (int j=0; j<dom.ny; j++) {
     //       for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( numState*dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( numState*dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int l, k, j, i;
       unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
       state2(l,hs+k,hs+j,hs+i) = c0 * state0(l,hs+k,hs+j,hs+i) + c1 * state1(l,hs+k,hs+j,hs+i) + ct * dom.dt * tend(l,k,j,i);
@@ -129,7 +129,7 @@ public :
     //   for (int k=0; k<dom.nz; k++) {
     //     for (int j=0; j<dom.ny; j++) {
     //       for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( numState*dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( numState*dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int l, k, j, i;
       unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
       tend(l,k,j,i) += tendTmp(l,k,j,i);
@@ -140,7 +140,7 @@ public :
   inline void applyHeatingCooling(real4d &state, Parallel const &par, Domain const &dom) {
     // for (int j=0; j<dom.ny; j++) {
     //   for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int j, i;
       unpackIndices(iGlob,dom.ny,dom.nx,j,i);
       real xloc = (par.i_beg + i + 0.5_fp) * dom.dx;

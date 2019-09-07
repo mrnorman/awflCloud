@@ -125,7 +125,7 @@ public :
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA ( int const iGlob ) {
+    yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA ( int const iGlob ) {
       int k, j, i;
       unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       SArray<real,numState,tord> gllState;  // GLL state values
@@ -180,7 +180,7 @@ public :
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx+1; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*(dom.nx+1) , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.nz*dom.ny*(dom.nx+1) , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
       unpackIndices(iGlob,dom.nz,dom.ny,dom.nx+1,k,j,i);
       // Compute averaged values for the flux Jacobian diagonalization
@@ -251,7 +251,7 @@ public :
     //   for (int k=0; k<dom.nz; k++) {
     //     for (int j=0; j<dom.ny; j++) {
     //       for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( numState*dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( numState*dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int l, k, j, i;
       unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
       tend(l,k,j,i) += - ( fwaves(l,1,k,j,i) + fwaves(l,0,k,j,i+1) ) / dom.dx;
@@ -281,7 +281,7 @@ public :
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
       unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       SArray<real,numState,tord> gllState;  // GLL state values
@@ -336,7 +336,7 @@ public :
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny+1; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*(dom.ny+1)*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.nz*(dom.ny+1)*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
       unpackIndices(iGlob,dom.nz,dom.ny+1,dom.nx,k,j,i);
       // Compute averaged values for the flux Jacobian diagonalization
@@ -407,7 +407,7 @@ public :
     //   for (int k=0; k<dom.nz; k++) {
     //     for (int j=0; j<dom.ny; j++) {
     //       for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( numState*dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( numState*dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int l, k, j, i;
       unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
       tend(l,k,j,i) += - ( fwaves(l,1,k,j,i) + fwaves(l,0,k,j+1,i) ) / dom.dy;
@@ -431,7 +431,7 @@ public :
     //   for (int k=0; k<dom.nz; k++) {
     //     for (int j=0; j<dom.ny; j++) {
     //       for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( numState*dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( numState*dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int l, k, j, i;
       unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
       tend(l,k,j,i)  = 0;
@@ -448,7 +448,7 @@ public :
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
       unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       SArray<real,3,tord> gllState;  // GLL state values
@@ -499,7 +499,7 @@ public :
     // Enforce boundary conditions on the state limits
     // for (int j=0; j<dom.ny; j++) {
     //   for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int j, i;
       unpackIndices(iGlob,dom.ny,dom.nx,j,i);
       stateLimits(0,0,0     ,j,i) = stateLimits(0,1,0     ,j,i);
@@ -517,7 +517,7 @@ public :
     // for (int k=0; k<dom.nz+1; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( (dom.nz+1)*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( (dom.nz+1)*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
       unpackIndices(iGlob,dom.nz+1,dom.ny,dom.nx,k,j,i);
       // Compute averaged values for the flux Jacobian diagonalization
@@ -562,7 +562,7 @@ public :
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
       unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       tend(idR,k,j,i) += - ( fwaves(0,1,k,j,i) + fwaves(0,0,k+1,j,i) ) / dom.dz;
@@ -577,7 +577,7 @@ public :
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
       unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       SArray<real,numState,tord> gllState;  // GLL state values
@@ -621,7 +621,7 @@ public :
     // Enforce boundary conditions
     // for (int j=0; j<dom.ny; j++) {
     //   for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int j, i;
       unpackIndices(iGlob,dom.ny,dom.nx,j,i);
       stateLimits(idR,0,0     ,j,i) = stateLimits(idR,1,0     ,j,i);
@@ -643,7 +643,7 @@ public :
     // for (int k=0; k<dom.nz+1; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( (dom.nz+1)*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( (dom.nz+1)*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
       unpackIndices(iGlob,dom.nz+1,dom.ny,dom.nx,k,j,i);
       // Compute averaged values for the flux Jacobian diagonalization
@@ -689,7 +689,7 @@ public :
     //   for (int k=0; k<dom.nz; k++) {
     //     for (int j=0; j<dom.ny; j++) {
     //       for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( numState*dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( numState*dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int l, k, j, i;
       unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
       tend(l,k,j,i) += - ( fwaves(l,1,k,j,i) + fwaves(l,0,k+1,j,i) ) / dom.dz;
@@ -703,7 +703,7 @@ public :
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
       unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       tend(idR ,k,j,i) = 0;
@@ -719,7 +719,7 @@ public :
     // for (int j=0; j<dom.ny; j++) {
     //   for (int i=0; i<dom.nx; i++) {
     //     for (int ii=0; ii<hs; ii++) {
-    Kokkos::parallel_for( dom.ny*dom.nx*hs , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.ny*dom.nx*hs , YAKL_LAMBDA (int const iGlob) {
       int j, i, ii;
       unpackIndices(iGlob,dom.ny,dom.nx,hs,j,i,ii);
       state(idR ,ii,hs+j,hs+i) = state(idR ,hs,hs+j,hs+i);
@@ -740,7 +740,7 @@ public :
   inline void edgeBoundariesZ(real5d &stateLimits, real5d &fluxLimits, Domain const &dom) {
     // for (int j=0; j<dom.ny; j++) {
     //   for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int j, i;
       unpackIndices(iGlob,dom.ny,dom.nx,j,i);
       stateLimits(idR ,0,0     ,j,i) = stateLimits(idR ,1,0     ,j,i);
@@ -791,7 +791,7 @@ public :
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
       unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       real r = ( state(idR,hs+k,hs+j,hs+i) + dom.hyDensCells(hs+k) );

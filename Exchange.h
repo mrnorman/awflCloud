@@ -129,7 +129,7 @@ public:
     auto &haloSendBufW = this->haloSendBufW;
     auto &haloSendBufE = this->haloSendBufE;
     auto &nPack        = this->nPack       ;
-    Kokkos::parallel_for( n*dom.nz*dom.ny*hs , KOKKOS_LAMBDA (int iGlob) {
+    yakl::parallel_for( n*dom.nz*dom.ny*hs , YAKL_LAMBDA (int iGlob) {
       int v, k, j, ii;
       unpackIndices(iGlob,n,dom.nz,dom.ny,hs,v,k,j,ii);
       int nGlob = dom.nz*dom.ny*hs;
@@ -144,7 +144,7 @@ public:
     auto &haloSendBufS = this->haloSendBufS;
     auto &haloSendBufN = this->haloSendBufN;
     auto &nPack        = this->nPack       ;
-    Kokkos::parallel_for( n*dom.nz*hs*dom.nx , KOKKOS_LAMBDA (int iGlob) {
+    yakl::parallel_for( n*dom.nz*hs*dom.nx , YAKL_LAMBDA (int iGlob) {
       int v, k, ii, i;
       unpackIndices(iGlob,n,dom.nz,hs,dom.nx,v,k,ii,i);
       int nGlob = dom.nz*hs*dom.nx;
@@ -159,7 +159,7 @@ public:
     auto &haloRecvBufW = this->haloRecvBufW;
     auto &haloRecvBufE = this->haloRecvBufE;
     auto &nUnpack      = this->nUnpack     ;
-    Kokkos::parallel_for( n*dom.nz*dom.ny*hs , KOKKOS_LAMBDA (int iGlob) {
+    yakl::parallel_for( n*dom.nz*dom.ny*hs , YAKL_LAMBDA (int iGlob) {
       int v, k, j, ii;
       unpackIndices(iGlob,n,dom.nz,dom.ny,hs,v,k,j,ii);
       int nGlob = dom.nz*dom.ny*hs;
@@ -174,7 +174,7 @@ public:
     auto &haloRecvBufS = this->haloRecvBufS;
     auto &haloRecvBufN = this->haloRecvBufN;
     auto &nUnpack      = this->nUnpack     ;
-    Kokkos::parallel_for( n*dom.nz*hs*dom.nx , KOKKOS_LAMBDA (int iGlob) {
+    yakl::parallel_for( n*dom.nz*hs*dom.nx , YAKL_LAMBDA (int iGlob) {
       int v, k, ii, i;
       unpackIndices(iGlob,n,dom.nz,hs,dom.nx,v,k,ii,i);
       int nGlob = dom.nz*hs*dom.nx;
@@ -189,7 +189,7 @@ public:
     int ierr;
 
     if (par.nproc_x > 0) {
-      Kokkos::fence();
+      yakl::fence();
 
       //Pre-post the receives
       ierr = MPI_Irecv( haloRecvBufW_cpu , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,0) , 0 , MPI_COMM_WORLD , &rReq[0] );
@@ -220,7 +220,7 @@ public:
     }
   }
   inline void haloExchange_x_loc(Domain const &dom, real1d &haloSendBufW, real1d &haloSendBufE, real1d &haloRecvBufW, real1d &haloRecvBufE) {
-    Kokkos::parallel_for( nPack*dom.nz*dom.ny*hs , KOKKOS_LAMBDA (int iGlob) {
+    yakl::parallel_for( nPack*dom.nz*dom.ny*hs , YAKL_LAMBDA (int iGlob) {
       haloRecvBufW(iGlob) = haloSendBufE(iGlob);
       haloRecvBufE(iGlob) = haloSendBufW(iGlob);
     });
@@ -231,7 +231,7 @@ public:
     int ierr;
 
     if (par.nproc_y > 0) {
-      Kokkos::fence();
+      yakl::fence();
 
       //Pre-post the receives
       ierr = MPI_Irecv( haloRecvBufS_cpu , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(0,1) , 0 , MPI_COMM_WORLD , &rReq[0] );
@@ -262,7 +262,7 @@ public:
     }
   }
   inline void haloExchange_y_loc(Domain const &dom, real1d &haloSendBufS, real1d &haloSendBufN, real1d &haloRecvBufS, real1d &haloRecvBufN) {
-    Kokkos::parallel_for( nPack*dom.nz*hs*dom.nx , KOKKOS_LAMBDA (int iGlob) {
+    yakl::parallel_for( nPack*dom.nz*hs*dom.nx , YAKL_LAMBDA (int iGlob) {
       haloRecvBufS(iGlob) = haloSendBufN(iGlob);
       haloRecvBufN(iGlob) = haloSendBufS(iGlob);
     });
@@ -276,7 +276,7 @@ public:
     // for (int v=0; v<n; v++) {
     //   for (int k=0; k<dom.nz; k++) {
     //     for (int j=0; j<dom.ny; j++) {
-    Kokkos::parallel_for( n*dom.nz*dom.ny , KOKKOS_LAMBDA (int iGlob) {
+    yakl::parallel_for( n*dom.nz*dom.ny , YAKL_LAMBDA (int iGlob) {
       int v, k, j;
       unpackIndices(iGlob,n,dom.nz,dom.ny,v,k,j);
       int nGlob = dom.nz*dom.ny;
@@ -294,7 +294,7 @@ public:
     // for (int v=0; v<n; v++) {
     //   for (int k=0; k<dom.nz; k++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( n*dom.nz*dom.nx , KOKKOS_LAMBDA (int iGlob) {
+    yakl::parallel_for( n*dom.nz*dom.nx , YAKL_LAMBDA (int iGlob) {
       int v, k, i;
       unpackIndices(iGlob,n,dom.nz,dom.nx,v,k,i);
       int nGlob = dom.nz*dom.nx;
@@ -312,7 +312,7 @@ public:
     // for (int v=0; v<n; v++) {
     //   for (int k=0; k<dom.nz; k++) {
     //     for (int j=0; j<dom.ny; j++) {
-    Kokkos::parallel_for( n*dom.nz*dom.ny , KOKKOS_LAMBDA (int iGlob) {
+    yakl::parallel_for( n*dom.nz*dom.ny , YAKL_LAMBDA (int iGlob) {
       int v, k, j;
       unpackIndices(iGlob,n,dom.nz,dom.ny,v,k,j);
       int nGlob = dom.nz*dom.ny;
@@ -330,7 +330,7 @@ public:
     // for (int v=0; v<n; v++) {
     //   for (int k=0; k<dom.nz; k++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( n*dom.nz*dom.nx , KOKKOS_LAMBDA (int iGlob) {
+    yakl::parallel_for( n*dom.nz*dom.nx , YAKL_LAMBDA (int iGlob) {
       int v, k, i;
       unpackIndices(iGlob,n,dom.nz,dom.nx,v,k,i);
       int nGlob = dom.nz*dom.nx;
@@ -345,7 +345,7 @@ public:
     int ierr;
 
     if (par.nproc_x > 0) {
-      Kokkos::fence();
+      yakl::fence();
 
       //Pre-post the receives
       ierr = MPI_Irecv( edgeRecvBufW_cpu , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,0) , 0 , MPI_COMM_WORLD , &rReq[0] );
@@ -376,7 +376,7 @@ public:
     }
   }
   inline void edgeExchange_x_loc(Domain const &dom, real1d &edgeSendBufW, real1d &edgeSendBufE, real1d &edgeRecvBufW, real1d &edgeRecvBufE) {
-    Kokkos::parallel_for( nPack*dom.nz*dom.ny , KOKKOS_LAMBDA (int iGlob) {
+    yakl::parallel_for( nPack*dom.nz*dom.ny , YAKL_LAMBDA (int iGlob) {
       edgeRecvBufW(iGlob) = edgeSendBufE(iGlob);
       edgeRecvBufE(iGlob) = edgeSendBufW(iGlob);
     });
@@ -387,7 +387,7 @@ public:
     int ierr;
 
     if (par.nproc_y > 0) {
-      Kokkos::fence();
+      yakl::fence();
 
       //Pre-post the receives
       ierr = MPI_Irecv( edgeRecvBufS_cpu , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(0,1) , 0 , MPI_COMM_WORLD , &rReq[0] );
@@ -418,7 +418,7 @@ public:
     }
   }
   inline void edgeExchange_y_loc(Domain const &dom, real1d &edgeSendBufS, real1d &edgeSendBufN, real1d &edgeRecvBufS, real1d &edgeRecvBufN) {
-    Kokkos::parallel_for( nPack*dom.nz*dom.nx, KOKKOS_LAMBDA (int iGlob) {
+    yakl::parallel_for( nPack*dom.nz*dom.nx, YAKL_LAMBDA (int iGlob) {
       edgeRecvBufS(iGlob) = edgeSendBufN(iGlob);
       edgeRecvBufN(iGlob) = edgeSendBufS(iGlob);
     });

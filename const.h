@@ -3,26 +3,26 @@
 #define _CONST_H_
 
 #include <cmath>
-#include <Kokkos_Core.hpp>
+#include "Array.h"
 
 typedef float         real;
 typedef unsigned long ulong;
 typedef unsigned int  uint;
 
 #ifdef __NVCC__
-  typedef Kokkos::View<real*     ,Kokkos::LayoutRight,Kokkos::Device<Kokkos::Cuda,Kokkos::CudaSpace>> real1d;
-  typedef Kokkos::View<real**    ,Kokkos::LayoutRight,Kokkos::Device<Kokkos::Cuda,Kokkos::CudaSpace>> real2d;
-  typedef Kokkos::View<real***   ,Kokkos::LayoutRight,Kokkos::Device<Kokkos::Cuda,Kokkos::CudaSpace>> real3d;
-  typedef Kokkos::View<real****  ,Kokkos::LayoutRight,Kokkos::Device<Kokkos::Cuda,Kokkos::CudaSpace>> real4d;
-  typedef Kokkos::View<real***** ,Kokkos::LayoutRight,Kokkos::Device<Kokkos::Cuda,Kokkos::CudaSpace>> real5d;
-  typedef Kokkos::View<real******,Kokkos::LayoutRight,Kokkos::Device<Kokkos::Cuda,Kokkos::CudaSpace>> real6d;
+  typedef Array<real> real1d;
+  typedef Array<real> real2d;
+  typedef Array<real> real3d;
+  typedef Array<real> real4d;
+  typedef Array<real> real5d;
+  typedef Array<real> real6d;
 #else
-  typedef Kokkos::View<real*     ,Kokkos::LayoutRight> real1d;
-  typedef Kokkos::View<real**    ,Kokkos::LayoutRight> real2d;
-  typedef Kokkos::View<real***   ,Kokkos::LayoutRight> real3d;
-  typedef Kokkos::View<real****  ,Kokkos::LayoutRight> real4d;
-  typedef Kokkos::View<real***** ,Kokkos::LayoutRight> real5d;
-  typedef Kokkos::View<real******,Kokkos::LayoutRight> real6d;
+  typedef Array<real> real1d;
+  typedef Array<real> real2d;
+  typedef Array<real> real3d;
+  typedef Array<real> real4d;
+  typedef Array<real> real5d;
+  typedef Array<real> real6d;
 #endif
 
 #ifdef __NVCC__
