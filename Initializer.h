@@ -29,7 +29,7 @@ public:
     }
   }
 
-  void initialize(real4d &state, Domain &dom, Parallel &par, Exchange &exch, TimeIntegrator &tint) {
+  void initialize(realArr &state, Domain &dom, Parallel &par, Exchange &exch, TimeIntegrator &tint) {
     int ierr;
     SArray<real,ord> gllOrdPoints;
     SArray<real,ord> gllOrdWeights;
@@ -112,17 +112,17 @@ public:
     exch.allocate(dom);
 
     // Allocate the fluid state variable
-    state = real4d( "state" , numState , dom.nz+2*hs , dom.ny+2*hs , dom.nx+2*hs );
+    state = realArr( "state" , numState , dom.nz+2*hs , dom.ny+2*hs , dom.nx+2*hs );
 
-    dom.hyDensCells      = real1d( "hyCellsR"  , dom.nz+2*hs );
-    dom.hyDensThetaCells = real1d( "hyCellsRT" , dom.nz+2*hs );
-    dom.hyThetaCells     = real1d( "hyCellsT"  , dom.nz+2*hs );
-    dom.hyPressureCells  = real1d( "hyCellsp"  , dom.nz+2*hs );
+    dom.hyDensCells      = realArr( "hyCellsR"  , dom.nz+2*hs );
+    dom.hyDensThetaCells = realArr( "hyCellsRT" , dom.nz+2*hs );
+    dom.hyThetaCells     = realArr( "hyCellsT"  , dom.nz+2*hs );
+    dom.hyPressureCells  = realArr( "hyCellsp"  , dom.nz+2*hs );
 
-    dom.hyDensGLL      = real2d( "hyGLLR"  , dom.nz , tord );
-    dom.hyDensThetaGLL = real2d( "hyGLLRT" , dom.nz , tord );
-    dom.hyThetaGLL     = real2d( "hyGLLT"  , dom.nz , tord );
-    dom.hyPressureGLL  = real2d( "hyGLLp"  , dom.nz , tord );
+    dom.hyDensGLL      = realArr( "hyGLLR"  , dom.nz , tord );
+    dom.hyDensThetaGLL = realArr( "hyGLLRT" , dom.nz , tord );
+    dom.hyThetaGLL     = realArr( "hyGLLT"  , dom.nz , tord );
+    dom.hyPressureGLL  = realArr( "hyGLLp"  , dom.nz , tord );
 
     // Initialize the hydrostatic background state for cell averages
     // for (int k=0; k<dom.nz; k++) {
@@ -236,7 +236,7 @@ public:
       }
     });
 
-    real3d dt3d("dt3d",dom.nz,dom.ny,dom.nx);
+    realArr dt3d("dt3d",dom.nz,dom.ny,dom.nx);
     // Compute the time step based on the CFL value
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {

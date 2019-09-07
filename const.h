@@ -9,21 +9,7 @@ typedef float         real;
 typedef unsigned long ulong;
 typedef unsigned int  uint;
 
-#ifdef __NVCC__
-  typedef Array<real> real1d;
-  typedef Array<real> real2d;
-  typedef Array<real> real3d;
-  typedef Array<real> real4d;
-  typedef Array<real> real5d;
-  typedef Array<real> real6d;
-#else
-  typedef Array<real> real1d;
-  typedef Array<real> real2d;
-  typedef Array<real> real3d;
-  typedef Array<real> real4d;
-  typedef Array<real> real5d;
-  typedef Array<real> real6d;
-#endif
+typedef Array<real> realArr;
 
 #ifdef __NVCC__
 #define _HOSTDEV __host__ __device__

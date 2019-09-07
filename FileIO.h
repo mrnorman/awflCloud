@@ -19,12 +19,12 @@ protected:
 
 public:
 
-  void outputInit(real4d &state, Domain const &dom, Parallel const &par) {
+  void outputInit(realArr &state, Domain const &dom, Parallel const &par) {
     int dimids[4];
     MPI_Offset st[1], ct[1];
-    real1d xCoord("xCoord",dom.nx);
-    real1d yCoord("yCoord",dom.ny);
-    real1d zCoord("zCoord",dom.nz);
+    realArr xCoord("xCoord",dom.nx);
+    realArr yCoord("yCoord",dom.ny);
+    realArr zCoord("zCoord",dom.nz);
     real *xCoord_cpu;
     real *yCoord_cpu;
     real *zCoord_cpu;
@@ -168,7 +168,7 @@ public:
   }
 
 
-  void output(real4d &state, Domain const &dom, Parallel const &par) {
+  void output(realArr &state, Domain const &dom, Parallel const &par) {
     int dimids[4];
     MPI_Offset st[1], ct[1];
 
@@ -196,7 +196,7 @@ public:
   }
 
 
-  void writeState(real4d &state, Domain const &dom, Parallel const &par) {
+  void writeState(realArr &state, Domain const &dom, Parallel const &par) {
     if        (dom.eqnSet == EQN_THETA_CONS) {
       writeStateThetaCons(state, dom, par);
     } else if (dom.eqnSet == EQN_THETA_PRIM) {
@@ -205,9 +205,9 @@ public:
   }
 
 
-  void writeStateThetaPrim(real4d &state, Domain const &dom, Parallel const &par) {
+  void writeStateThetaPrim(realArr &state, Domain const &dom, Parallel const &par) {
     MPI_Offset st[4], ct[4];
-    real1d data("data",dom.nz*dom.ny*dom.nx);
+    realArr data("data",dom.nz*dom.ny*dom.nx);
     real *data_cpu;
 
     #ifdef __NVCC__
@@ -328,9 +328,9 @@ public:
   }
 
 
-  void writeStateThetaCons(real4d &state, Domain const &dom, Parallel const &par) {
+  void writeStateThetaCons(realArr &state, Domain const &dom, Parallel const &par) {
     MPI_Offset st[4], ct[4];
-    real1d data("data",dom.nz*dom.ny*dom.nx);
+    realArr data("data",dom.nz*dom.ny*dom.nx);
     real *data_cpu;
 
     #ifdef __NVCC__

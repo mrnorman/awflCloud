@@ -21,23 +21,23 @@ protected:
   int nPack;
   int nUnpack;
 
-  real1d haloSendBufS;
-  real1d haloSendBufN;
-  real1d haloSendBufW;
-  real1d haloSendBufE;
-  real1d haloRecvBufS;
-  real1d haloRecvBufN;
-  real1d haloRecvBufW;
-  real1d haloRecvBufE;
+  realArr haloSendBufS;
+  realArr haloSendBufN;
+  realArr haloSendBufW;
+  realArr haloSendBufE;
+  realArr haloRecvBufS;
+  realArr haloRecvBufN;
+  realArr haloRecvBufW;
+  realArr haloRecvBufE;
 
-  real1d edgeRecvBufE;
-  real1d edgeRecvBufW;
-  real1d edgeSendBufE;
-  real1d edgeSendBufW;
-  real1d edgeRecvBufN;
-  real1d edgeRecvBufS;
-  real1d edgeSendBufN;
-  real1d edgeSendBufS;
+  realArr edgeRecvBufE;
+  realArr edgeRecvBufW;
+  realArr edgeSendBufE;
+  realArr edgeSendBufW;
+  realArr edgeRecvBufN;
+  realArr edgeRecvBufS;
+  realArr edgeSendBufN;
+  realArr edgeSendBufS;
 
   real *haloSendBufS_cpu;
   real *haloSendBufN_cpu;
@@ -61,23 +61,23 @@ public:
 
 
   inline void allocate(Domain &dom) {
-    haloSendBufS = real1d("haloSendBufS",maxPack*dom.nz*hs*dom.nx);
-    haloSendBufN = real1d("haloSendBufN",maxPack*dom.nz*hs*dom.nx);
-    haloSendBufW = real1d("haloSendBufW",maxPack*dom.nz*dom.ny*hs);
-    haloSendBufE = real1d("haloSendBufE",maxPack*dom.nz*dom.ny*hs);
-    haloRecvBufS = real1d("haloRecvBufS",maxPack*dom.nz*hs*dom.nx);
-    haloRecvBufN = real1d("haloRecvBufN",maxPack*dom.nz*hs*dom.nx);
-    haloRecvBufW = real1d("haloRecvBufW",maxPack*dom.nz*dom.ny*hs);
-    haloRecvBufE = real1d("haloRecvBufE",maxPack*dom.nz*dom.ny*hs);
+    haloSendBufS = realArr("haloSendBufS",maxPack*dom.nz*hs*dom.nx);
+    haloSendBufN = realArr("haloSendBufN",maxPack*dom.nz*hs*dom.nx);
+    haloSendBufW = realArr("haloSendBufW",maxPack*dom.nz*dom.ny*hs);
+    haloSendBufE = realArr("haloSendBufE",maxPack*dom.nz*dom.ny*hs);
+    haloRecvBufS = realArr("haloRecvBufS",maxPack*dom.nz*hs*dom.nx);
+    haloRecvBufN = realArr("haloRecvBufN",maxPack*dom.nz*hs*dom.nx);
+    haloRecvBufW = realArr("haloRecvBufW",maxPack*dom.nz*dom.ny*hs);
+    haloRecvBufE = realArr("haloRecvBufE",maxPack*dom.nz*dom.ny*hs);
 
-    edgeSendBufS = real1d("edgeSendBufS",maxPack*dom.nz*dom.nx);
-    edgeSendBufN = real1d("edgeSendBufN",maxPack*dom.nz*dom.nx);
-    edgeSendBufW = real1d("edgeSendBufW",maxPack*dom.nz*dom.ny);
-    edgeSendBufE = real1d("edgeSendBufE",maxPack*dom.nz*dom.ny);
-    edgeRecvBufS = real1d("edgeRecvBufS",maxPack*dom.nz*dom.nx);
-    edgeRecvBufN = real1d("edgeRecvBufN",maxPack*dom.nz*dom.nx);
-    edgeRecvBufW = real1d("edgeRecvBufW",maxPack*dom.nz*dom.ny);
-    edgeRecvBufE = real1d("edgeRecvBufE",maxPack*dom.nz*dom.ny);
+    edgeSendBufS = realArr("edgeSendBufS",maxPack*dom.nz*dom.nx);
+    edgeSendBufN = realArr("edgeSendBufN",maxPack*dom.nz*dom.nx);
+    edgeSendBufW = realArr("edgeSendBufW",maxPack*dom.nz*dom.ny);
+    edgeSendBufE = realArr("edgeSendBufE",maxPack*dom.nz*dom.ny);
+    edgeRecvBufS = realArr("edgeRecvBufS",maxPack*dom.nz*dom.nx);
+    edgeRecvBufN = realArr("edgeRecvBufN",maxPack*dom.nz*dom.nx);
+    edgeRecvBufW = realArr("edgeRecvBufW",maxPack*dom.nz*dom.ny);
+    edgeRecvBufE = realArr("edgeRecvBufE",maxPack*dom.nz*dom.ny);
 
     #ifdef __NVCC__
       cudaMallocHost( &haloSendBufS_cpu , maxPack*dom.nz*hs*dom.nx*sizeof(real) );
@@ -125,7 +125,7 @@ public:
   }
 
 
-  inline void haloPackN_x(Domain const &dom, real4d const &a, int const n) {
+  inline void haloPackN_x(Domain const &dom, realArr const &a, int const n) {
     auto &haloSendBufW = this->haloSendBufW;
     auto &haloSendBufE = this->haloSendBufE;
     auto &nPack        = this->nPack       ;
@@ -140,7 +140,7 @@ public:
   }
 
 
-  inline void haloPackN_y(Domain const &dom, real4d const &a, int const n) {
+  inline void haloPackN_y(Domain const &dom, realArr const &a, int const n) {
     auto &haloSendBufS = this->haloSendBufS;
     auto &haloSendBufN = this->haloSendBufN;
     auto &nPack        = this->nPack       ;
@@ -155,7 +155,7 @@ public:
   }
 
 
-  inline void haloUnpackN_x(Domain const &dom, real4d &a, int const n) {
+  inline void haloUnpackN_x(Domain const &dom, realArr &a, int const n) {
     auto &haloRecvBufW = this->haloRecvBufW;
     auto &haloRecvBufE = this->haloRecvBufE;
     auto &nUnpack      = this->nUnpack     ;
@@ -170,7 +170,7 @@ public:
   }
 
 
-  inline void haloUnpackN_y(Domain const &dom, real4d &a, int const n) {
+  inline void haloUnpackN_y(Domain const &dom, realArr &a, int const n) {
     auto &haloRecvBufS = this->haloRecvBufS;
     auto &haloRecvBufN = this->haloRecvBufN;
     auto &nUnpack      = this->nUnpack     ;
@@ -219,7 +219,7 @@ public:
       haloExchange_x_loc(dom, haloSendBufW, haloSendBufE, haloRecvBufW, haloRecvBufE);
     }
   }
-  inline void haloExchange_x_loc(Domain const &dom, real1d &haloSendBufW, real1d &haloSendBufE, real1d &haloRecvBufW, real1d &haloRecvBufE) {
+  inline void haloExchange_x_loc(Domain const &dom, realArr &haloSendBufW, realArr &haloSendBufE, realArr &haloRecvBufW, realArr &haloRecvBufE) {
     yakl::parallel_for( nPack*dom.nz*dom.ny*hs , YAKL_LAMBDA (int iGlob) {
       haloRecvBufW(iGlob) = haloSendBufE(iGlob);
       haloRecvBufE(iGlob) = haloSendBufW(iGlob);
@@ -261,7 +261,7 @@ public:
       haloExchange_y_loc(dom, haloSendBufS, haloSendBufN, haloRecvBufS, haloRecvBufN);
     }
   }
-  inline void haloExchange_y_loc(Domain const &dom, real1d &haloSendBufS, real1d &haloSendBufN, real1d &haloRecvBufS, real1d &haloRecvBufN) {
+  inline void haloExchange_y_loc(Domain const &dom, realArr &haloSendBufS, realArr &haloSendBufN, realArr &haloRecvBufS, realArr &haloRecvBufN) {
     yakl::parallel_for( nPack*dom.nz*hs*dom.nx , YAKL_LAMBDA (int iGlob) {
       haloRecvBufS(iGlob) = haloSendBufN(iGlob);
       haloRecvBufN(iGlob) = haloSendBufS(iGlob);
@@ -269,7 +269,7 @@ public:
   }
 
 
-  inline void edgePackN_x(Domain const &dom, real5d const &a, int const n) {
+  inline void edgePackN_x(Domain const &dom, realArr const &a, int const n) {
     auto &edgeSendBufW = this->edgeSendBufW;
     auto &edgeSendBufE = this->edgeSendBufE;
     auto &nPack        = this->nPack       ;
@@ -287,7 +287,7 @@ public:
   }
 
 
-  inline void edgePackN_y(Domain const &dom, real5d const &a, int const n) {
+  inline void edgePackN_y(Domain const &dom, realArr const &a, int const n) {
     auto &edgeSendBufS = this->edgeSendBufS;
     auto &edgeSendBufN = this->edgeSendBufN;
     auto &nPack        = this->nPack       ;
@@ -305,7 +305,7 @@ public:
   }
 
 
-  inline void edgeUnpackN_x(Domain const &dom, real5d &a, int const n) {
+  inline void edgeUnpackN_x(Domain const &dom, realArr &a, int const n) {
     auto &edgeRecvBufW = this->edgeRecvBufW;
     auto &edgeRecvBufE = this->edgeRecvBufE;
     auto &nUnpack      = this->nUnpack     ;
@@ -323,7 +323,7 @@ public:
   }
 
 
-  inline void edgeUnpackN_y(Domain const &dom, real5d &a, int const n) {
+  inline void edgeUnpackN_y(Domain const &dom, realArr &a, int const n) {
     auto &edgeRecvBufS = this->edgeRecvBufS;
     auto &edgeRecvBufN = this->edgeRecvBufN;
     auto &nUnpack      = this->nUnpack     ;
@@ -375,7 +375,7 @@ public:
       edgeExchange_x_loc(dom, edgeSendBufW, edgeSendBufE, edgeRecvBufW, edgeRecvBufE);
     }
   }
-  inline void edgeExchange_x_loc(Domain const &dom, real1d &edgeSendBufW, real1d &edgeSendBufE, real1d &edgeRecvBufW, real1d &edgeRecvBufE) {
+  inline void edgeExchange_x_loc(Domain const &dom, realArr &edgeSendBufW, realArr &edgeSendBufE, realArr &edgeRecvBufW, realArr &edgeRecvBufE) {
     yakl::parallel_for( nPack*dom.nz*dom.ny , YAKL_LAMBDA (int iGlob) {
       edgeRecvBufW(iGlob) = edgeSendBufE(iGlob);
       edgeRecvBufE(iGlob) = edgeSendBufW(iGlob);
@@ -417,7 +417,7 @@ public:
       edgeExchange_y_loc(dom, edgeSendBufS, edgeSendBufN, edgeRecvBufS, edgeRecvBufN);
     }
   }
-  inline void edgeExchange_y_loc(Domain const &dom, real1d &edgeSendBufS, real1d &edgeSendBufN, real1d &edgeRecvBufS, real1d &edgeRecvBufN) {
+  inline void edgeExchange_y_loc(Domain const &dom, realArr &edgeSendBufS, realArr &edgeSendBufN, realArr &edgeRecvBufS, realArr &edgeRecvBufN) {
     yakl::parallel_for( nPack*dom.nz*dom.nx, YAKL_LAMBDA (int iGlob) {
       edgeRecvBufS(iGlob) = edgeSendBufN(iGlob);
       edgeRecvBufN(iGlob) = edgeSendBufS(iGlob);

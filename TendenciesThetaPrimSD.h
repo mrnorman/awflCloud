@@ -14,10 +14,10 @@
 
 class TendenciesThetaPrimSD {
 
-  real5d stateLimits;
-  real5d fwaves;
-  real3d src;
-  real5d stateGLL;
+  realArr stateLimits;
+  realArr fwaves;
+  realArr src;
+  realArr stateGLL;
   SArray<real,tord> gllWts;
   SArray<real,ord,tord> to_gll;
   SArray<real,ord,tord> to_derivX_gll;
@@ -33,10 +33,10 @@ public :
   inline void initialize(Domain const &dom) {
     TransformMatrices<real> trans;
 
-    stateLimits = real5d("srcLimits" ,numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
-    fwaves      = real5d("fwaves"    ,numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
-    src         = real3d("src"       ,dom.nz,dom.ny,dom.nx);
-    stateGLL    = real5d("stateGLL"  ,numState,dom.nz,dom.ny,dom.nx,tord);
+    stateLimits = realArr("srcLimits" ,numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
+    fwaves      = realArr("fwaves"    ,numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
+    src         = realArr("src"       ,dom.nz,dom.ny,dom.nx);
+    stateGLL    = realArr("stateGLL"  ,numState,dom.nz,dom.ny,dom.nx,tord);
 
     // Setup the matrix to transform a stenicl (or coefs) into tord derivative GLL points
     SArray<real,ord,ord> s2c_ho;
@@ -92,7 +92,7 @@ public :
   }
 
 
-  inline void compEulerTend_X(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+  inline void compEulerTend_X(realArr &state, Domain const &dom, Exchange &exch, Parallel const &par, realArr &tend) {
     auto &stateLimits = this->stateLimits;
     auto &fwaves      = this->fwaves     ;
     auto &src         = this->src        ;
@@ -247,7 +247,7 @@ public :
   }
 
 
-  inline void compEulerTend_Y(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+  inline void compEulerTend_Y(realArr &state, Domain const &dom, Exchange &exch, Parallel const &par, realArr &tend) {
     auto &stateLimits = this->stateLimits;
     auto &fwaves      = this->fwaves     ;
     auto &src         = this->src        ;
@@ -402,7 +402,7 @@ public :
   }
 
 
-  inline void compEulerTend_Z(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+  inline void compEulerTend_Z(realArr &state, Domain const &dom, Exchange &exch, Parallel const &par, realArr &tend) {
     auto &stateLimits = this->stateLimits;
     auto &fwaves      = this->fwaves     ;
     auto &src         = this->src        ;
@@ -684,7 +684,7 @@ public :
   }
 
 
-  inline void compEulerTend_S(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+  inline void compEulerTend_S(realArr &state, Domain const &dom, Exchange &exch, Parallel const &par, realArr &tend) {
     // Form the tendencies
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
@@ -701,7 +701,7 @@ public :
   }
 
 
-  inline void stateBoundariesZ(real4d &state, Domain const &dom) {
+  inline void stateBoundariesZ(realArr &state, Domain const &dom) {
     // for (int j=0; j<dom.ny; j++) {
     //   for (int i=0; i<dom.nx; i++) {
     //     for (int ii=0; ii<hs; ii++) {
@@ -723,7 +723,7 @@ public :
   }
 
 
-  inline void edgeBoundariesZ(real5d &stateLimits, real5d &fluxLimits, Domain const &dom) {
+  inline void edgeBoundariesZ(realArr &stateLimits, realArr &fluxLimits, Domain const &dom) {
     // for (int j=0; j<dom.ny; j++) {
     //   for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
@@ -758,7 +758,7 @@ public :
   }
 
 
-  inline void compStrakaTend(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+  inline void compStrakaTend(realArr &state, Domain const &dom, Exchange &exch, Parallel const &par, realArr &tend) {
     //Exchange halos in the x-direction
     exch.haloInit      ();
     exch.haloPackN_x   (dom, state, numState);

@@ -50,7 +50,7 @@ public :
   }
 
 
-  inline void compEulerTend_X(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+  inline void compEulerTend_X(realArr &state, Domain const &dom, Exchange &exch, Parallel const &par, realArr &tend) {
     if        (useTend == useTendThetaConsADER) {
       tendenciesThetaConsADER.compEulerTend_X(state, dom, exch, par, tend);
     } else if (useTend == useTendThetaConsSD  ) {
@@ -63,7 +63,7 @@ public :
   }
 
 
-  inline void compEulerTend_Y(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+  inline void compEulerTend_Y(realArr &state, Domain const &dom, Exchange &exch, Parallel const &par, realArr &tend) {
     if        (useTend == useTendThetaConsADER) {
       tendenciesThetaConsADER.compEulerTend_Y(state, dom, exch, par, tend);
     } else if (useTend == useTendThetaConsSD  ) {
@@ -76,7 +76,7 @@ public :
   }
 
 
-  inline void compEulerTend_Z(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+  inline void compEulerTend_Z(realArr &state, Domain const &dom, Exchange &exch, Parallel const &par, realArr &tend) {
     if        (useTend == useTendThetaConsADER) {
       tendenciesThetaConsADER.compEulerTend_Z(state, dom, exch, par, tend);
     } else if (useTend == useTendThetaConsSD  ) {
@@ -89,7 +89,7 @@ public :
   }
 
 
-  inline void compEulerTend_S(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+  inline void compEulerTend_S(realArr &state, Domain const &dom, Exchange &exch, Parallel const &par, realArr &tend) {
     if        (useTend == useTendThetaConsADER) {
       tendenciesThetaConsADER.compEulerTend_S(state, dom, exch, par, tend);
     } else if (useTend == useTendThetaConsSD  ) {
@@ -102,7 +102,7 @@ public :
   }
 
 
-  inline void compStrakaTend(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+  inline void compStrakaTend(realArr &state, Domain const &dom, Exchange &exch, Parallel const &par, realArr &tend) {
     if        (useTend == useTendThetaConsADER) {
       tendenciesThetaConsADER.compStrakaTend(state, dom, exch, par, tend);
     } else if (useTend == useTendThetaConsSD  ) {
