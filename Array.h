@@ -306,7 +306,7 @@ template <class T, int myMem> class Array {
     *refCount = 1;
     if (myMem == memDevice) {
       #ifdef __NVCC__
-        cudaMallocManaged(&myData,totElems*sizeof(T));
+        cudaMalloc(&myData,totElems*sizeof(T));
       #endif
     } else {
       myData = new T[totElems];
