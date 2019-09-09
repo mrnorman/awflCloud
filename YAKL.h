@@ -17,11 +17,23 @@
 namespace yakl {
 
   
+  int const functorBufSize = 1024*128;
+  void *functorBuffer;
   int vectorSize = 128;
 
 
-  void init(int vectorSize_in) {
+  void init(int vectorSize_in=128) {
     vectorSize = vectorSize_in;
+    #if defined(__NVCC__)
+      cudaMalloc(&functorBuffer,functorBufSize);
+    #endif
+  }
+
+
+  void finalize() {
+    #if defined(__NVCC__)
+      cudaFree(functorBuffer);
+    #endif
   }
 
 
@@ -101,34 +113,47 @@ namespace yakl {
 
 
   #ifdef __NVCC__
-    template <class F> __global__ void cudaKernel(ulong const nIter, F f) {
+    class FunctorLarge {};
+    template <class F> __global__ void cudaKernelVal(ulong const nIter, F f) {
       ulong i = blockIdx.x*blockDim.x + threadIdx.x;
       if (i < nIter) {
         f( i );
       }
     }
+    template <class F> __global__ void cudaKernelRef(ulong const nIter, F const &f) {
+      ulong i = blockIdx.x*blockDim.x + threadIdx.x;
+      if (i < nIter) {
+        f( i );
+      }
+    }
+    template<class F , typename std::enable_if< sizeof(F) <= 4096 , int >::type = 0> void parallel_for_cuda( int const nIter , F const &f ) {
+      cudaKernelVal <<< (uint) (nIter-1)/vectorSize+1 , vectorSize >>> ( nIter , f );
+    }
+    template<class F , typename std::enable_if< sizeof(F) >= 4097 , int >::type = 0> void parallel_for_cuda( int const nIter , F const &f ) {
+      F *fp = (F *) functorBuffer;
+      cudaMemcpy(fp,&f,sizeof(F),cudaMemcpyHostToDevice);
+      cudaKernelRef <<< (uint) (nIter-1)/vectorSize+1 , vectorSize >>> ( nIter , *fp );
+    }
   #endif
 
 
-  template <class F> void parallel_for( int const nIter , F f ) {
+  template <class F> void parallel_for( int const nIter , F const &f ) {
     #ifdef __NVCC__
-      cudaKernel <<< (uint) (nIter-1)/vectorSize+1 , vectorSize >>> ( nIter , f );
+      parallel_for_cuda<F>( nIter , f );
     #else
-      for (int i=0; i<nIter; i++) {
-        f(i);
-      }
+      parallel_for_cpu_serial<F>( nIter , f );
     #endif
   }
 
+  template <class F> void parallel_for_cpu_serial( int const nIter , F const &f ) {
+    for (int i=0; i<nIter; i++) {
+      f(i);
+    }
+  }
 
-  template <class F> void parallel_for( char const * str , int const nIter , F f ) {
-    #ifdef __NVCC__
-      cudaKernel <<< (uint) (nIter-1)/vectorSize+1 , vectorSize >>> ( nIter , f );
-    #else
-      for (int i=0; i<nIter; i++) {
-        f(i);
-      }
-    #endif
+
+  template <class F> void parallel_for( char const * str , int const nIter , F const &f ) {
+    parallel_for( nIter , f );
   }
 
 

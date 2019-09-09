@@ -13,6 +13,8 @@
 
 int main(int argc, char** argv) {
 
+  yakl::init();
+
   {
     // Create the model objects
     realArr         state;

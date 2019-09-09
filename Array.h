@@ -421,6 +421,7 @@ template <class T> class Array {
     return myData[ind];
   }
 
+
   inline void check_dims(int const rank_called, int const rank_actual, char const *file, int const line) const {
     #ifdef ARRAY_DEBUG
     if (rank_called != rank_actual) {

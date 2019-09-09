@@ -4,7 +4,7 @@
 // You can end input key:value lines with comments
 
 nx         : 200        // Number of cells in the x-direction
-ny         : 1          // Number of cells in the y-direction
+ny         : 200        // Number of cells in the y-direction
 nz         : 100        // Number of cells in the z-direction
 
 xlen       : 20000.     // Domain length in the x-direction (m)
@@ -12,7 +12,7 @@ ylen       : 20000.     // Domain length in the y-direction (m)
 zlen       : 10000.     // Domain length in the z-direction (m)
 
 cfl        : 0.9        // CFL value to use
-simLength  : 1000.      // How long to simulation (s)
+simLength  : 1          // How long to simulation (s)
 
 parNx      : 1          // Number of parallel tasks in the x-direction
 parNy      : 1          // Number of parallel tasks in the y-direction
@@ -32,10 +32,10 @@ dataInit : thermal
 // Temporal discretization to use:
 //   ADER: ADER with Differential Transforms  (max cfl = 1)
 //   SSPRK3: optimal 3-stage, 3rd order SSPRK (max cfl = 1)
-timeMethod : SSPRK3
+timeMethod : ADER
 
 // Equation set to use:
 //   theta_cons: q={rho,rho*u,rho*v,rho*w,rho*theta}, conservative
 //   theta_prim: q={rho,u,v,w,theta}, non-conservative
-eqnSet : theta_prim
+eqnSet : theta_cons
 
