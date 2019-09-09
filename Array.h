@@ -20,12 +20,18 @@
 #define _HOSTDEV 
 #endif
 
+namespace yakl {
+
+
+int const memDevice = 1;
+int const memHost   = 2;
+
 
 /* Array<T>
 Multi-dimensional array with functor indexing up to eight dimensions.
 */
 
-template <class T> class Array {
+template <class T, int myMem> class Array {
 
   public :
 
@@ -298,11 +304,13 @@ template <class T> class Array {
   inline void allocate() {
     refCount = new int;
     *refCount = 1;
-    #ifdef __NVCC__
-      cudaMallocManaged(&myData,totElems*sizeof(T));
-    #else
+    if (myMem == memDevice) {
+      #ifdef __NVCC__
+        cudaMallocManaged(&myData,totElems*sizeof(T));
+      #endif
+    } else {
       myData = new T[totElems];
-    #endif
+    }
   }
 
 
@@ -313,11 +321,13 @@ template <class T> class Array {
       if (*refCount == 0) {
         delete refCount;
         refCount = nullptr;
-        #ifdef __NVCC__
-          cudaFree(myData);
-        #else
+        if (myMem == memDevice) {
+          #ifdef __NVCC__
+            cudaFree(myData);
+          #endif
+        } else {
           delete[] myData;
-        #endif
+        }
         myData = nullptr;
       }
 
@@ -471,6 +481,78 @@ template <class T> class Array {
   }
 
 
+  inline Array<T,memHost> createHostCopy() {
+    Array<T,memHost> ret;
+    #ifdef ARRAY_DEBUG
+      ret.setup_arr( myname.c_str() , rank , dimension );
+    #else
+      ret.setup_arr( ""             , rank , dimension );
+    #endif
+    if (myMem == memHost) {
+      for (int i=0; i<totElems; i++) {
+        ret.myData[i] = myData[i];
+      }
+    } else {
+      #ifdef __NVCC__
+        cudaMemcpy(ret.myData,myData,totElems*sizeof(T),cudaMemcpyDeviceToHost);
+        cudaDeviceSynchronize();
+      #endif
+    }
+    return ret;
+  }
+
+
+  inline Array<T,memDevice> createDeviceCopy() {
+    Array<T,memDevice> ret;
+    #ifdef ARRAY_DEBUG
+      ret.setup_arr( myname.c_str() , rank , dimension );
+    #else
+      ret.setup_arr( ""             , rank , dimension );
+    #endif
+    if (myMem == memHost) {
+      #ifdef __NVCC__
+        cudaMemcpy(ret.myData,myData,totElems*sizeof(T),cudaMemcpyHostToDevice);
+        cudaDeviceSynchronize();
+      #endif
+    } else {
+      #ifdef __NVCC__
+        cudaMemcpy(ret.myData,myData,totElems*sizeof(T),cudaMemcpyDeviceToDevice);
+        cudaDeviceSynchronize();
+      #endif
+    }
+    return ret;
+  }
+
+
+  inline void copyToHost(Array<T,memHost> lhs) {
+    if (myMem == memHost) {
+      for (int i=0; i<totElems; i++) {
+        lhs.myData[i] = myData[i];
+      }
+    } else {
+      #ifdef __NVCC__
+        cudaMemcpy(lhs.myData,myData,totElems*sizeof(T),cudaMemcpyDeviceToHost);
+        cudaDeviceSynchronize();
+      #endif
+    }
+  }
+
+
+  inline void copyToDevice(Array<T,memDevice> lhs) {
+    if (myMem == memHost) {
+      #ifdef __NVCC__
+        cudaMemcpy(lhs.myData,myData,totElems*sizeof(T),cudaMemcpyHostToDevice);
+        cudaDeviceSynchronize();
+      #endif
+    } else {
+      #ifdef __NVCC__
+        cudaMemcpy(lhs.myData,myData,totElems*sizeof(T),cudaMemcpyDeviceToDevice);
+        cudaDeviceSynchronize();
+      #endif
+    }
+  }
+
+
   /* ACCESSORS */
   inline _HOSTDEV int get_rank() const {
     return rank;
@@ -595,5 +677,7 @@ template <class T> class Array {
 
 
 };
+
+}
 
 #endif

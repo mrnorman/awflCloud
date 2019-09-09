@@ -9,7 +9,8 @@ typedef float         real;
 typedef unsigned long ulong;
 typedef unsigned int  uint;
 
-typedef Array<real> realArr;
+typedef yakl::Array<real,yakl::memDevice> realArr;
+typedef yakl::Array<real,yakl::memHost>   realArrHost;
 
 #ifdef __NVCC__
 #define _HOSTDEV __host__ __device__

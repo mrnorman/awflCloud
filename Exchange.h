@@ -39,23 +39,23 @@ protected:
   realArr edgeSendBufN;
   realArr edgeSendBufS;
 
-  real *haloSendBufS_cpu;
-  real *haloSendBufN_cpu;
-  real *haloSendBufW_cpu;
-  real *haloSendBufE_cpu;
-  real *haloRecvBufS_cpu;
-  real *haloRecvBufN_cpu;
-  real *haloRecvBufW_cpu;
-  real *haloRecvBufE_cpu;
+  realArrHost haloSendBufS_host;
+  realArrHost haloSendBufN_host;
+  realArrHost haloSendBufW_host;
+  realArrHost haloSendBufE_host;
+  realArrHost haloRecvBufS_host;
+  realArrHost haloRecvBufN_host;
+  realArrHost haloRecvBufW_host;
+  realArrHost haloRecvBufE_host;
 
-  real *edgeRecvBufE_cpu;
-  real *edgeRecvBufW_cpu;
-  real *edgeSendBufE_cpu;
-  real *edgeSendBufW_cpu;
-  real *edgeRecvBufN_cpu;
-  real *edgeRecvBufS_cpu;
-  real *edgeSendBufN_cpu;
-  real *edgeSendBufS_cpu;
+  realArrHost edgeRecvBufE_host;
+  realArrHost edgeRecvBufW_host;
+  realArrHost edgeSendBufE_host;
+  realArrHost edgeSendBufW_host;
+  realArrHost edgeRecvBufN_host;
+  realArrHost edgeRecvBufS_host;
+  realArrHost edgeSendBufN_host;
+  realArrHost edgeSendBufS_host;
 
 public:
 
@@ -79,43 +79,23 @@ public:
     edgeRecvBufW = realArr("edgeRecvBufW",maxPack*dom.nz*dom.ny);
     edgeRecvBufE = realArr("edgeRecvBufE",maxPack*dom.nz*dom.ny);
 
-    #ifdef __NVCC__
-      cudaMallocHost( &haloSendBufS_cpu , maxPack*dom.nz*hs*dom.nx*sizeof(real) );
-      cudaMallocHost( &haloSendBufN_cpu , maxPack*dom.nz*hs*dom.nx*sizeof(real) );
-      cudaMallocHost( &haloSendBufW_cpu , maxPack*dom.nz*dom.ny*hs*sizeof(real) );
-      cudaMallocHost( &haloSendBufE_cpu , maxPack*dom.nz*dom.ny*hs*sizeof(real) );
-      cudaMallocHost( &haloRecvBufS_cpu , maxPack*dom.nz*hs*dom.nx*sizeof(real) );
-      cudaMallocHost( &haloRecvBufN_cpu , maxPack*dom.nz*hs*dom.nx*sizeof(real) );
-      cudaMallocHost( &haloRecvBufW_cpu , maxPack*dom.nz*dom.ny*hs*sizeof(real) );
-      cudaMallocHost( &haloRecvBufE_cpu , maxPack*dom.nz*dom.ny*hs*sizeof(real) );
+    haloSendBufS_host = haloSendBufS.createHostCopy(); 
+    haloSendBufN_host = haloSendBufN.createHostCopy(); 
+    haloSendBufW_host = haloSendBufW.createHostCopy(); 
+    haloSendBufE_host = haloSendBufE.createHostCopy(); 
+    haloRecvBufS_host = haloRecvBufS.createHostCopy(); 
+    haloRecvBufN_host = haloRecvBufN.createHostCopy(); 
+    haloRecvBufW_host = haloRecvBufW.createHostCopy(); 
+    haloRecvBufE_host = haloRecvBufE.createHostCopy(); 
 
-      cudaMallocHost( &edgeSendBufS_cpu , maxPack*dom.nz*dom.nx*sizeof(real) );
-      cudaMallocHost( &edgeSendBufN_cpu , maxPack*dom.nz*dom.nx*sizeof(real) );
-      cudaMallocHost( &edgeSendBufW_cpu , maxPack*dom.nz*dom.ny*sizeof(real) );
-      cudaMallocHost( &edgeSendBufE_cpu , maxPack*dom.nz*dom.ny*sizeof(real) );
-      cudaMallocHost( &edgeRecvBufS_cpu , maxPack*dom.nz*dom.nx*sizeof(real) );
-      cudaMallocHost( &edgeRecvBufN_cpu , maxPack*dom.nz*dom.nx*sizeof(real) );
-      cudaMallocHost( &edgeRecvBufW_cpu , maxPack*dom.nz*dom.ny*sizeof(real) );
-      cudaMallocHost( &edgeRecvBufE_cpu , maxPack*dom.nz*dom.ny*sizeof(real) );
-    #else
-      haloSendBufS_cpu = haloSendBufS.data(); 
-      haloSendBufN_cpu = haloSendBufN.data(); 
-      haloSendBufW_cpu = haloSendBufW.data(); 
-      haloSendBufE_cpu = haloSendBufE.data(); 
-      haloRecvBufS_cpu = haloRecvBufS.data(); 
-      haloRecvBufN_cpu = haloRecvBufN.data(); 
-      haloRecvBufW_cpu = haloRecvBufW.data(); 
-      haloRecvBufE_cpu = haloRecvBufE.data(); 
-
-      edgeSendBufS_cpu = edgeSendBufS.data(); 
-      edgeSendBufN_cpu = edgeSendBufN.data(); 
-      edgeSendBufW_cpu = edgeSendBufW.data(); 
-      edgeSendBufE_cpu = edgeSendBufE.data(); 
-      edgeRecvBufS_cpu = edgeRecvBufS.data(); 
-      edgeRecvBufN_cpu = edgeRecvBufN.data(); 
-      edgeRecvBufW_cpu = edgeRecvBufW.data(); 
-      edgeRecvBufE_cpu = edgeRecvBufE.data(); 
-    #endif
+    edgeSendBufS_host = edgeSendBufS.createHostCopy(); 
+    edgeSendBufN_host = edgeSendBufN.createHostCopy(); 
+    edgeSendBufW_host = edgeSendBufW.createHostCopy(); 
+    edgeSendBufE_host = edgeSendBufE.createHostCopy(); 
+    edgeRecvBufS_host = edgeRecvBufS.createHostCopy(); 
+    edgeRecvBufN_host = edgeRecvBufN.createHostCopy(); 
+    edgeRecvBufW_host = edgeRecvBufW.createHostCopy(); 
+    edgeRecvBufE_host = edgeRecvBufE.createHostCopy(); 
   }
 
 
@@ -192,28 +172,22 @@ public:
       yakl::fence();
 
       //Pre-post the receives
-      ierr = MPI_Irecv( haloRecvBufW_cpu , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,0) , 0 , MPI_COMM_WORLD , &rReq[0] );
-      ierr = MPI_Irecv( haloRecvBufE_cpu , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,2) , 1 , MPI_COMM_WORLD , &rReq[1] );
+      ierr = MPI_Irecv( haloRecvBufW_host.data() , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,0) , 0 , MPI_COMM_WORLD , &rReq[0] );
+      ierr = MPI_Irecv( haloRecvBufE_host.data() , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,2) , 1 , MPI_COMM_WORLD , &rReq[1] );
 
-      #ifdef __NVCC__
-        cudaMemcpyAsync( haloSendBufW_cpu , haloSendBufW.data() , nPack*dom.nz*dom.ny*hs*sizeof(real) , cudaMemcpyDeviceToHost );
-        cudaMemcpyAsync( haloSendBufE_cpu , haloSendBufE.data() , nPack*dom.nz*dom.ny*hs*sizeof(real) , cudaMemcpyDeviceToHost );
-        cudaDeviceSynchronize();
-      #endif
+      haloSendBufW.copyToHost(haloSendBufW_host);
+      haloSendBufE.copyToHost(haloSendBufE_host);
 
       //Send the data
-      ierr = MPI_Isend( haloSendBufW_cpu , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,0) , 1 , MPI_COMM_WORLD , &sReq[0] );
-      ierr = MPI_Isend( haloSendBufE_cpu , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,2) , 0 , MPI_COMM_WORLD , &sReq[1] );
+      ierr = MPI_Isend( haloSendBufW_host.data() , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,0) , 1 , MPI_COMM_WORLD , &sReq[0] );
+      ierr = MPI_Isend( haloSendBufE_host.data() , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,2) , 0 , MPI_COMM_WORLD , &sReq[1] );
 
       //Wait for the sends and receives to finish
       ierr = MPI_Waitall(2, sReq, sStat);
       ierr = MPI_Waitall(2, rReq, rStat);
 
-      #ifdef __NVCC__
-        cudaMemcpyAsync( haloRecvBufW.data() , haloRecvBufW_cpu , nPack*dom.nz*dom.ny*hs*sizeof(real) , cudaMemcpyHostToDevice );
-        cudaMemcpyAsync( haloRecvBufE.data() , haloRecvBufE_cpu , nPack*dom.nz*dom.ny*hs*sizeof(real) , cudaMemcpyHostToDevice );
-        cudaDeviceSynchronize();
-      #endif
+      haloRecvBufW_host.copyToDevice(haloRecvBufW);
+      haloRecvBufE_host.copyToDevice(haloRecvBufE);
 
     } else {
       haloExchange_x_loc(dom, haloSendBufW, haloSendBufE, haloRecvBufW, haloRecvBufE);
@@ -234,28 +208,22 @@ public:
       yakl::fence();
 
       //Pre-post the receives
-      ierr = MPI_Irecv( haloRecvBufS_cpu , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(0,1) , 0 , MPI_COMM_WORLD , &rReq[0] );
-      ierr = MPI_Irecv( haloRecvBufN_cpu , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(2,1) , 1 , MPI_COMM_WORLD , &rReq[1] );
+      ierr = MPI_Irecv( haloRecvBufS_host.data() , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(0,1) , 0 , MPI_COMM_WORLD , &rReq[0] );
+      ierr = MPI_Irecv( haloRecvBufN_host.data() , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(2,1) , 1 , MPI_COMM_WORLD , &rReq[1] );
 
-      #ifdef __NVCC__
-        cudaMemcpyAsync( haloSendBufS_cpu , haloSendBufS.data() , nPack*dom.nz*hs*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
-        cudaMemcpyAsync( haloSendBufN_cpu , haloSendBufN.data() , nPack*dom.nz*hs*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
-        cudaDeviceSynchronize();
-      #endif
+      haloSendBufS.copyToHost(haloSendBufS_host);
+      haloSendBufN.copyToHost(haloSendBufN_host);
 
       //Send the data
-      ierr = MPI_Isend( haloSendBufS_cpu , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(0,1) , 1 , MPI_COMM_WORLD , &sReq[0] );
-      ierr = MPI_Isend( haloSendBufN_cpu , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(2,1) , 0 , MPI_COMM_WORLD , &sReq[1] );
+      ierr = MPI_Isend( haloSendBufS_host.data() , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(0,1) , 1 , MPI_COMM_WORLD , &sReq[0] );
+      ierr = MPI_Isend( haloSendBufN_host.data() , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(2,1) , 0 , MPI_COMM_WORLD , &sReq[1] );
 
       //Wait for the sends and receives to finish
       ierr = MPI_Waitall(2, sReq, sStat);
       ierr = MPI_Waitall(2, rReq, rStat);
 
-      #ifdef __NVCC__
-        cudaMemcpyAsync( haloRecvBufS.data() , haloRecvBufS_cpu , nPack*dom.nz*hs*dom.nx*sizeof(real) , cudaMemcpyHostToDevice );
-        cudaMemcpyAsync( haloRecvBufN.data() , haloRecvBufN_cpu , nPack*dom.nz*hs*dom.nx*sizeof(real) , cudaMemcpyHostToDevice );
-        cudaDeviceSynchronize();
-      #endif
+      haloRecvBufS_host.copyToDevice(haloRecvBufS);
+      haloRecvBufN_host.copyToDevice(haloRecvBufN);
 
     } else {
       haloExchange_y_loc(dom, haloSendBufS, haloSendBufN, haloRecvBufS, haloRecvBufN);
@@ -348,28 +316,22 @@ public:
       yakl::fence();
 
       //Pre-post the receives
-      ierr = MPI_Irecv( edgeRecvBufW_cpu , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,0) , 0 , MPI_COMM_WORLD , &rReq[0] );
-      ierr = MPI_Irecv( edgeRecvBufE_cpu , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,2) , 1 , MPI_COMM_WORLD , &rReq[1] );
+      ierr = MPI_Irecv( edgeRecvBufW_host.data() , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,0) , 0 , MPI_COMM_WORLD , &rReq[0] );
+      ierr = MPI_Irecv( edgeRecvBufE_host.data() , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,2) , 1 , MPI_COMM_WORLD , &rReq[1] );
 
-      #ifdef __NVCC__
-        cudaMemcpyAsync( edgeSendBufW_cpu , edgeSendBufW.data() , nPack*dom.nz*dom.ny*sizeof(real) , cudaMemcpyDeviceToHost );
-        cudaMemcpyAsync( edgeSendBufE_cpu , edgeSendBufE.data() , nPack*dom.nz*dom.ny*sizeof(real) , cudaMemcpyDeviceToHost );
-        cudaDeviceSynchronize();
-      #endif
+      edgeSendBufW.copyToHost(edgeSendBufW_host);
+      edgeSendBufE.copyToHost(edgeSendBufE_host);
 
       //Send the data
-      ierr = MPI_Isend( edgeSendBufW_cpu , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,0) , 1 , MPI_COMM_WORLD , &sReq[0] );
-      ierr = MPI_Isend( edgeSendBufE_cpu , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,2) , 0 , MPI_COMM_WORLD , &sReq[1] );
+      ierr = MPI_Isend( edgeSendBufW_host.data() , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,0) , 1 , MPI_COMM_WORLD , &sReq[0] );
+      ierr = MPI_Isend( edgeSendBufE_host.data() , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,2) , 0 , MPI_COMM_WORLD , &sReq[1] );
 
       //Wait for the sends and receives to finish
       ierr = MPI_Waitall(2, sReq, sStat);
       ierr = MPI_Waitall(2, rReq, rStat);
 
-      #ifdef __NVCC__
-        cudaMemcpyAsync( edgeRecvBufW.data() , edgeRecvBufW_cpu , nPack*dom.nz*dom.ny*sizeof(real) , cudaMemcpyHostToDevice );
-        cudaMemcpyAsync( edgeRecvBufE.data() , edgeRecvBufE_cpu , nPack*dom.nz*dom.ny*sizeof(real) , cudaMemcpyHostToDevice );
-        cudaDeviceSynchronize();
-      #endif
+      edgeRecvBufW_host.copyToDevice(edgeRecvBufW);
+      edgeRecvBufE_host.copyToDevice(edgeRecvBufE);
 
     } else {
       edgeExchange_x_loc(dom, edgeSendBufW, edgeSendBufE, edgeRecvBufW, edgeRecvBufE);
@@ -390,28 +352,22 @@ public:
       yakl::fence();
 
       //Pre-post the receives
-      ierr = MPI_Irecv( edgeRecvBufS_cpu , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(0,1) , 0 , MPI_COMM_WORLD , &rReq[0] );
-      ierr = MPI_Irecv( edgeRecvBufN_cpu , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(2,1) , 1 , MPI_COMM_WORLD , &rReq[1] );
+      ierr = MPI_Irecv( edgeRecvBufS_host.data() , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(0,1) , 0 , MPI_COMM_WORLD , &rReq[0] );
+      ierr = MPI_Irecv( edgeRecvBufN_host.data() , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(2,1) , 1 , MPI_COMM_WORLD , &rReq[1] );
 
-      #ifdef __NVCC__
-        cudaMemcpyAsync( edgeSendBufS_cpu , edgeSendBufS.data() , nPack*dom.nz*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
-        cudaMemcpyAsync( edgeSendBufN_cpu , edgeSendBufN.data() , nPack*dom.nz*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
-        cudaDeviceSynchronize();
-      #endif
+      edgeSendBufS.copyToHost(edgeSendBufS_host);
+      edgeSendBufN.copyToHost(edgeSendBufN_host);
 
       //Send the data
-      ierr = MPI_Isend( edgeSendBufS_cpu , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(0,1) , 1 , MPI_COMM_WORLD , &sReq[0] );
-      ierr = MPI_Isend( edgeSendBufN_cpu , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(2,1) , 0 , MPI_COMM_WORLD , &sReq[1] );
+      ierr = MPI_Isend( edgeSendBufS_host.data() , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(0,1) , 1 , MPI_COMM_WORLD , &sReq[0] );
+      ierr = MPI_Isend( edgeSendBufN_host.data() , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(2,1) , 0 , MPI_COMM_WORLD , &sReq[1] );
 
       //Wait for the sends and receives to finish
       ierr = MPI_Waitall(2, sReq, sStat);
       ierr = MPI_Waitall(2, rReq, rStat);
 
-      #ifdef __NVCC__
-        cudaMemcpyAsync( edgeRecvBufS.data() , edgeRecvBufS_cpu , nPack*dom.nz*dom.nx*sizeof(real) , cudaMemcpyHostToDevice );
-        cudaMemcpyAsync( edgeRecvBufN.data() , edgeRecvBufN_cpu , nPack*dom.nz*dom.nx*sizeof(real) , cudaMemcpyHostToDevice );
-        cudaDeviceSynchronize();
-      #endif
+      edgeRecvBufS_host.copyToDevice(edgeRecvBufS);
+      edgeRecvBufN_host.copyToDevice(edgeRecvBufN);
 
     } else {
       edgeExchange_y_loc(dom, edgeSendBufS, edgeSendBufN, edgeRecvBufS, edgeRecvBufN);
