@@ -263,10 +263,10 @@ public:
       cs = sqrt( GAMMA * p / r );
 
       // Compute the max wave
-      real maxWave = max( max( fabs(u) , fabs(v)) , fabs(w)) + cs;
+      real maxWave = mymax( mymax( fabs(u) , fabs(v)) , fabs(w)) + cs;
 
       // Compute the time step
-      real mindx = min( min(dom.dx,dom.dy) , dom.dz);
+      real mindx = mymin( mymin(dom.dx,dom.dy) , dom.dz);
       dt3d(k,j,i) = dom.cfl * mindx / maxWave;
     });
 
@@ -303,7 +303,7 @@ public:
     real yn = (y-y0)/yrad;
     real zn = (z-z0)/zrad;
     real dist = sqrt( xn*xn + yn*yn + zn*zn );
-    return amp * max( 1._fp - dist , 0._fp );
+    return amp * mymax( 1._fp - dist , 0._fp );
   }
 
 
