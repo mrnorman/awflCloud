@@ -271,11 +271,12 @@ public:
     });
 
     realArrHost dt3d_host = dt3d.createHostCopy();
+
     dom.dt = 1.e12_fp;
     for (int k=0; k<dom.nz; k++) {
       for (int j=0; j<dom.ny; j++) {
         for (int i=0; i<dom.nx; i++) {
-          dom.dt = min(dom.dt,dt3d_host(k,j,i));
+          dom.dt = mymin(dom.dt,dt3d_host(k,j,i));
         }
       }
     }

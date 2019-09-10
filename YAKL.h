@@ -158,13 +158,16 @@ namespace yakl {
         f( i );
       }
     }
-    template<class F , typename std::enable_if< sizeof(F) <= 4000 , int >::type = 0> void parallel_for_hip( int const nIter , F const &f ) {
+    // template<class F , typename std::enable_if< sizeof(F) <= 4000 , int >::type = 0> void parallel_for_hip( int const nIter , F const &f ) {
+    //   hipLaunchKernelGGL( cudaKernelVal , dim3((nIter-1)/vectorSize+1) , dim3(vectorSize) , (std::uint32_t) 0 , (hipStream_t) 0 , nIter , f );
+    // }
+    // template<class F , typename std::enable_if< sizeof(F) >= 4001 , int >::type = 0> void parallel_for_hip( int const nIter , F const &f ) {
+    //   F *fp = (F *) functorBuffer;
+    //   hipMemcpy(fp,&f,sizeof(F),hipMemcpyHostToDevice);
+    //   hipLaunchKernelGGL( cudaKernelVal , dim3((nIter-1)/vectorSize+1) , dim3(vectorSize) , (std::uint32_t) 0 , (hipStream_t) 0 , nIter , *fp );
+    // }
+    template<class F> void parallel_for_hip( int const nIter , F const &f ) {
       hipLaunchKernelGGL( cudaKernelVal , dim3((nIter-1)/vectorSize+1) , dim3(vectorSize) , (std::uint32_t) 0 , (hipStream_t) 0 , nIter , f );
-    }
-    template<class F , typename std::enable_if< sizeof(F) >= 4001 , int >::type = 0> void parallel_for_hip( int const nIter , F const &f ) {
-      F *fp = (F *) functorBuffer;
-      hipMemcpy(fp,&f,sizeof(F),hipMemcpyHostToDevice);
-      hipLaunchKernelGGL( cudaKernelVal , dim3((nIter-1)/vectorSize+1) , dim3(vectorSize) , (std::uint32_t) 0 , (hipStream_t) 0 , nIter , *fp );
     }
   #endif
 
