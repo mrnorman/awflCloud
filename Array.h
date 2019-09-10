@@ -16,6 +16,8 @@
 
 #ifdef __NVCC__
 #define _HOSTDEV __host__ __device__
+#elif defined(__HCC__)
+#define _HOSTDEV __host__ __device__
 #else
 #define _HOSTDEV 
 #endif
@@ -307,6 +309,8 @@ template <class T, int myMem> class Array {
     if (myMem == memDevice) {
       #ifdef __NVCC__
         cudaMalloc(&myData,totElems*sizeof(T));
+      #elif defined(__HCC__)
+        hipMalloc(&myData,totElems*sizeof(T));
       #endif
     } else {
       myData = new T[totElems];
@@ -324,6 +328,8 @@ template <class T, int myMem> class Array {
         if (myMem == memDevice) {
           #ifdef __NVCC__
             cudaFree(myData);
+          #elif defined(__HCC__)
+            hipFree(myData);
           #endif
         } else {
           delete[] myData;
@@ -496,6 +502,9 @@ template <class T, int myMem> class Array {
       #ifdef __NVCC__
         cudaMemcpy(ret.myData,myData,totElems*sizeof(T),cudaMemcpyDeviceToHost);
         cudaDeviceSynchronize();
+      #elif defined(__HCC__)
+        hipMemcpy(ret.myData,myData,totElems*sizeof(T),hipMemcpyDeviceToHost);
+        hipDeviceSynchronize();
       #endif
     }
     return ret;
@@ -513,11 +522,17 @@ template <class T, int myMem> class Array {
       #ifdef __NVCC__
         cudaMemcpy(ret.myData,myData,totElems*sizeof(T),cudaMemcpyHostToDevice);
         cudaDeviceSynchronize();
+      #elif defined(__HCC__)
+        hipMemcpy(ret.myData,myData,totElems*sizeof(T),hipMemcpyHostToDevice);
+        hipDeviceSynchronize();
       #endif
     } else {
       #ifdef __NVCC__
         cudaMemcpy(ret.myData,myData,totElems*sizeof(T),cudaMemcpyDeviceToDevice);
         cudaDeviceSynchronize();
+      #elif defined(__HCC__)
+        hipMemcpy(ret.myData,myData,totElems*sizeof(T),hipMemcpyDeviceToDevice);
+        hipDeviceSynchronize();
       #endif
     }
     return ret;
@@ -533,6 +548,9 @@ template <class T, int myMem> class Array {
       #ifdef __NVCC__
         cudaMemcpy(lhs.myData,myData,totElems*sizeof(T),cudaMemcpyDeviceToHost);
         cudaDeviceSynchronize();
+      #elif defined(__HCC__)
+        hipMemcpy(lhs.myData,myData,totElems*sizeof(T),hipMemcpyDeviceToHost);
+        hipDeviceSynchronize();
       #endif
     }
   }
@@ -543,11 +561,17 @@ template <class T, int myMem> class Array {
       #ifdef __NVCC__
         cudaMemcpy(lhs.myData,myData,totElems*sizeof(T),cudaMemcpyHostToDevice);
         cudaDeviceSynchronize();
+      #elif defined(__HCC__)
+        hipMemcpy(lhs.myData,myData,totElems*sizeof(T),hipMemcpyHostToDevice);
+        hipDeviceSynchronize();
       #endif
     } else {
       #ifdef __NVCC__
         cudaMemcpy(lhs.myData,myData,totElems*sizeof(T),cudaMemcpyDeviceToDevice);
         cudaDeviceSynchronize();
+      #elif defined(__HCC__)
+        hipMemcpy(lhs.myData,myData,totElems*sizeof(T),hipMemcpyDeviceToDevice);
+        hipDeviceSynchronize();
       #endif
     }
   }
