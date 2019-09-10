@@ -14,6 +14,9 @@ typedef yakl::Array<real,yakl::memHost>   realArrHost;
 
 #ifdef __NVCC__
 #define _HOSTDEV __host__ __device__
+#elif defined(__USE_HIP__)
+#define _HOSTDEV __host__ __device__
+#include "hip_runtime.h"
 #else
 #define _HOSTDEV 
 #endif
@@ -51,6 +54,7 @@ real const P0    = 1.0e5;
 real const C0    = 27.5629410929725921310572974482;
 real const GAMMA  = 1.40027894002789400278940027894;
 
+#ifndef __USE_HIP__
 template <class T> inline _HOSTDEV T min( T const v1 , T const v2 ) {
   if (v1 < v2) { return v1; }
   else         { return v2; }
@@ -59,5 +63,6 @@ template <class T> inline _HOSTDEV T max( T const v1 , T const v2 ) {
   if (v1 > v2) { return v1; }
   else         { return v2; }
 }
+#endif
 
 #endif

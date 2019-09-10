@@ -99,7 +99,7 @@ public :
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       SArray<real,numState,tord> gllState;  // GLL state values
       SArray<real,numState,tord> gllFlux;   // GLL flux values
 
@@ -158,7 +158,7 @@ public :
     //     for (int i=0; i<dom.nx+1; i++) {
     yakl::parallel_for( dom.nz*dom.ny*(dom.nx+1) , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx+1,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx+1,k,j,i);
       SArray<real,numState> s1, s2, f1, f2, upw;
       for (int l=0; l<numState; l++) {
         s1(l) = stateLimits(l,0,k,j,i);
@@ -180,7 +180,7 @@ public :
     //       for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( numState*dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int l, k, j, i;
-      unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
+      yakl::unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
       tend(l,k,j,i) = - ( flux(l,k,j,i+1) - flux(l,k,j,i) ) / dom.dx;
     });
   }
@@ -210,7 +210,7 @@ public :
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       SArray<real,numState,tord> gllState;
       SArray<real,numState,tord> gllFlux;
 
@@ -269,7 +269,7 @@ public :
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( dom.nz*(dom.ny+1)*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny+1,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny+1,dom.nx,k,j,i);
       SArray<real,numState> s1, s2, f1, f2, upw;
       for (int l=0; l<numState; l++) {
         s1(l) = stateLimits(l,0,k,j,i);
@@ -291,7 +291,7 @@ public :
     //       for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( numState*dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int l, k, j, i;
-      unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
+      yakl::unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
       tend(l,k,j,i) = - ( flux(l,k,j+1,i) - flux(l,k,j,i) ) / dom.dy;
     });
   }
@@ -318,7 +318,7 @@ public :
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       SArray<real,numState,tord> gllState;
       SArray<real,numState,tord> gllFlux;
 
@@ -376,7 +376,7 @@ public :
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( (dom.nz+1)*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz+1,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz+1,dom.ny,dom.nx,k,j,i);
       SArray<real,numState> s1, s2, f1, f2, upw;
       for (int l=0; l<numState; l++) {
         s1(l) = stateLimits(l,0,k,j,i);
@@ -398,7 +398,7 @@ public :
     //       for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( numState*dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int l, k, j, i;
-      unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
+      yakl::unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
       tend(l,k,j,i) = - ( flux(l,k+1,j,i) - flux(l,k,j,i) ) / dom.dz;
       if (l==idRW) {
         tend(l,k,j,i) += src(k,j,i);
@@ -414,7 +414,7 @@ public :
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       tend(idR ,k,j,i) = 0;
       tend(idRU,k,j,i) = 0;
       tend(idRV,k,j,i) = 0;
@@ -430,7 +430,7 @@ public :
     //     for (int ii=0; ii<hs; ii++) {
     yakl::parallel_for( dom.ny*dom.nx*hs , YAKL_LAMBDA (int const iGlob) {
       int j, i, ii;
-      unpackIndices(iGlob,dom.ny,dom.nx,hs,j,i,ii);
+      yakl::unpackIndices(iGlob,dom.ny,dom.nx,hs,j,i,ii);
       state(idR ,ii,hs+j,hs+i) = state(idR ,hs,hs+j,hs+i);
       state(idRU,ii,hs+j,hs+i) = state(idRU,hs,hs+j,hs+i);
       state(idRV,ii,hs+j,hs+i) = state(idRV,hs,hs+j,hs+i);
@@ -451,7 +451,7 @@ public :
     //   for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int j, i;
-      unpackIndices(iGlob,dom.ny,dom.nx,j,i);
+      yakl::unpackIndices(iGlob,dom.ny,dom.nx,j,i);
       stateLimits(idR ,0,0     ,j,i) = stateLimits(idR ,1,0     ,j,i);
       stateLimits(idRU,0,0     ,j,i) = stateLimits(idRU,1,0     ,j,i);
       stateLimits(idRV,0,0     ,j,i) = stateLimits(idRV,1,0     ,j,i);
@@ -502,7 +502,7 @@ public :
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       real r = ( state(idR,hs+k,hs+j,hs+i) + dom.hyDensCells(hs+k) );
       SArray<real,numState,3> sten;
 

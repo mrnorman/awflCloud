@@ -8,9 +8,10 @@
 #ifdef __NVCC__
   #define YAKL_LAMBDA [=] __host__ __device__
   #define YAKL_INLINE __host__ __device__
-#elif defined(__HCC__)
+#elif defined(__USE_HIP__)
   #define YAKL_LAMBDA [=] __host__ __device__
   #define YAKL_INLINE __host__ __device__
+  #include "hip_runtime.h"
 #else
   #define YAKL_LAMBDA [=]
   #define YAKL_INLINE 
@@ -30,7 +31,7 @@ namespace yakl {
     #if defined(__NVCC__)
       cudaMalloc(&functorBuffer,functorBufSize);
     #endif
-    #if defined(__HCC__)
+    #if defined(__USE_HIP__)
       hipMalloc(&functorBuffer,functorBufSize);
     #endif
   }
@@ -40,7 +41,7 @@ namespace yakl {
     #if defined(__NVCC__)
       cudaFree(functorBuffer);
     #endif
-    #if defined(__HCC__)
+    #if defined(__USE_HIP__)
       hipFree(functorBuffer);
     #endif
   }
@@ -51,14 +52,14 @@ namespace yakl {
 
 
   // Unpack 2D indices
-  YAKL_INLINE void unpackIndices(uint iGlob, uint n1, uint n2, uint &i1, uint &i2) {
+  YAKL_INLINE void unpackIndices(int iGlob, int n1, int n2, int &i1, int &i2) {
     i1 = (iGlob/(n2))     ;
     i2 = (iGlob     ) % n2;
   }
 
 
   // Unpack 3D indices
-  YAKL_INLINE void unpackIndices(uint iGlob, uint n1, uint n2, uint n3, uint &i1, uint &i2, uint &i3) {
+  YAKL_INLINE void unpackIndices(int iGlob, int n1, int n2, int n3, int &i1, int &i2, int &i3) {
     i1 = (iGlob/(n3*n2))     ;
     i2 = (iGlob/(n3   )) % n2;
     i3 = (iGlob        ) % n3;
@@ -66,7 +67,7 @@ namespace yakl {
 
   
   // Unpack 4D indices
-  YAKL_INLINE void unpackIndices(uint iGlob, uint n1, uint n2, uint n3, uint n4, uint &i1, uint &i2, uint &i3, uint &i4) {
+  YAKL_INLINE void unpackIndices(int iGlob, int n1, int n2, int n3, int n4, int &i1, int &i2, int &i3, int &i4) {
     i1 = (iGlob/(n4*n3*n2))     ;
     i2 = (iGlob/(n4*n3   )) % n2;
     i3 = (iGlob/(n4      )) % n3;
@@ -75,7 +76,7 @@ namespace yakl {
 
   
   // Unpack 5D indices
-  YAKL_INLINE void unpackIndices(uint iGlob, uint n1, uint n2, uint n3, uint n4, uint n5, uint &i1, uint &i2, uint &i3, uint &i4, uint &i5) {
+  YAKL_INLINE void unpackIndices(int iGlob, int n1, int n2, int n3, int n4, int n5, int &i1, int &i2, int &i3, int &i4, int &i5) {
     i1 = (iGlob/(n5*n4*n3*n2))     ;
     i2 = (iGlob/(n5*n4*n3   )) % n2;
     i3 = (iGlob/(n5*n4      )) % n3;
@@ -85,7 +86,7 @@ namespace yakl {
 
   
   // Unpack 6D indices
-  YAKL_INLINE void unpackIndices(uint iGlob, uint n1, uint n2, uint n3, uint n4, uint n5, uint n6, uint &i1, uint &i2, uint &i3, uint &i4, uint &i5, uint &i6) {
+  YAKL_INLINE void unpackIndices(int iGlob, int n1, int n2, int n3, int n4, int n5, int n6, int &i1, int &i2, int &i3, int &i4, int &i5, int &i6) {
     i1 = (iGlob/(n6*n5*n4*n3*n2))     ;
     i2 = (iGlob/(n6*n5*n4*n3   )) % n2;
     i3 = (iGlob/(n6*n5*n4      )) % n3;
@@ -96,7 +97,7 @@ namespace yakl {
 
   
   // Unpack 7D indices
-  YAKL_INLINE void unpackIndices(uint iGlob, uint n1, uint n2, uint n3, uint n4, uint n5, uint n6, uint n7, uint &i1, uint &i2, uint &i3, uint &i4, uint &i5, uint &i6, uint &i7) {
+  YAKL_INLINE void unpackIndices(int iGlob, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int &i1, int &i2, int &i3, int &i4, int &i5, int &i6, int &i7) {
     i1 = (iGlob/(n7*n6*n5*n4*n3*n2))     ;
     i2 = (iGlob/(n7*n6*n5*n4*n3   )) % n2;
     i3 = (iGlob/(n7*n6*n5*n4      )) % n3;
@@ -108,7 +109,7 @@ namespace yakl {
 
   
   // Unpack 8D indices
-  YAKL_INLINE void unpackIndices(uint iGlob, uint n1, uint n2, uint n3, uint n4, uint n5, uint n6, uint n7, uint n8, uint &i1, uint &i2, uint &i3, uint &i4, uint &i5, uint &i6, uint &i7, uint &i8) {
+  YAKL_INLINE void unpackIndices(int iGlob, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8, int &i1, int &i2, int &i3, int &i4, int &i5, int &i6, int &i7, int &i8) {
     i1 = (iGlob/(n8*n7*n6*n5*n4*n3*n2))     ;
     i2 = (iGlob/(n8*n7*n6*n5*n4*n3   )) % n2;
     i3 = (iGlob/(n8*n7*n6*n5*n4      )) % n3;
@@ -144,44 +145,44 @@ namespace yakl {
   #endif
 
 
-  #ifdef __HCC__
-    template <class F> __global__ void cudaKernelVal(hipLaunchParm lp, ulong const nIter, F f) {
-      ulong i = hipBlocIdx_x*hipBlockDim_x + hipThreadIdx_x;
+  #ifdef __USE_HIP__
+    template <class F> __global__ void cudaKernelVal(ulong const nIter, F f) {
+      ulong i = hipBlockIdx_x*hipBlockDim_x + hipThreadIdx_x;
       if (i < nIter) {
         f( i );
       }
     }
-    template <class F> __global__ void cudaKernelRef(hipLaunchParm lp, ulong const nIter, F const &f) {
-      ulong i = hipBlocIdx_x*hipBlockDim_x + hipThreadIdx_x;
+    template <class F> __global__ void cudaKernelRef(ulong const nIter, F const &f) {
+      ulong i = hipBlockIdx_x*hipBlockDim_x + hipThreadIdx_x;
       if (i < nIter) {
         f( i );
       }
     }
     template<class F , typename std::enable_if< sizeof(F) <= 4000 , int >::type = 0> void parallel_for_hip( int const nIter , F const &f ) {
-      hipLaunchKernel( cudaKernelVal , dim3((nIter-1)/vectorSize+1) , dim3(vectorSize) , 0 , 0 , nIter , f );
+      hipLaunchKernelGGL( cudaKernelVal , dim3((nIter-1)/vectorSize+1) , dim3(vectorSize) , (std::uint32_t) 0 , (hipStream_t) 0 , nIter , f );
     }
     template<class F , typename std::enable_if< sizeof(F) >= 4001 , int >::type = 0> void parallel_for_hip( int const nIter , F const &f ) {
       F *fp = (F *) functorBuffer;
       hipMemcpy(fp,&f,sizeof(F),hipMemcpyHostToDevice);
-      hipLaunchKernel( cudaKernelVal , dim3((nIter-1)/vectorSize+1) , dim3(vectorSize) , 0 , 0 , nIter , *fp );
+      hipLaunchKernelGGL( cudaKernelVal , dim3((nIter-1)/vectorSize+1) , dim3(vectorSize) , (std::uint32_t) 0 , (hipStream_t) 0 , nIter , *fp );
     }
   #endif
-
-
-  template <class F> void parallel_for( int const nIter , F const &f ) {
-    #ifdef __NVCC__
-      parallel_for_cuda<F>( nIter , f );
-    #elif defined(__HCC__)
-      parallel_for_hip<F>( nIter , f );
-    #else
-      parallel_for_cpu_serial<F>( nIter , f );
-    #endif
-  }
 
   template <class F> void parallel_for_cpu_serial( int const nIter , F const &f ) {
     for (int i=0; i<nIter; i++) {
       f(i);
     }
+  }
+
+
+  template <class F> void parallel_for( int const nIter , F const &f ) {
+    #ifdef __NVCC__
+      parallel_for_cuda( nIter , f );
+    #elif defined(__USE_HIP__)
+      parallel_for_hip( nIter , f );
+    #else
+      parallel_for_cpu_serial( nIter , f );
+    #endif
   }
 
 
@@ -194,7 +195,7 @@ namespace yakl {
     #ifdef __NVCC__
       cudaDeviceSynchronize();
     #endif
-    #ifdef __HCC__
+    #ifdef __USE_HIP__
       hipDeviceSynchronize();
     #endif
   }

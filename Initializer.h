@@ -7,7 +7,6 @@
 #include "Exchange.h"
 #include "TransformMatrices.h"
 #include "TimeIntegrator.h"
-#include "Indexing.h"
 #include "mpi.h"
 
 
@@ -167,7 +166,7 @@ public:
     //   for (int kk=0; kk<tord; kk++) {
     yakl::parallel_for( "initHydroGLL" , dom.nz*tord , YAKL_LAMBDA (int const iGlob) {
       int k, kk;
-      unpackIndices(iGlob,dom.nz,tord,k,kk);
+      yakl::unpackIndices(iGlob,dom.nz,tord,k,kk);
       real zloc = (k + 0.5_fp)*dom.dz + gllTordPoints(kk)*dom.dz;
       real r0, t0;
 
@@ -188,7 +187,7 @@ public:
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( "InitFluidState" , dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       // Initialize the state to zero
       for (int l=0; l<numState; l++) {
         state(l,hs+k,hs+j,hs+i) = 0;
@@ -243,7 +242,7 @@ public:
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( "Compute_dt3d" , dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       // Grab state variables
       real r, u, v, w, t, p, cs;
       if (dom.eqnSet == EQN_THETA_CONS) {
@@ -281,8 +280,10 @@ public:
       }
     }
 
-    real dtloc = dom.dt;
-    ierr = MPI_Allreduce(&dtloc, &dom.dt, 1, MPI_REAL , MPI_MIN, MPI_COMM_WORLD);
+    if (par.nranks > 1) {
+      real dtloc = dom.dt;
+      ierr = MPI_Allreduce(&dtloc, &dom.dt, 1, MPI_REAL , MPI_MIN, MPI_COMM_WORLD);
+    }
 
     if (par.masterproc) {
       std::cout << "dx: " << dom.dx << "\n";

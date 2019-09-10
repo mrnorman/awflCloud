@@ -111,7 +111,7 @@ public:
     auto &nPack        = this->nPack       ;
     yakl::parallel_for( n*dom.nz*dom.ny*hs , YAKL_LAMBDA (int iGlob) {
       int v, k, j, ii;
-      unpackIndices(iGlob,n,dom.nz,dom.ny,hs,v,k,j,ii);
+      yakl::unpackIndices(iGlob,n,dom.nz,dom.ny,hs,v,k,j,ii);
       int nGlob = dom.nz*dom.ny*hs;
       haloSendBufW(nPack*nGlob+iGlob) = a(v,hs+k,hs+j,hs    +ii);
       haloSendBufE(nPack*nGlob+iGlob) = a(v,hs+k,hs+j,dom.nx+ii);
@@ -126,7 +126,7 @@ public:
     auto &nPack        = this->nPack       ;
     yakl::parallel_for( n*dom.nz*hs*dom.nx , YAKL_LAMBDA (int iGlob) {
       int v, k, ii, i;
-      unpackIndices(iGlob,n,dom.nz,hs,dom.nx,v,k,ii,i);
+      yakl::unpackIndices(iGlob,n,dom.nz,hs,dom.nx,v,k,ii,i);
       int nGlob = dom.nz*hs*dom.nx;
       haloSendBufS(nPack*nGlob+iGlob) = a(v,hs+k,hs    +ii,hs+i);
       haloSendBufN(nPack*nGlob+iGlob) = a(v,hs+k,dom.ny+ii,hs+i);
@@ -141,7 +141,7 @@ public:
     auto &nUnpack      = this->nUnpack     ;
     yakl::parallel_for( n*dom.nz*dom.ny*hs , YAKL_LAMBDA (int iGlob) {
       int v, k, j, ii;
-      unpackIndices(iGlob,n,dom.nz,dom.ny,hs,v,k,j,ii);
+      yakl::unpackIndices(iGlob,n,dom.nz,dom.ny,hs,v,k,j,ii);
       int nGlob = dom.nz*dom.ny*hs;
       a(v,hs+k,hs+j,          ii) = haloRecvBufW(nUnpack*nGlob+iGlob);
       a(v,hs+k,hs+j,dom.nx+hs+ii) = haloRecvBufE(nUnpack*nGlob+iGlob);
@@ -156,7 +156,7 @@ public:
     auto &nUnpack      = this->nUnpack     ;
     yakl::parallel_for( n*dom.nz*hs*dom.nx , YAKL_LAMBDA (int iGlob) {
       int v, k, ii, i;
-      unpackIndices(iGlob,n,dom.nz,hs,dom.nx,v,k,ii,i);
+      yakl::unpackIndices(iGlob,n,dom.nz,hs,dom.nx,v,k,ii,i);
       int nGlob = dom.nz*hs*dom.nx;
       a(v,hs+k,          ii,hs+i) = haloRecvBufS(nUnpack*nGlob+iGlob);
       a(v,hs+k,dom.ny+hs+ii,hs+i) = haloRecvBufN(nUnpack*nGlob+iGlob);
@@ -246,7 +246,7 @@ public:
     //     for (int j=0; j<dom.ny; j++) {
     yakl::parallel_for( n*dom.nz*dom.ny , YAKL_LAMBDA (int iGlob) {
       int v, k, j;
-      unpackIndices(iGlob,n,dom.nz,dom.ny,v,k,j);
+      yakl::unpackIndices(iGlob,n,dom.nz,dom.ny,v,k,j);
       int nGlob = dom.nz*dom.ny;
       edgeSendBufW(nPack*nGlob+iGlob) = a(v,1,k,j,0     );
       edgeSendBufE(nPack*nGlob+iGlob) = a(v,0,k,j,dom.nx);
@@ -264,7 +264,7 @@ public:
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( n*dom.nz*dom.nx , YAKL_LAMBDA (int iGlob) {
       int v, k, i;
-      unpackIndices(iGlob,n,dom.nz,dom.nx,v,k,i);
+      yakl::unpackIndices(iGlob,n,dom.nz,dom.nx,v,k,i);
       int nGlob = dom.nz*dom.nx;
       edgeSendBufS(nPack*nGlob+iGlob) = a(v,1,k,0     ,i);
       edgeSendBufN(nPack*nGlob+iGlob) = a(v,0,k,dom.ny,i);
@@ -282,7 +282,7 @@ public:
     //     for (int j=0; j<dom.ny; j++) {
     yakl::parallel_for( n*dom.nz*dom.ny , YAKL_LAMBDA (int iGlob) {
       int v, k, j;
-      unpackIndices(iGlob,n,dom.nz,dom.ny,v,k,j);
+      yakl::unpackIndices(iGlob,n,dom.nz,dom.ny,v,k,j);
       int nGlob = dom.nz*dom.ny;
       a(v,0,k,j,0     ) = edgeRecvBufW(nUnpack*nGlob+iGlob);
       a(v,1,k,j,dom.nx) = edgeRecvBufE(nUnpack*nGlob+iGlob);
@@ -300,7 +300,7 @@ public:
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( n*dom.nz*dom.nx , YAKL_LAMBDA (int iGlob) {
       int v, k, i;
-      unpackIndices(iGlob,n,dom.nz,dom.nx,v,k,i);
+      yakl::unpackIndices(iGlob,n,dom.nz,dom.nx,v,k,i);
       int nGlob = dom.nz*dom.nx;
       a(v,0,k,0     ,i) = edgeRecvBufS(nUnpack*nGlob+iGlob);
       a(v,1,k,dom.ny,i) = edgeRecvBufN(nUnpack*nGlob+iGlob);

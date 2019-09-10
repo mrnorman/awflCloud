@@ -4,7 +4,6 @@
 
 #include "const.h"
 #include "pnetcdf.h"
-#include "Indexing.h"
 #include "mpi.h"
 #include "YAKL.h"
 
@@ -176,7 +175,7 @@ public:
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       data(iGlob) = state(idR,hs+k,hs+j,hs+i);
     });
     ncwrap( ncmpi_put_vara_float_all( ncid , rVar , st , ct , data.createHostCopy().data() ) , __LINE__ );
@@ -187,7 +186,7 @@ public:
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       data(iGlob) = state(idU,hs+k,hs+j,hs+i);
     });
     ncwrap( ncmpi_put_vara_float_all( ncid , uVar , st , ct , data.createHostCopy().data() ) , __LINE__ );
@@ -198,7 +197,7 @@ public:
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       data(iGlob) = state(idV,hs+k,hs+j,hs+i);
     });
     ncwrap( ncmpi_put_vara_float_all( ncid , vVar , st , ct , data.createHostCopy().data() ) , __LINE__ );
@@ -209,7 +208,7 @@ public:
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       data(iGlob) = state(idW,hs+k,hs+j,hs+i);
     });
     ncwrap( ncmpi_put_vara_float_all( ncid , wVar , st , ct , data.createHostCopy().data() ) , __LINE__ );
@@ -220,7 +219,7 @@ public:
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       data(iGlob) = state(idT,hs+k,hs+j,hs+i);
     });
     ncwrap( ncmpi_put_vara_float_all( ncid , thVar , st , ct , data.createHostCopy().data() ) , __LINE__ );
@@ -231,7 +230,7 @@ public:
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       data(iGlob) = C0*pow( ( state(idR,hs+k,hs+j,hs+i)+dom.hyDensCells (hs+k) ) *
                             ( state(idT,hs+k,hs+j,hs+i)+dom.hyThetaCells(hs+k) ) , GAMMA ) -
                     dom.hyPressureCells(hs+k);
@@ -258,7 +257,7 @@ public:
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       data(iGlob) = state(idR,hs+k,hs+j,hs+i);
     });
     ncwrap( ncmpi_put_vara_float_all( ncid , rVar , st , ct , data.createHostCopy().data() ) , __LINE__ );
@@ -269,7 +268,7 @@ public:
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       data(iGlob) = state(idRU,hs+k,hs+j,hs+i) / ( state(idR,hs+k,hs+j,hs+i) + dom.hyDensCells(hs+k) );
     });
     ncwrap( ncmpi_put_vara_float_all( ncid , uVar , st , ct , data.createHostCopy().data() ) , __LINE__ );
@@ -280,7 +279,7 @@ public:
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       data(iGlob) = state(idRV,hs+k,hs+j,hs+i) / ( state(idR,hs+k,hs+j,hs+i) + dom.hyDensCells(hs+k) );
     });
     ncwrap( ncmpi_put_vara_float_all( ncid , vVar , st , ct , data.createHostCopy().data() ) , __LINE__ );
@@ -291,7 +290,7 @@ public:
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       data(iGlob) = state(idRW,hs+k,hs+j,hs+i) / ( state(idR,hs+k,hs+j,hs+i) + dom.hyDensCells(hs+k) );
     });
     ncwrap( ncmpi_put_vara_float_all( ncid , wVar , st , ct , data.createHostCopy().data() ) , __LINE__ );
@@ -302,7 +301,7 @@ public:
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       data(iGlob) = ( state(idRT,hs+k,hs+j,hs+i) + dom.hyDensThetaCells(hs+k) ) /
                     ( state(idR ,hs+k,hs+j,hs+i) + dom.hyDensCells     (hs+k) ) -
                     dom.hyDensThetaCells(hs+k) / dom.hyDensCells(hs+k);
@@ -315,7 +314,7 @@ public:
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       data(iGlob) = C0*pow(state(idRT,hs+k,hs+j,hs+i)+dom.hyDensThetaCells(hs+k),GAMMA) -
                     C0*pow(dom.hyDensThetaCells(hs+k),GAMMA);
     });

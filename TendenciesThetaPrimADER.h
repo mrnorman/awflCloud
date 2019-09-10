@@ -127,7 +127,7 @@ public :
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA ( int const iGlob ) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       SArray<real,numState,tord> gllState;  // GLL state values
 
       // Compute tord GLL points of the state vector
@@ -182,7 +182,7 @@ public :
     //     for (int i=0; i<dom.nx+1; i++) {
     yakl::parallel_for( dom.nz*dom.ny*(dom.nx+1) , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx+1,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx+1,k,j,i);
       // Compute averaged values for the flux Jacobian diagonalization
       real r = 0.5_fp * ( stateLimits(idR,0,k,j,i) + stateLimits(idR,1,k,j,i) );
       real u = 0.5_fp * ( stateLimits(idU,0,k,j,i) + stateLimits(idU,1,k,j,i) );
@@ -253,7 +253,7 @@ public :
     //       for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( numState*dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int l, k, j, i;
-      unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
+      yakl::unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
       tend(l,k,j,i) += - ( fwaves(l,1,k,j,i) + fwaves(l,0,k,j,i+1) ) / dom.dx;
     });
   }
@@ -283,7 +283,7 @@ public :
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       SArray<real,numState,tord> gllState;  // GLL state values
 
       // Compute tord GLL points of the state vector
@@ -338,7 +338,7 @@ public :
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( dom.nz*(dom.ny+1)*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny+1,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny+1,dom.nx,k,j,i);
       // Compute averaged values for the flux Jacobian diagonalization
       real r = 0.5_fp * ( stateLimits(idR,0,k,j,i) + stateLimits(idR,1,k,j,i) );
       real v = 0.5_fp * ( stateLimits(idV,0,k,j,i) + stateLimits(idV,1,k,j,i) );
@@ -409,7 +409,7 @@ public :
     //       for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( numState*dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int l, k, j, i;
-      unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
+      yakl::unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
       tend(l,k,j,i) += - ( fwaves(l,1,k,j,i) + fwaves(l,0,k,j+1,i) ) / dom.dy;
     });
   }
@@ -433,7 +433,7 @@ public :
     //       for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( numState*dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int l, k, j, i;
-      unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
+      yakl::unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
       tend(l,k,j,i)  = 0;
     });
 
@@ -450,7 +450,7 @@ public :
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       SArray<real,3,tord> gllState;  // GLL state values
       SArray<real,ord> stencil;
       SArray<real,tord> gllPts;
@@ -501,7 +501,7 @@ public :
     //   for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int j, i;
-      unpackIndices(iGlob,dom.ny,dom.nx,j,i);
+      yakl::unpackIndices(iGlob,dom.ny,dom.nx,j,i);
       stateLimits(0,0,0     ,j,i) = stateLimits(0,1,0     ,j,i);
       stateLimits(1,0,0     ,j,i) = 0;
       stateLimits(1,1,0     ,j,i) = 0;
@@ -519,7 +519,7 @@ public :
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( (dom.nz+1)*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz+1,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz+1,dom.ny,dom.nx,k,j,i);
       // Compute averaged values for the flux Jacobian diagonalization
       real r = 0.5_fp * ( stateLimits(0,0,k,j,i) + stateLimits(0,1,k,j,i) );
       real p = 0.5_fp * ( stateLimits(2,0,k,j,i) + stateLimits(2,1,k,j,i) );
@@ -564,7 +564,7 @@ public :
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       tend(idR,k,j,i) += - ( fwaves(0,1,k,j,i) + fwaves(0,0,k+1,j,i) ) / dom.dz;
       tend(idW,k,j,i) += - ( fwaves(1,1,k,j,i) + fwaves(1,0,k+1,j,i) ) / dom.dz;
     });
@@ -579,7 +579,7 @@ public :
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       SArray<real,numState,tord> gllState;  // GLL state values
 
       // Compute tord GLL points of the state vector
@@ -623,7 +623,7 @@ public :
     //   for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int j, i;
-      unpackIndices(iGlob,dom.ny,dom.nx,j,i);
+      yakl::unpackIndices(iGlob,dom.ny,dom.nx,j,i);
       stateLimits(idR,0,0     ,j,i) = stateLimits(idR,1,0     ,j,i);
       stateLimits(idU,0,0     ,j,i) = stateLimits(idU,1,0     ,j,i);
       stateLimits(idV,0,0     ,j,i) = stateLimits(idV,1,0     ,j,i);
@@ -645,7 +645,7 @@ public :
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( (dom.nz+1)*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz+1,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz+1,dom.ny,dom.nx,k,j,i);
       // Compute averaged values for the flux Jacobian diagonalization
       real w = 0.5_fp * ( stateLimits(idW,0,k,j,i) + stateLimits(idW,1,k,j,i) );
 
@@ -691,7 +691,7 @@ public :
     //       for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( numState*dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int l, k, j, i;
-      unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
+      yakl::unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
       tend(l,k,j,i) += - ( fwaves(l,1,k,j,i) + fwaves(l,0,k+1,j,i) ) / dom.dz;
     });
 
@@ -705,7 +705,7 @@ public :
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       tend(idR ,k,j,i) = 0;
       tend(idU,k,j,i) = 0;
       tend(idV,k,j,i) = 0;
@@ -721,7 +721,7 @@ public :
     //     for (int ii=0; ii<hs; ii++) {
     yakl::parallel_for( dom.ny*dom.nx*hs , YAKL_LAMBDA (int const iGlob) {
       int j, i, ii;
-      unpackIndices(iGlob,dom.ny,dom.nx,hs,j,i,ii);
+      yakl::unpackIndices(iGlob,dom.ny,dom.nx,hs,j,i,ii);
       state(idR ,ii,hs+j,hs+i) = state(idR ,hs,hs+j,hs+i);
       state(idRU,ii,hs+j,hs+i) = state(idRU,hs,hs+j,hs+i);
       state(idRV,ii,hs+j,hs+i) = state(idRV,hs,hs+j,hs+i);
@@ -742,7 +742,7 @@ public :
     //   for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int j, i;
-      unpackIndices(iGlob,dom.ny,dom.nx,j,i);
+      yakl::unpackIndices(iGlob,dom.ny,dom.nx,j,i);
       stateLimits(idR ,0,0     ,j,i) = stateLimits(idR ,1,0     ,j,i);
       stateLimits(idRU,0,0     ,j,i) = stateLimits(idRU,1,0     ,j,i);
       stateLimits(idRV,0,0     ,j,i) = stateLimits(idRV,1,0     ,j,i);
@@ -793,7 +793,7 @@ public :
     //     for (int i=0; i<dom.nx; i++) {
     yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       real r = ( state(idR,hs+k,hs+j,hs+i) + dom.hyDensCells(hs+k) );
       SArray<real,numState,3> sten;
 
