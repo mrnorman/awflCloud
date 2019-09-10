@@ -194,7 +194,7 @@ namespace yakl {
     #ifdef __NVCC__
       cudaDeviceSynchronize();
     #endif
-    #ifdef __NVCC__
+    #ifdef __HCC__
       hipDeviceSynchronize();
     #endif
   }
