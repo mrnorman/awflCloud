@@ -5,7 +5,7 @@
 #include <iostream>
 #include <algorithm>
 
-#ifdef __NVCC__
+#ifdef __USE_CUDA__
   #define YAKL_LAMBDA [=] __host__ __device__
   #define YAKL_INLINE __host__ __device__
 #elif defined(__USE_HIP__)
@@ -28,21 +28,15 @@ namespace yakl {
 
   void init(int vectorSize_in=128) {
     vectorSize = vectorSize_in;
-    #if defined(__NVCC__)
+    #if defined(__USE_CUDA__)
       cudaMalloc(&functorBuffer,functorBufSize);
-    #endif
-    #if defined(__USE_HIP__)
-      hipMalloc(&functorBuffer,functorBufSize);
     #endif
   }
 
 
   void finalize() {
-    #if defined(__NVCC__)
+    #if defined(__USE_CUDA__)
       cudaFree(functorBuffer);
-    #endif
-    #if defined(__USE_HIP__)
-      hipFree(functorBuffer);
     #endif
   }
 
@@ -121,7 +115,7 @@ namespace yakl {
   }
 
 
-  #ifdef __NVCC__
+  #ifdef __USE_CUDA__
     template <class F> __global__ void cudaKernelVal(ulong const nIter, F f) {
       ulong i = blockIdx.x*blockDim.x + threadIdx.x;
       if (i < nIter) {
@@ -152,20 +146,6 @@ namespace yakl {
         f( i );
       }
     }
-    template <class F> __global__ void cudaKernelRef(ulong const nIter, F const &f) {
-      ulong i = hipBlockIdx_x*hipBlockDim_x + hipThreadIdx_x;
-      if (i < nIter) {
-        f( i );
-      }
-    }
-    // template<class F , typename std::enable_if< sizeof(F) <= 4000 , int >::type = 0> void parallel_for_hip( int const nIter , F const &f ) {
-    //   hipLaunchKernelGGL( cudaKernelVal , dim3((nIter-1)/vectorSize+1) , dim3(vectorSize) , (std::uint32_t) 0 , (hipStream_t) 0 , nIter , f );
-    // }
-    // template<class F , typename std::enable_if< sizeof(F) >= 4001 , int >::type = 0> void parallel_for_hip( int const nIter , F const &f ) {
-    //   F *fp = (F *) functorBuffer;
-    //   hipMemcpy(fp,&f,sizeof(F),hipMemcpyHostToDevice);
-    //   hipLaunchKernelGGL( cudaKernelVal , dim3((nIter-1)/vectorSize+1) , dim3(vectorSize) , (std::uint32_t) 0 , (hipStream_t) 0 , nIter , *fp );
-    // }
     template<class F> void parallel_for_hip( int const nIter , F const &f ) {
       hipLaunchKernelGGL( cudaKernelVal , dim3((nIter-1)/vectorSize+1) , dim3(vectorSize) , (std::uint32_t) 0 , (hipStream_t) 0 , nIter , f );
     }
@@ -179,7 +159,7 @@ namespace yakl {
 
 
   template <class F> void parallel_for( int const nIter , F const &f ) {
-    #ifdef __NVCC__
+    #ifdef __USE_CUDA__
       parallel_for_cuda( nIter , f );
     #elif defined(__USE_HIP__)
       parallel_for_hip( nIter , f );
@@ -195,7 +175,7 @@ namespace yakl {
 
 
   void fence() {
-    #ifdef __NVCC__
+    #ifdef __USE_CUDA__
       cudaDeviceSynchronize();
     #endif
     #ifdef __USE_HIP__
@@ -204,7 +184,7 @@ namespace yakl {
   }
 
 
-  #ifdef __NVCC__
+  #ifdef __USE_CUDA__
     __device__ __forceinline__ void atomicMin(float *address , float value) {
       int oldval, newval, readback;
       oldval = __float_as_int(*address);
@@ -246,7 +226,7 @@ namespace yakl {
     }
   #endif
   template <class FP> inline YAKL_INLINE void addAtomic(FP &x, FP const val) {
-    #ifdef __NVCC__
+    #ifdef __USE_CUDA__
       atomicAdd(&x,val);
     #else
       x += val;
@@ -254,7 +234,7 @@ namespace yakl {
   }
 
   template <class FP> inline YAKL_INLINE void minAtomic(FP &a, FP const b) {
-    #ifdef __NVCC__
+    #ifdef __USE_CUDA__
       atomicMin(&a,b);
     #else
       a = a < b ? a : b;
@@ -262,7 +242,7 @@ namespace yakl {
   }
 
   template <class FP> inline YAKL_INLINE void maxAtomic(FP &a, FP const b) {
-    #ifdef __NVCC__
+    #ifdef __USE_CUDA__
       atomicMax(&a,b);
     #else
       a = a > b ? a : b;

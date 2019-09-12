@@ -9,7 +9,7 @@ typedef float         real;
 typedef unsigned long ulong;
 typedef unsigned int  uint;
 
-#if defined(__NVCC__) || defined(__USE_HIP__)
+#if defined(__USE_CUDA__) || defined(__USE_HIP__)
 typedef yakl::Array<real,yakl::memDevice> realArr;
 #else
 typedef yakl::Array<real,yakl::memHost> realArr;
@@ -17,7 +17,7 @@ typedef yakl::Array<real,yakl::memHost> realArr;
 
 typedef yakl::Array<real,yakl::memHost> realArrHost;
 
-#ifdef __NVCC__
+#ifdef __USE_CUDA__
 #define _HOSTDEV __host__ __device__
 #elif defined(__USE_HIP__)
 #define _HOSTDEV __host__ __device__
