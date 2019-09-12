@@ -9,9 +9,9 @@
 
 class TimeIntegrator {
 
-  real4d stateTmp;
-  real4d tend;
-  real4d tendTmp;
+  realArr stateTmp;
+  realArr tend;
+  realArr tendTmp;
   Tendencies tendencies;
   int dsSwitch;
 
@@ -20,16 +20,16 @@ public :
 
   inline void initialize(Domain &dom) {
     if (timeMethod == TIME_SSPRK3) {
-      stateTmp = real4d("stateTmp",numState,dom.nz+2*hs,dom.ny+2*hs,dom.nx+2*hs);
-      tendTmp  = real4d("tendTmp" ,numState,dom.nz,dom.ny,dom.nx);
+      stateTmp = realArr("stateTmp",numState,dom.nz+2*hs,dom.ny+2*hs,dom.nx+2*hs);
+      tendTmp  = realArr("tendTmp" ,numState,dom.nz,dom.ny,dom.nx);
     }
-    tend = real4d("tend",numState,dom.nz,dom.ny,dom.nx);
+    tend = realArr("tend",numState,dom.nz,dom.ny,dom.nx);
     tendencies.initialize(dom);
     dsSwitch = 1;
   }
 
 
-  inline void stepForward(real4d &state, Domain &dom, Exchange &exch, Parallel const &par) {
+  inline void stepForward(realArr &state, Domain &dom, Exchange &exch, Parallel const &par) {
     if (timeMethod == TIME_SSPRK3) {
       stepForwardSSPRK3(state, dom, exch, par);
     } else if (timeMethod == TIME_ADER) {
@@ -45,7 +45,7 @@ public :
   }
 
 
-  inline void stepForwardADER(real4d &state, Domain &dom, Exchange &exch, Parallel const &par) {
+  inline void stepForwardADER(realArr &state, Domain &dom, Exchange &exch, Parallel const &par) {
     if (dsSwitch) {
       dsSwitch = 0;
       tendencies.compEulerTend_X(state, dom, exch, par, tend);
@@ -79,7 +79,7 @@ public :
   }
 
 
-  inline void stepForwardSSPRK3(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par) {
+  inline void stepForwardSSPRK3(realArr &state, Domain const &dom, Exchange &exch, Parallel const &par) {
     // Stage 1
     tendencies.compEulerTend_X(state, dom, exch, par, tend   );
     if (!dom.run2d) {
@@ -109,40 +109,40 @@ public :
   }
 
 
-  inline void applyTendencies(real4d &state2, real const c0, real4d const &state0,
-                                              real const c1, real4d const &state1,
-                                              real const ct, real4d const &tend, Domain const &dom) {
+  inline void applyTendencies(realArr &state2, real const c0, realArr const &state0,
+                                              real const c1, realArr const &state1,
+                                              real const ct, realArr const &tend, Domain const &dom) {
     // for (int l=0; l<numState; l++) {
     //   for (int k=0; k<dom.nz; k++) {
     //     for (int j=0; j<dom.ny; j++) {
     //       for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( numState*dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( numState*dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int l, k, j, i;
-      unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
+      yakl::unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
       state2(l,hs+k,hs+j,hs+i) = c0 * state0(l,hs+k,hs+j,hs+i) + c1 * state1(l,hs+k,hs+j,hs+i) + ct * dom.dt * tend(l,k,j,i);
     });
   }
 
 
-  inline void appendTendencies(real4d &tend, real4d const &tendTmp, Domain const &dom) {
+  inline void appendTendencies(realArr &tend, realArr const &tendTmp, Domain const &dom) {
     // for (int l=0; l<numState; l++) {
     //   for (int k=0; k<dom.nz; k++) {
     //     for (int j=0; j<dom.ny; j++) {
     //       for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( numState*dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( numState*dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int l, k, j, i;
-      unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
+      yakl::unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
       tend(l,k,j,i) += tendTmp(l,k,j,i);
     });
   }
 
 
-  inline void applyHeatingCooling(real4d &state, Parallel const &par, Domain const &dom) {
+  inline void applyHeatingCooling(realArr &state, Parallel const &par, Domain const &dom) {
     // for (int j=0; j<dom.ny; j++) {
     //   for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int j, i;
-      unpackIndices(iGlob,dom.ny,dom.nx,j,i);
+      yakl::unpackIndices(iGlob,dom.ny,dom.nx,j,i);
       real xloc = (par.i_beg + i + 0.5_fp) * dom.dx;
       real yloc = (par.j_beg + j + 0.5_fp) * dom.dy;
       if (dom.run2d) {yloc = dom.ylen/2;}

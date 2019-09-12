@@ -39,16 +39,16 @@ public:
   real dt;
 
   // Hydrostatic background state cell averages (no halos)
-  real1d hyDensCells;
-  real1d hyDensThetaCells;
-  real1d hyThetaCells;
-  real1d hyPressureCells;
+  realArr hyDensCells;
+  realArr hyDensThetaCells;
+  realArr hyThetaCells;
+  realArr hyPressureCells;
 
   // Hydrostatic background state at tord GLL points within cells (no halos)
-  real2d hyDensGLL;
-  real2d hyDensThetaGLL;
-  real2d hyThetaGLL;
-  real2d hyPressureGLL;
+  realArr hyDensGLL;
+  realArr hyDensThetaGLL;
+  realArr hyThetaGLL;
+  realArr hyPressureGLL;
 };
 
 #endif

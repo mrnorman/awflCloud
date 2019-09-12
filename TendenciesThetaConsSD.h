@@ -14,11 +14,11 @@
 
 class TendenciesThetaConsSD {
 
-  real5d stateLimits;
-  real5d fluxLimits;
-  real4d flux;
-  real3d src;
-  real5d stateGLL;
+  realArr stateLimits;
+  realArr fluxLimits;
+  realArr flux;
+  realArr src;
+  realArr stateGLL;
   SArray<real,tord> gllWts;
   SArray<real,ord,tord> to_gll;
   SArray<real,ord,ord,ord> wenoRecon;
@@ -31,11 +31,11 @@ public :
   inline void initialize(Domain const &dom) {
     TransformMatrices<real> trans;
 
-    fluxLimits  = real5d("fluxLimits",numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
-    stateLimits = real5d("srcLimits" ,numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
-    flux        = real4d("flux"      ,numState  ,dom.nz+1,dom.ny+1,dom.nx+1);
-    src         = real3d("src"       ,dom.nz,dom.ny,dom.nx);
-    stateGLL    = real5d("stateGLL"  ,numState,dom.nz,dom.ny,dom.nx,tord);
+    fluxLimits  = realArr("fluxLimits",numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
+    stateLimits = realArr("srcLimits" ,numState,2,dom.nz+1,dom.ny+1,dom.nx+1);
+    flux        = realArr("flux"      ,numState  ,dom.nz+1,dom.ny+1,dom.nx+1);
+    src         = realArr("src"       ,dom.nz,dom.ny,dom.nx);
+    stateGLL    = realArr("stateGLL"  ,numState,dom.nz,dom.ny,dom.nx,tord);
 
     // Setup the matrix to transform a stencil of ord cell averages into tord GLL points
     if (dom.doWeno) {
@@ -75,7 +75,7 @@ public :
   }
 
 
-  inline void compEulerTend_X(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+  inline void compEulerTend_X(realArr &state, Domain const &dom, Exchange &exch, Parallel const &par, realArr &tend) {
     auto &stateLimits = this->stateLimits;
     auto &fluxLimits  = this->fluxLimits ;
     auto &flux        = this->flux       ;
@@ -97,9 +97,9 @@ public :
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       SArray<real,numState,tord> gllState;  // GLL state values
       SArray<real,numState,tord> gllFlux;   // GLL flux values
 
@@ -156,9 +156,9 @@ public :
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx+1; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*(dom.nx+1) , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.nz*dom.ny*(dom.nx+1) , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx+1,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx+1,k,j,i);
       SArray<real,numState> s1, s2, f1, f2, upw;
       for (int l=0; l<numState; l++) {
         s1(l) = stateLimits(l,0,k,j,i);
@@ -178,15 +178,15 @@ public :
     //   for (int k=0; k<dom.nz; k++) {
     //     for (int j=0; j<dom.ny; j++) {
     //       for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( numState*dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( numState*dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int l, k, j, i;
-      unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
+      yakl::unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
       tend(l,k,j,i) = - ( flux(l,k,j,i+1) - flux(l,k,j,i) ) / dom.dx;
     });
   }
 
 
-  inline void compEulerTend_Y(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+  inline void compEulerTend_Y(realArr &state, Domain const &dom, Exchange &exch, Parallel const &par, realArr &tend) {
     auto &stateLimits = this->stateLimits;
     auto &fluxLimits  = this->fluxLimits ;
     auto &flux        = this->flux       ;
@@ -208,9 +208,9 @@ public :
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       SArray<real,numState,tord> gllState;
       SArray<real,numState,tord> gllFlux;
 
@@ -267,9 +267,9 @@ public :
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny+1; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*(dom.ny+1)*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.nz*(dom.ny+1)*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny+1,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny+1,dom.nx,k,j,i);
       SArray<real,numState> s1, s2, f1, f2, upw;
       for (int l=0; l<numState; l++) {
         s1(l) = stateLimits(l,0,k,j,i);
@@ -289,15 +289,15 @@ public :
     //   for (int k=0; k<dom.nz; k++) {
     //     for (int j=0; j<dom.ny; j++) {
     //       for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( numState*dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( numState*dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int l, k, j, i;
-      unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
+      yakl::unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
       tend(l,k,j,i) = - ( flux(l,k,j+1,i) - flux(l,k,j,i) ) / dom.dy;
     });
   }
 
 
-  inline void compEulerTend_Z(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+  inline void compEulerTend_Z(realArr &state, Domain const &dom, Exchange &exch, Parallel const &par, realArr &tend) {
     auto &stateLimits = this->stateLimits;
     auto &fluxLimits  = this->fluxLimits ;
     auto &flux        = this->flux       ;
@@ -316,9 +316,9 @@ public :
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       SArray<real,numState,tord> gllState;
       SArray<real,numState,tord> gllFlux;
 
@@ -374,9 +374,9 @@ public :
     // for (int k=0; k<dom.nz+1; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( (dom.nz+1)*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( (dom.nz+1)*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz+1,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz+1,dom.ny,dom.nx,k,j,i);
       SArray<real,numState> s1, s2, f1, f2, upw;
       for (int l=0; l<numState; l++) {
         s1(l) = stateLimits(l,0,k,j,i);
@@ -396,9 +396,9 @@ public :
     //   for (int k=0; k<dom.nz; k++) {
     //     for (int j=0; j<dom.ny; j++) {
     //       for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( numState*dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( numState*dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int l, k, j, i;
-      unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
+      yakl::unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
       tend(l,k,j,i) = - ( flux(l,k+1,j,i) - flux(l,k,j,i) ) / dom.dz;
       if (l==idRW) {
         tend(l,k,j,i) += src(k,j,i);
@@ -407,14 +407,14 @@ public :
   }
 
 
-  inline void compEulerTend_S(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+  inline void compEulerTend_S(realArr &state, Domain const &dom, Exchange &exch, Parallel const &par, realArr &tend) {
     // Form the tendencies
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       tend(idR ,k,j,i) = 0;
       tend(idRU,k,j,i) = 0;
       tend(idRV,k,j,i) = 0;
@@ -424,13 +424,13 @@ public :
   }
 
 
-  inline void stateBoundariesZ(real4d &state, Domain const &dom) {
+  inline void stateBoundariesZ(realArr &state, Domain const &dom) {
     // for (int j=0; j<dom.ny; j++) {
     //   for (int i=0; i<dom.nx; i++) {
     //     for (int ii=0; ii<hs; ii++) {
-    Kokkos::parallel_for( dom.ny*dom.nx*hs , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.ny*dom.nx*hs , YAKL_LAMBDA (int const iGlob) {
       int j, i, ii;
-      unpackIndices(iGlob,dom.ny,dom.nx,hs,j,i,ii);
+      yakl::unpackIndices(iGlob,dom.ny,dom.nx,hs,j,i,ii);
       state(idR ,ii,hs+j,hs+i) = state(idR ,hs,hs+j,hs+i);
       state(idRU,ii,hs+j,hs+i) = state(idRU,hs,hs+j,hs+i);
       state(idRV,ii,hs+j,hs+i) = state(idRV,hs,hs+j,hs+i);
@@ -446,12 +446,12 @@ public :
   }
 
 
-  inline void edgeBoundariesZ(real5d &stateLimits, real5d &fluxLimits, Domain const &dom) {
+  inline void edgeBoundariesZ(realArr &stateLimits, realArr &fluxLimits, Domain const &dom) {
     // for (int j=0; j<dom.ny; j++) {
     //   for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int j, i;
-      unpackIndices(iGlob,dom.ny,dom.nx,j,i);
+      yakl::unpackIndices(iGlob,dom.ny,dom.nx,j,i);
       stateLimits(idR ,0,0     ,j,i) = stateLimits(idR ,1,0     ,j,i);
       stateLimits(idRU,0,0     ,j,i) = stateLimits(idRU,1,0     ,j,i);
       stateLimits(idRV,0,0     ,j,i) = stateLimits(idRV,1,0     ,j,i);
@@ -481,7 +481,7 @@ public :
   }
 
 
-  inline void compStrakaTend(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
+  inline void compStrakaTend(realArr &state, Domain const &dom, Exchange &exch, Parallel const &par, realArr &tend) {
     //Exchange halos in the x-direction
     exch.haloInit      ();
     exch.haloPackN_x   (dom, state, numState);
@@ -500,9 +500,9 @@ public :
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       real r = ( state(idR,hs+k,hs+j,hs+i) + dom.hyDensCells(hs+k) );
       SArray<real,numState,3> sten;
 

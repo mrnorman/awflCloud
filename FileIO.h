@@ -4,8 +4,8 @@
 
 #include "const.h"
 #include "pnetcdf.h"
-#include "Indexing.h"
 #include "mpi.h"
+#include "YAKL.h"
 
 class FileIO {
 
@@ -18,25 +18,12 @@ protected:
 
 public:
 
-  void outputInit(real4d &state, Domain const &dom, Parallel const &par) {
+  void outputInit(realArr &state, Domain const &dom, Parallel const &par) {
     int dimids[4];
     MPI_Offset st[1], ct[1];
-    real1d xCoord("xCoord",dom.nx);
-    real1d yCoord("yCoord",dom.ny);
-    real1d zCoord("zCoord",dom.nz);
-    real *xCoord_cpu;
-    real *yCoord_cpu;
-    real *zCoord_cpu;
-
-    #ifdef __NVCC__
-      cudaMallocHost( &xCoord_cpu , dom.nx*sizeof(real) );
-      cudaMallocHost( &yCoord_cpu , dom.ny*sizeof(real) );
-      cudaMallocHost( &zCoord_cpu , dom.nz*sizeof(real) );
-    #else
-      xCoord_cpu = xCoord.data();
-      yCoord_cpu = yCoord.data();
-      zCoord_cpu = zCoord.data();
-    #endif
+    realArr xCoord("xCoord",dom.nx);
+    realArr yCoord("yCoord",dom.ny);
+    realArr zCoord("zCoord",dom.nz);
 
     numOut = 0;
 
@@ -84,72 +71,49 @@ public:
 
     // Compute x, y, and z coordinates
     // for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nx , KOKKOS_LAMBDA (int const i) {
+    yakl::parallel_for( dom.nx , YAKL_LAMBDA (int const i) {
       xCoord(i) = ( par.i_beg + i + 0.5_fp ) * dom.dx;
     });
     // for (int j=0; j<dom.ny; j++) {
-    Kokkos::parallel_for( dom.ny , KOKKOS_LAMBDA (int const j) {
+    yakl::parallel_for( dom.ny , YAKL_LAMBDA (int const j) {
       yCoord(j) = ( par.j_beg + j + 0.5_fp ) * dom.dy;
     });
     // for (int k=0; k<dom.nz; k++) {
-    Kokkos::parallel_for( dom.nz , KOKKOS_LAMBDA (int const k) {
+    yakl::parallel_for( dom.nz , YAKL_LAMBDA (int const k) {
       zCoord(k) = (             k + 0.5_fp ) * dom.dz;
     });
-    Kokkos::fence();
-
-    #ifdef __NVCC__
-      cudaMemcpyAsync( xCoord_cpu , xCoord.data() , dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
-      cudaMemcpyAsync( yCoord_cpu , yCoord.data() , dom.ny*sizeof(real) , cudaMemcpyDeviceToHost );
-      cudaMemcpyAsync( zCoord_cpu , zCoord.data() , dom.nz*sizeof(real) , cudaMemcpyDeviceToHost );
-      cudaDeviceSynchronize();
-    #endif
 
     // Write out x, y, and z coordinates
     st[0] = par.i_beg;
     ct[0] = dom.nx;
-    ncwrap( ncmpi_put_vara_float_all( ncid , xVar , st , ct , xCoord_cpu ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_float_all( ncid , xVar , st , ct , xCoord.createHostCopy().data() ) , __LINE__ );
     st[0] = par.j_beg;
     ct[0] = dom.ny;
-    ncwrap( ncmpi_put_vara_float_all( ncid , yVar , st , ct , yCoord_cpu ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_float_all( ncid , yVar , st , ct , yCoord.createHostCopy().data() ) , __LINE__ );
 
     // Write out the hydrostatic background states and z coordinates
     st[0] = 0;
     ct[0] = dom.nz_glob;
     ncwrap( ncmpi_begin_indep_data(ncid) , __LINE__ );
-    ncwrap( ncmpi_put_vara_float( ncid , zVar    , st , ct , zCoord_cpu ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_float( ncid , zVar    , st , ct , zCoord.createHostCopy().data() ) , __LINE__ );
 
     // for (int k=0; k<dom.nz; k++) {
-    Kokkos::parallel_for( dom.nz , KOKKOS_LAMBDA (int const k) {
+    yakl::parallel_for( dom.nz , YAKL_LAMBDA (int const k) {
       zCoord(k) = dom.hyDensCells     (hs+k);
     });
-    Kokkos::fence();
-    #ifdef __NVCC__
-      cudaMemcpyAsync( zCoord_cpu , zCoord.data() , dom.nz*sizeof(real) , cudaMemcpyDeviceToHost );
-      cudaDeviceSynchronize();
-    #endif
-    ncwrap( ncmpi_put_vara_float( ncid , hyrVar  , st , ct , zCoord_cpu ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_float( ncid , hyrVar  , st , ct , zCoord.createHostCopy().data() ) , __LINE__ );
 
     // for (int k=0; k<dom.nz; k++) {
-    Kokkos::parallel_for( dom.nz , KOKKOS_LAMBDA (int const k) {
+    yakl::parallel_for( dom.nz , YAKL_LAMBDA (int const k) {
       zCoord(k) = dom.hyDensThetaCells(hs+k);
     });
-    Kokkos::fence();
-    #ifdef __NVCC__
-      cudaMemcpyAsync( zCoord_cpu , zCoord.data() , dom.nz*sizeof(real) , cudaMemcpyDeviceToHost );
-      cudaDeviceSynchronize();
-    #endif
-    ncwrap( ncmpi_put_vara_float( ncid , hyrtVar , st , ct , zCoord_cpu ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_float( ncid , hyrtVar , st , ct , zCoord.createHostCopy().data() ) , __LINE__ );
 
     // for (int k=0; k<dom.nz; k++) {
-    Kokkos::parallel_for( dom.nz , KOKKOS_LAMBDA (int const k) {
+    yakl::parallel_for( dom.nz , YAKL_LAMBDA (int const k) {
       zCoord(k) = dom.hyPressureCells(hs+k);
     });
-    Kokkos::fence();
-    #ifdef __NVCC__
-      cudaMemcpyAsync( zCoord_cpu , zCoord.data() , dom.nz*sizeof(real) , cudaMemcpyDeviceToHost );
-      cudaDeviceSynchronize();
-    #endif
-    ncwrap( ncmpi_put_vara_float( ncid , hypVar , st , ct , zCoord_cpu ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_float( ncid , hypVar , st , ct , zCoord.createHostCopy().data() ) , __LINE__ );
 
     ncwrap( ncmpi_end_indep_data(ncid) , __LINE__ );
 
@@ -158,16 +122,10 @@ public:
     ncwrap( ncmpi_close(ncid) , __LINE__ );
 
     numOut++;
-
-    #ifdef __NVCC__
-      cudaFree( xCoord_cpu );
-      cudaFree( yCoord_cpu );
-      cudaFree( zCoord_cpu );
-    #endif
   }
 
 
-  void output(real4d &state, Domain const &dom, Parallel const &par) {
+  void output(realArr &state, Domain const &dom, Parallel const &par) {
     int dimids[4];
     MPI_Offset st[1], ct[1];
 
@@ -195,7 +153,7 @@ public:
   }
 
 
-  void writeState(real4d &state, Domain const &dom, Parallel const &par) {
+  void writeState(realArr &state, Domain const &dom, Parallel const &par) {
     if        (dom.eqnSet == EQN_THETA_CONS) {
       writeStateThetaCons(state, dom, par);
     } else if (dom.eqnSet == EQN_THETA_PRIM) {
@@ -204,16 +162,9 @@ public:
   }
 
 
-  void writeStateThetaPrim(real4d &state, Domain const &dom, Parallel const &par) {
+  void writeStateThetaPrim(realArr &state, Domain const &dom, Parallel const &par) {
     MPI_Offset st[4], ct[4];
-    real1d data("data",dom.nz*dom.ny*dom.nx);
-    real *data_cpu;
-
-    #ifdef __NVCC__
-      cudaMallocHost( &data_cpu , dom.nz*dom.ny*dom.nx*sizeof(real) );
-    #else
-      data_cpu = data.data();
-    #endif
+    realArr data("data",dom.nz*dom.ny*dom.nx);
 
     st[0] = numOut; st[1] = 0     ; st[2] = par.j_beg; st[3] = par.i_beg;
     ct[0] = 1     ; ct[1] = dom.nz; ct[2] = dom.ny   ; ct[3] = dom.nx   ;
@@ -222,121 +173,80 @@ public:
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       data(iGlob) = state(idR,hs+k,hs+j,hs+i);
     });
-    Kokkos::fence();
-    #ifdef __NVCC__
-      cudaMemcpyAsync( data_cpu , data.data() , dom.nz*dom.ny*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
-      cudaDeviceSynchronize();
-    #endif
-    ncwrap( ncmpi_put_vara_float_all( ncid , rVar , st , ct , data_cpu ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_float_all( ncid , rVar , st , ct , data.createHostCopy().data() ) , __LINE__ );
 
     // Write out u wind
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       data(iGlob) = state(idU,hs+k,hs+j,hs+i);
     });
-    Kokkos::fence();
-    #ifdef __NVCC__
-      cudaMemcpyAsync( data_cpu , data.data() , dom.nz*dom.ny*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
-      cudaDeviceSynchronize();
-    #endif
-    ncwrap( ncmpi_put_vara_float_all( ncid , uVar , st , ct , data_cpu ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_float_all( ncid , uVar , st , ct , data.createHostCopy().data() ) , __LINE__ );
 
     // Write out v wind
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       data(iGlob) = state(idV,hs+k,hs+j,hs+i);
     });
-    Kokkos::fence();
-    #ifdef __NVCC__
-      cudaMemcpyAsync( data_cpu , data.data() , dom.nz*dom.ny*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
-      cudaDeviceSynchronize();
-    #endif
-    ncwrap( ncmpi_put_vara_float_all( ncid , vVar , st , ct , data_cpu ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_float_all( ncid , vVar , st , ct , data.createHostCopy().data() ) , __LINE__ );
 
     // Write out w wind
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       data(iGlob) = state(idW,hs+k,hs+j,hs+i);
     });
-    Kokkos::fence();
-    #ifdef __NVCC__
-      cudaMemcpyAsync( data_cpu , data.data() , dom.nz*dom.ny*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
-      cudaDeviceSynchronize();
-    #endif
-    ncwrap( ncmpi_put_vara_float_all( ncid , wVar , st , ct , data_cpu ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_float_all( ncid , wVar , st , ct , data.createHostCopy().data() ) , __LINE__ );
 
     // Write out potential temperature perturbations
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       data(iGlob) = state(idT,hs+k,hs+j,hs+i);
     });
-    Kokkos::fence();
-    #ifdef __NVCC__
-      cudaMemcpyAsync( data_cpu , data.data() , dom.nz*dom.ny*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
-      cudaDeviceSynchronize();
-    #endif
-    ncwrap( ncmpi_put_vara_float_all( ncid , thVar , st , ct , data_cpu ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_float_all( ncid , thVar , st , ct , data.createHostCopy().data() ) , __LINE__ );
 
     // Write out perturbation pressure
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       data(iGlob) = C0*pow( ( state(idR,hs+k,hs+j,hs+i)+dom.hyDensCells (hs+k) ) *
                             ( state(idT,hs+k,hs+j,hs+i)+dom.hyThetaCells(hs+k) ) , GAMMA ) -
                     dom.hyPressureCells(hs+k);
     });
-    Kokkos::fence();
-    #ifdef __NVCC__
-      cudaMemcpyAsync( data_cpu , data.data() , dom.nz*dom.ny*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
-      cudaDeviceSynchronize();
-    #endif
-    ncwrap( ncmpi_put_vara_float_all( ncid , pVar , st , ct , data_cpu ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_float_all( ncid , pVar , st , ct , data.createHostCopy().data() ) , __LINE__ );
 
     ncwrap( ncmpi_begin_indep_data(ncid) , __LINE__ );
     st[0] = numOut;
     ncwrap( ncmpi_put_var1_float( ncid , tVar , st , &(dom.etime) ) , __LINE__ );
     ncwrap( ncmpi_end_indep_data(ncid) , __LINE__ );
-
-    #ifdef __NVCC__
-      cudaFree( data_cpu );
-    #endif
   }
 
 
-  void writeStateThetaCons(real4d &state, Domain const &dom, Parallel const &par) {
+  void writeStateThetaCons(realArr &state, Domain const &dom, Parallel const &par) {
     MPI_Offset st[4], ct[4];
-    real1d data("data",dom.nz*dom.ny*dom.nx);
-    real *data_cpu;
-
-    #ifdef __NVCC__
-      cudaMallocHost( &data_cpu , dom.nz*dom.ny*dom.nx*sizeof(real) );
-    #else
-      data_cpu = data.data();
-    #endif
+    realArr data("data",dom.nz*dom.ny*dom.nx);
 
     st[0] = numOut; st[1] = 0     ; st[2] = par.j_beg; st[3] = par.i_beg;
     ct[0] = 1     ; ct[1] = dom.nz; ct[2] = dom.ny   ; ct[3] = dom.nx   ;
@@ -345,109 +255,75 @@ public:
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       data(iGlob) = state(idR,hs+k,hs+j,hs+i);
     });
-    Kokkos::fence();
-    #ifdef __NVCC__
-      cudaMemcpyAsync( data_cpu , data.data() , dom.nz*dom.ny*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
-      cudaDeviceSynchronize();
-    #endif
-    ncwrap( ncmpi_put_vara_float_all( ncid , rVar , st , ct , data_cpu ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_float_all( ncid , rVar , st , ct , data.createHostCopy().data() ) , __LINE__ );
 
     // Write out u wind
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       data(iGlob) = state(idRU,hs+k,hs+j,hs+i) / ( state(idR,hs+k,hs+j,hs+i) + dom.hyDensCells(hs+k) );
     });
-    Kokkos::fence();
-    #ifdef __NVCC__
-      cudaMemcpyAsync( data_cpu , data.data() , dom.nz*dom.ny*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
-      cudaDeviceSynchronize();
-    #endif
-    ncwrap( ncmpi_put_vara_float_all( ncid , uVar , st , ct , data_cpu ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_float_all( ncid , uVar , st , ct , data.createHostCopy().data() ) , __LINE__ );
 
     // Write out v wind
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       data(iGlob) = state(idRV,hs+k,hs+j,hs+i) / ( state(idR,hs+k,hs+j,hs+i) + dom.hyDensCells(hs+k) );
     });
-    Kokkos::fence();
-    #ifdef __NVCC__
-      cudaMemcpyAsync( data_cpu , data.data() , dom.nz*dom.ny*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
-      cudaDeviceSynchronize();
-    #endif
-    ncwrap( ncmpi_put_vara_float_all( ncid , vVar , st , ct , data_cpu ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_float_all( ncid , vVar , st , ct , data.createHostCopy().data() ) , __LINE__ );
 
     // Write out w wind
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       data(iGlob) = state(idRW,hs+k,hs+j,hs+i) / ( state(idR,hs+k,hs+j,hs+i) + dom.hyDensCells(hs+k) );
     });
-    Kokkos::fence();
-    #ifdef __NVCC__
-      cudaMemcpyAsync( data_cpu , data.data() , dom.nz*dom.ny*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
-      cudaDeviceSynchronize();
-    #endif
-    ncwrap( ncmpi_put_vara_float_all( ncid , wVar , st , ct , data_cpu ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_float_all( ncid , wVar , st , ct , data.createHostCopy().data() ) , __LINE__ );
 
     // Write out potential temperature perturbations
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       data(iGlob) = ( state(idRT,hs+k,hs+j,hs+i) + dom.hyDensThetaCells(hs+k) ) /
                     ( state(idR ,hs+k,hs+j,hs+i) + dom.hyDensCells     (hs+k) ) -
                     dom.hyDensThetaCells(hs+k) / dom.hyDensCells(hs+k);
     });
-    Kokkos::fence();
-    #ifdef __NVCC__
-      cudaMemcpyAsync( data_cpu , data.data() , dom.nz*dom.ny*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
-      cudaDeviceSynchronize();
-    #endif
-    ncwrap( ncmpi_put_vara_float_all( ncid , thVar , st , ct , data_cpu ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_float_all( ncid , thVar , st , ct , data.createHostCopy().data() ) , __LINE__ );
 
     // Write out perturbation pressure
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       data(iGlob) = C0*pow(state(idRT,hs+k,hs+j,hs+i)+dom.hyDensThetaCells(hs+k),GAMMA) -
                     C0*pow(dom.hyDensThetaCells(hs+k),GAMMA);
     });
-    Kokkos::fence();
-    #ifdef __NVCC__
-      cudaMemcpyAsync( data_cpu , data.data() , dom.nz*dom.ny*dom.nx*sizeof(real) , cudaMemcpyDeviceToHost );
-      cudaDeviceSynchronize();
-    #endif
-    ncwrap( ncmpi_put_vara_float_all( ncid , pVar , st , ct , data_cpu ) , __LINE__ );
+    ncwrap( ncmpi_put_vara_float_all( ncid , pVar , st , ct , data.createHostCopy().data() ) , __LINE__ );
 
     ncwrap( ncmpi_begin_indep_data(ncid) , __LINE__ );
     st[0] = numOut;
     ncwrap( ncmpi_put_var1_float( ncid , tVar , st , &(dom.etime) ) , __LINE__ );
     ncwrap( ncmpi_end_indep_data(ncid) , __LINE__ );
-
-    #ifdef __NVCC__
-      cudaFree( data_cpu );
-    #endif
   }
 
 

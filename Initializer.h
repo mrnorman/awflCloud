@@ -7,7 +7,6 @@
 #include "Exchange.h"
 #include "TransformMatrices.h"
 #include "TimeIntegrator.h"
-#include "Indexing.h"
 #include "mpi.h"
 
 
@@ -29,7 +28,7 @@ public:
     }
   }
 
-  void initialize(real4d &state, Domain &dom, Parallel &par, Exchange &exch, TimeIntegrator &tint) {
+  void initialize(realArr &state, Domain &dom, Parallel &par, Exchange &exch, TimeIntegrator &tint) {
     int ierr;
     SArray<real,ord> gllOrdPoints;
     SArray<real,ord> gllOrdWeights;
@@ -112,21 +111,21 @@ public:
     exch.allocate(dom);
 
     // Allocate the fluid state variable
-    state = real4d( "state" , numState , dom.nz+2*hs , dom.ny+2*hs , dom.nx+2*hs );
+    state = realArr( "state" , numState , dom.nz+2*hs , dom.ny+2*hs , dom.nx+2*hs );
 
-    dom.hyDensCells      = real1d( "hyCellsR"  , dom.nz+2*hs );
-    dom.hyDensThetaCells = real1d( "hyCellsRT" , dom.nz+2*hs );
-    dom.hyThetaCells     = real1d( "hyCellsT"  , dom.nz+2*hs );
-    dom.hyPressureCells  = real1d( "hyCellsp"  , dom.nz+2*hs );
+    dom.hyDensCells      = realArr( "hyCellsR"  , dom.nz+2*hs );
+    dom.hyDensThetaCells = realArr( "hyCellsRT" , dom.nz+2*hs );
+    dom.hyThetaCells     = realArr( "hyCellsT"  , dom.nz+2*hs );
+    dom.hyPressureCells  = realArr( "hyCellsp"  , dom.nz+2*hs );
 
-    dom.hyDensGLL      = real2d( "hyGLLR"  , dom.nz , tord );
-    dom.hyDensThetaGLL = real2d( "hyGLLRT" , dom.nz , tord );
-    dom.hyThetaGLL     = real2d( "hyGLLT"  , dom.nz , tord );
-    dom.hyPressureGLL  = real2d( "hyGLLp"  , dom.nz , tord );
+    dom.hyDensGLL      = realArr( "hyGLLR"  , dom.nz , tord );
+    dom.hyDensThetaGLL = realArr( "hyGLLRT" , dom.nz , tord );
+    dom.hyThetaGLL     = realArr( "hyGLLT"  , dom.nz , tord );
+    dom.hyPressureGLL  = realArr( "hyGLLp"  , dom.nz , tord );
 
     // Initialize the hydrostatic background state for cell averages
     // for (int k=0; k<dom.nz; k++) {
-    Kokkos::parallel_for( "initHydroCells" , dom.nz , KOKKOS_LAMBDA (int const k) {
+    yakl::parallel_for( "initHydroCells" , dom.nz , YAKL_LAMBDA (int const k) {
       dom.hyDensCells     (hs+k) = 0;
       dom.hyDensThetaCells(hs+k) = 0;
       dom.hyThetaCells    (hs+k) = 0;
@@ -150,7 +149,7 @@ public:
 
     // Enforce vertical boundaries
     // for (int ii=0; ii<hs; ii++) {
-    Kokkos::parallel_for( "boundariesHydroCells" , hs , KOKKOS_LAMBDA (int const ii) {
+    yakl::parallel_for( "boundariesHydroCells" , hs , YAKL_LAMBDA (int const ii) {
       dom.hyDensCells     (ii) = dom.hyDensCells     (hs);
       dom.hyDensThetaCells(ii) = dom.hyDensThetaCells(hs);
       dom.hyThetaCells    (ii) = dom.hyThetaCells    (hs);
@@ -165,9 +164,9 @@ public:
     // Perform ord-point GLL quadrature for the cell averages
     // for (int k=0; k<dom.nz; k++) {
     //   for (int kk=0; kk<tord; kk++) {
-    Kokkos::parallel_for( "initHydroGLL" , dom.nz*tord , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( "initHydroGLL" , dom.nz*tord , YAKL_LAMBDA (int const iGlob) {
       int k, kk;
-      unpackIndices(iGlob,dom.nz,tord,k,kk);
+      yakl::unpackIndices(iGlob,dom.nz,tord,k,kk);
       real zloc = (k + 0.5_fp)*dom.dz + gllTordPoints(kk)*dom.dz;
       real r0, t0;
 
@@ -186,9 +185,9 @@ public:
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( "InitFluidState" , dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( "InitFluidState" , dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       // Initialize the state to zero
       for (int l=0; l<numState; l++) {
         state(l,hs+k,hs+j,hs+i) = 0;
@@ -236,14 +235,14 @@ public:
       }
     });
 
-    real3d dt3d("dt3d",dom.nz,dom.ny,dom.nx);
+    realArr dt3d("dt3d",dom.nz,dom.ny,dom.nx);
     // Compute the time step based on the CFL value
     // for (int k=0; k<dom.nz; k++) {
     //   for (int j=0; j<dom.ny; j++) {
     //     for (int i=0; i<dom.nx; i++) {
-    Kokkos::parallel_for( "Compute_dt3d" , dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob) {
+    yakl::parallel_for( "Compute_dt3d" , dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
       int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+      yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
       // Grab state variables
       real r, u, v, w, t, p, cs;
       if (dom.eqnSet == EQN_THETA_CONS) {
@@ -264,24 +263,28 @@ public:
       cs = sqrt( GAMMA * p / r );
 
       // Compute the max wave
-      real maxWave = max( max( fabs(u) , fabs(v)) , fabs(w)) + cs;
+      real maxWave = mymax( mymax( fabs(u) , fabs(v)) , fabs(w)) + cs;
 
       // Compute the time step
-      real mindx = min( min(dom.dx,dom.dy) , dom.dz);
+      real mindx = mymin( mymin(dom.dx,dom.dy) , dom.dz);
       dt3d(k,j,i) = dom.cfl * mindx / maxWave;
     });
 
+    realArrHost dt3d_host = dt3d.createHostCopy();
+
     dom.dt = 1.e12_fp;
-    Kokkos::parallel_reduce( "ReduceTimeStep" , dom.nz*dom.ny*dom.nx , KOKKOS_LAMBDA (int const iGlob, real &dt) {
-      int k, j, i;
-      unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
-      dt = min(dt,dt3d(k,j,i));
-    } , Kokkos::Min<real>(dom.dt) );
+    for (int k=0; k<dom.nz; k++) {
+      for (int j=0; j<dom.ny; j++) {
+        for (int i=0; i<dom.nx; i++) {
+          dom.dt = mymin(dom.dt,dt3d_host(k,j,i));
+        }
+      }
+    }
 
-    Kokkos::fence();
-
-    real dtloc = dom.dt;
-    ierr = MPI_Allreduce(&dtloc, &dom.dt, 1, MPI_REAL , MPI_MIN, MPI_COMM_WORLD);
+    if (par.nranks > 1) {
+      real dtloc = dom.dt;
+      ierr = MPI_Allreduce(&dtloc, &dom.dt, 1, MPI_REAL , MPI_MIN, MPI_COMM_WORLD);
+    }
 
     if (par.masterproc) {
       std::cout << "dx: " << dom.dx << "\n";
@@ -300,7 +303,7 @@ public:
     real yn = (y-y0)/yrad;
     real zn = (z-z0)/zrad;
     real dist = sqrt( xn*xn + yn*yn + zn*zn );
-    return amp * max( 1._fp - dist , 0._fp );
+    return amp * mymax( 1._fp - dist , 0._fp );
   }
 
 
