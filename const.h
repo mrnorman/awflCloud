@@ -21,7 +21,7 @@ typedef yakl::Array<real,yakl::memHost> realArrHost;
 #define _HOSTDEV __host__ __device__
 #elif defined(__USE_HIP__)
 #define _HOSTDEV __host__ __device__
-#include "hip_runtime.h"
+#include "hip/hip_runtime.h"
 #else
 #define _HOSTDEV 
 #endif

@@ -11,7 +11,7 @@
 #elif defined(__USE_HIP__)
   #define YAKL_LAMBDA [=] __host__ __device__
   #define YAKL_INLINE __host__ __device__
-  #include "hip_runtime.h"
+  #include "hip/hip_runtime.h"
 #else
   #define YAKL_LAMBDA [=]
   #define YAKL_INLINE 

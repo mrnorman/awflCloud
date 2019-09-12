@@ -8,8 +8,8 @@ default: main
 
 CXX = mpic++ -std=c++14
 LINK = mpic++
-CXXFLAGS = --amdgpu-target=gfx900 -g -ffast-math -I${PNETCDF_PATH}/include -I/opt/rocm/include/hip -D__USE_HIP__ #  -I/opt/openmpi/4.0.0-ucx/include
-LDFLAGS = -L${PNETCDF_PATH}/lib -lpnetcdf # -L/opt/openmpi/4.0.0-ucx/lib -lmpi
+CXXFLAGS = -O3 -ffast-math -I${PNETCDF_PATH}/include -D__USE_HIP__
+LDFLAGS = -L${PNETCDF_PATH}/lib -lpnetcdf
 
 DEPFLAGS = -M
 OBJ = $(notdir $(SRC:.cpp=.o))
