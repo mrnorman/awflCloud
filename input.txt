@@ -3,9 +3,9 @@
 // Legal syntax is key : value
 // You can end input key:value lines with comments
 
-nx         : 200        // Number of cells in the x-direction
-ny         : 200        // Number of cells in the y-direction
-nz         : 100        // Number of cells in the z-direction
+nx         : 100        // Number of cells in the x-direction
+ny         : 100        // Number of cells in the y-direction
+nz         : 50         // Number of cells in the z-direction
 
 xlen       : 20000.     // Domain length in the x-direction (m)
 ylen       : 20000.     // Domain length in the y-direction (m)
@@ -17,7 +17,7 @@ simLength  : 100.      // How long to simulation (s)
 parNx      : 1          // Number of parallel tasks in the x-direction
 parNy      : 1          // Number of parallel tasks in the y-direction
 
-outFreq    : 101.       // Frequency for output in seconds
+outFreq    : 10.        // Frequency for output in seconds
 
 doWeno     : 1          // Whether to do WENO
 
