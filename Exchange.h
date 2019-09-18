@@ -175,8 +175,8 @@ public:
       ierr = MPI_Irecv( haloRecvBufW_host.data() , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,0) , 0 , MPI_COMM_WORLD , &rReq[0] );
       ierr = MPI_Irecv( haloRecvBufE_host.data() , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,2) , 1 , MPI_COMM_WORLD , &rReq[1] );
 
-      haloSendBufW.copyToHost(haloSendBufW_host);
-      haloSendBufE.copyToHost(haloSendBufE_host);
+      haloSendBufW.deep_copy(haloSendBufW_host);
+      haloSendBufE.deep_copy(haloSendBufE_host);
 
       //Send the data
       ierr = MPI_Isend( haloSendBufW_host.data() , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,0) , 1 , MPI_COMM_WORLD , &sReq[0] );
@@ -186,8 +186,8 @@ public:
       ierr = MPI_Waitall(2, sReq, sStat);
       ierr = MPI_Waitall(2, rReq, rStat);
 
-      haloRecvBufW_host.copyToDevice(haloRecvBufW);
-      haloRecvBufE_host.copyToDevice(haloRecvBufE);
+      haloRecvBufW_host.deep_copy(haloRecvBufW);
+      haloRecvBufE_host.deep_copy(haloRecvBufE);
 
     } else {
       haloExchange_x_loc(dom, haloSendBufW, haloSendBufE, haloRecvBufW, haloRecvBufE);
@@ -211,8 +211,8 @@ public:
       ierr = MPI_Irecv( haloRecvBufS_host.data() , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(0,1) , 0 , MPI_COMM_WORLD , &rReq[0] );
       ierr = MPI_Irecv( haloRecvBufN_host.data() , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(2,1) , 1 , MPI_COMM_WORLD , &rReq[1] );
 
-      haloSendBufS.copyToHost(haloSendBufS_host);
-      haloSendBufN.copyToHost(haloSendBufN_host);
+      haloSendBufS.deep_copy(haloSendBufS_host);
+      haloSendBufN.deep_copy(haloSendBufN_host);
 
       //Send the data
       ierr = MPI_Isend( haloSendBufS_host.data() , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(0,1) , 1 , MPI_COMM_WORLD , &sReq[0] );
@@ -222,8 +222,8 @@ public:
       ierr = MPI_Waitall(2, sReq, sStat);
       ierr = MPI_Waitall(2, rReq, rStat);
 
-      haloRecvBufS_host.copyToDevice(haloRecvBufS);
-      haloRecvBufN_host.copyToDevice(haloRecvBufN);
+      haloRecvBufS_host.deep_copy(haloRecvBufS);
+      haloRecvBufN_host.deep_copy(haloRecvBufN);
 
     } else {
       haloExchange_y_loc(dom, haloSendBufS, haloSendBufN, haloRecvBufS, haloRecvBufN);
@@ -319,8 +319,8 @@ public:
       ierr = MPI_Irecv( edgeRecvBufW_host.data() , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,0) , 0 , MPI_COMM_WORLD , &rReq[0] );
       ierr = MPI_Irecv( edgeRecvBufE_host.data() , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,2) , 1 , MPI_COMM_WORLD , &rReq[1] );
 
-      edgeSendBufW.copyToHost(edgeSendBufW_host);
-      edgeSendBufE.copyToHost(edgeSendBufE_host);
+      edgeSendBufW.deep_copy(edgeSendBufW_host);
+      edgeSendBufE.deep_copy(edgeSendBufE_host);
 
       //Send the data
       ierr = MPI_Isend( edgeSendBufW_host.data() , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,0) , 1 , MPI_COMM_WORLD , &sReq[0] );
@@ -330,8 +330,8 @@ public:
       ierr = MPI_Waitall(2, sReq, sStat);
       ierr = MPI_Waitall(2, rReq, rStat);
 
-      edgeRecvBufW_host.copyToDevice(edgeRecvBufW);
-      edgeRecvBufE_host.copyToDevice(edgeRecvBufE);
+      edgeRecvBufW_host.deep_copy(edgeRecvBufW);
+      edgeRecvBufE_host.deep_copy(edgeRecvBufE);
 
     } else {
       edgeExchange_x_loc(dom, edgeSendBufW, edgeSendBufE, edgeRecvBufW, edgeRecvBufE);
@@ -355,8 +355,8 @@ public:
       ierr = MPI_Irecv( edgeRecvBufS_host.data() , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(0,1) , 0 , MPI_COMM_WORLD , &rReq[0] );
       ierr = MPI_Irecv( edgeRecvBufN_host.data() , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(2,1) , 1 , MPI_COMM_WORLD , &rReq[1] );
 
-      edgeSendBufS.copyToHost(edgeSendBufS_host);
-      edgeSendBufN.copyToHost(edgeSendBufN_host);
+      edgeSendBufS.deep_copy(edgeSendBufS_host);
+      edgeSendBufN.deep_copy(edgeSendBufN_host);
 
       //Send the data
       ierr = MPI_Isend( edgeSendBufS_host.data() , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(0,1) , 1 , MPI_COMM_WORLD , &sReq[0] );
@@ -366,8 +366,8 @@ public:
       ierr = MPI_Waitall(2, sReq, sStat);
       ierr = MPI_Waitall(2, rReq, rStat);
 
-      edgeRecvBufS_host.copyToDevice(edgeRecvBufS);
-      edgeRecvBufN_host.copyToDevice(edgeRecvBufN);
+      edgeRecvBufS_host.deep_copy(edgeRecvBufS);
+      edgeRecvBufN_host.deep_copy(edgeRecvBufN);
 
     } else {
       edgeExchange_y_loc(dom, edgeSendBufS, edgeSendBufN, edgeRecvBufS, edgeRecvBufN);
