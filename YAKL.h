@@ -12,6 +12,7 @@
   #define YAKL_LAMBDA [=] __host__ __device__
   #define YAKL_INLINE __host__ __device__
   #include "hip/hip_runtime.h"
+  #include <hipcub/hipcub.hpp>
 #else
   #define YAKL_LAMBDA [=]
   #define YAKL_INLINE 
@@ -30,6 +31,13 @@ namespace yakl {
     vectorSize = vectorSize_in;
     #if defined(__USE_CUDA__)
       cudaMalloc(&functorBuffer,functorBufSize);
+    #endif
+    #if defined(__USE_HIP__)
+      int id;
+      hipGetDevice(&id);
+      hipDeviceProp_t props;
+      hipGetDeviceProperties(&props,id);
+      std::cout << props.name << std::endl;
     #endif
   }
 
@@ -171,6 +179,28 @@ namespace yakl {
 
   template <class F> void parallel_for( char const * str , int const nIter , F const &f ) {
     parallel_for( nIter , f );
+  }
+
+
+  template <class T> void parallel_min( int const nItems , T *data , T &rslt ) {
+    void   *d_temp_storage = NULL;
+    size_t temp_storage_bytes = 0;
+    T *rslt_ptr;
+    hipMalloc(&rslt_ptr,sizeof(T));
+    hipDeviceSynchronize();
+    hipcub::DeviceReduce::Min(d_temp_storage, temp_storage_bytes, data , rslt_ptr , nItems );
+    hipDeviceSynchronize();
+    // Allocate temporary storage
+    hipMalloc(&d_temp_storage, temp_storage_bytes);
+    hipDeviceSynchronize();
+    // Run min-reduction
+    hipcub::DeviceReduce::Min(d_temp_storage, temp_storage_bytes, data , rslt_ptr , nItems );
+    hipDeviceSynchronize();
+    hipMemcpy(&rslt,rslt_ptr,sizeof(T),hipMemcpyDeviceToHost);
+    hipDeviceSynchronize();
+    hipFree(d_temp_storage);
+    hipFree(rslt_ptr);
+    hipDeviceSynchronize();
   }
 
 
