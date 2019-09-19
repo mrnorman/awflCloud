@@ -270,17 +270,8 @@ public:
       dt3d(k,j,i) = dom.cfl * mindx / maxWave;
     });
 
-    // realArrHost dt3d_host = dt3d.createHostCopy();
-
-    // dom.dt = 1.e12_fp;
-    // for (int k=0; k<dom.nz; k++) {
-    //   for (int j=0; j<dom.ny; j++) {
-    //     for (int i=0; i<dom.nx; i++) {
-    //       dom.dt = mymin(dom.dt,dt3d_host(k,j,i));
-    //     }
-    //   }
-    // }
-    yakl::parallel_min( dom.nx*dom.ny*dom.nz , dt3d.data() , dom.dt );
+    yakl::ParallelMin<real> pmin( dom.nx*dom.ny*dom.nz );
+    dom.dt = pmin( dt3d.data() );
 
     if (par.nranks > 1) {
       real dtloc = dom.dt;
