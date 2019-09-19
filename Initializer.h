@@ -270,7 +270,7 @@ public:
       dt3d(k,j,i) = dom.cfl * mindx / maxWave;
     });
 
-    yakl::ParallelMin<real> pmin( dom.nx*dom.ny*dom.nz );
+    yakl::ParallelMin<real,yakl::memDevice> pmin( dom.nx*dom.ny*dom.nz );
     dom.dt = pmin( dt3d.data() );
 
     if (par.nranks > 1) {
