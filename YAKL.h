@@ -183,24 +183,17 @@ namespace yakl {
 
 
   template <class T> void parallel_min( int const nItems , T *data , T &rslt ) {
-    void   *d_temp_storage = NULL;
-    size_t temp_storage_bytes = 0;
-    T *rslt_ptr;
-    hipMalloc(&rslt_ptr,sizeof(T));
-    hipDeviceSynchronize();
-    hipcub::DeviceReduce::Min(d_temp_storage, temp_storage_bytes, data , rslt_ptr , nItems );
-    hipDeviceSynchronize();
-    // Allocate temporary storage
-    hipMalloc(&d_temp_storage, temp_storage_bytes);
-    hipDeviceSynchronize();
-    // Run min-reduction
-    hipcub::DeviceReduce::Min(d_temp_storage, temp_storage_bytes, data , rslt_ptr , nItems );
-    hipDeviceSynchronize();
-    hipMemcpy(&rslt,rslt_ptr,sizeof(T),hipMemcpyDeviceToHost);
-    hipDeviceSynchronize();
-    hipFree(d_temp_storage);
-    hipFree(rslt_ptr);
-    hipDeviceSynchronize();
+    void   *tmp = NULL;             // Temporary storage
+    size_t nTmp = 0;                // Size of temporary storage
+    T *rsltP;                       // Device pointer for reduction result
+    hipMalloc(&rsltP,sizeof(T));    // Allocate device pointer for result
+    // Get the amount of temporary storage needed (call with NULL storage pointer)
+    hipcub::DeviceReduce::Min(tmp, nTmp, data , rsltP , nItems );
+    hipMalloc(&tmp, nTmp);          // Allocate temporary storage plus 1 for result pointer
+    hipcub::DeviceReduce::Min(tmp, nTmp, data , rsltP , nItems ); // Compute the reduction
+    hipMemcpy(&rslt,rsltP,sizeof(T),hipMemcpyDeviceToHost);       // Copy result to host
+    hipFree(rsltP);                 // Free the result pointer
+    hipFree(tmp);                   // Free the temporary storage
   }
 
 
