@@ -25,6 +25,12 @@ The most pressing developments needed are:
 3) Add tracer transport routines
 4) Create a plan for incorporating moisture, possibly through an equivalent potential temperature.
 
+## Software Dependencies
+* Nvidia GPUs require CUB: https://github.com/NVlabs/cub
+* AMD GPUs require hipCub and rocPrim:
+  * https://github.com/ROCmSoftwarePlatform/hipcub
+  * https://github.com/ROCmSoftwarePlatform/rocPRIM
+
 ## How to Build
 ```
 ln -s build/[whatever_machine].inc mach.inc
