@@ -175,8 +175,8 @@ public:
       ierr = MPI_Irecv( haloRecvBufW_host.data() , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,0) , 0 , MPI_COMM_WORLD , &rReq[0] );
       ierr = MPI_Irecv( haloRecvBufE_host.data() , nPack*dom.nz*dom.ny*hs , MPI_FLOAT , par.neigh(1,2) , 1 , MPI_COMM_WORLD , &rReq[1] );
 
-      haloSendBufW.deep_copy(haloSendBufW_host);
-      haloSendBufE.deep_copy(haloSendBufE_host);
+      haloSendBufW.deep_copy_to(haloSendBufW_host);
+      haloSendBufE.deep_copy_to(haloSendBufE_host);
       yakl::fence();
 
       //Send the data
@@ -187,8 +187,8 @@ public:
       ierr = MPI_Waitall(2, sReq, sStat);
       ierr = MPI_Waitall(2, rReq, rStat);
 
-      haloRecvBufW_host.deep_copy(haloRecvBufW);
-      haloRecvBufE_host.deep_copy(haloRecvBufE);
+      haloRecvBufW_host.deep_copy_to(haloRecvBufW);
+      haloRecvBufE_host.deep_copy_to(haloRecvBufE);
 
     } else {
       haloExchange_x_loc(dom, haloSendBufW, haloSendBufE, haloRecvBufW, haloRecvBufE);
@@ -212,8 +212,8 @@ public:
       ierr = MPI_Irecv( haloRecvBufS_host.data() , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(0,1) , 0 , MPI_COMM_WORLD , &rReq[0] );
       ierr = MPI_Irecv( haloRecvBufN_host.data() , nPack*dom.nz*hs*dom.nx , MPI_FLOAT , par.neigh(2,1) , 1 , MPI_COMM_WORLD , &rReq[1] );
 
-      haloSendBufS.deep_copy(haloSendBufS_host);
-      haloSendBufN.deep_copy(haloSendBufN_host);
+      haloSendBufS.deep_copy_to(haloSendBufS_host);
+      haloSendBufN.deep_copy_to(haloSendBufN_host);
       yakl::fence();
 
       //Send the data
@@ -224,8 +224,8 @@ public:
       ierr = MPI_Waitall(2, sReq, sStat);
       ierr = MPI_Waitall(2, rReq, rStat);
 
-      haloRecvBufS_host.deep_copy(haloRecvBufS);
-      haloRecvBufN_host.deep_copy(haloRecvBufN);
+      haloRecvBufS_host.deep_copy_to(haloRecvBufS);
+      haloRecvBufN_host.deep_copy_to(haloRecvBufN);
 
     } else {
       haloExchange_y_loc(dom, haloSendBufS, haloSendBufN, haloRecvBufS, haloRecvBufN);
@@ -321,8 +321,8 @@ public:
       ierr = MPI_Irecv( edgeRecvBufW_host.data() , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,0) , 0 , MPI_COMM_WORLD , &rReq[0] );
       ierr = MPI_Irecv( edgeRecvBufE_host.data() , nPack*dom.nz*dom.ny , MPI_FLOAT , par.neigh(1,2) , 1 , MPI_COMM_WORLD , &rReq[1] );
 
-      edgeSendBufW.deep_copy(edgeSendBufW_host);
-      edgeSendBufE.deep_copy(edgeSendBufE_host);
+      edgeSendBufW.deep_copy_to(edgeSendBufW_host);
+      edgeSendBufE.deep_copy_to(edgeSendBufE_host);
       yakl::fence();
 
       //Send the data
@@ -333,8 +333,8 @@ public:
       ierr = MPI_Waitall(2, sReq, sStat);
       ierr = MPI_Waitall(2, rReq, rStat);
 
-      edgeRecvBufW_host.deep_copy(edgeRecvBufW);
-      edgeRecvBufE_host.deep_copy(edgeRecvBufE);
+      edgeRecvBufW_host.deep_copy_to(edgeRecvBufW);
+      edgeRecvBufE_host.deep_copy_to(edgeRecvBufE);
 
     } else {
       edgeExchange_x_loc(dom, edgeSendBufW, edgeSendBufE, edgeRecvBufW, edgeRecvBufE);
@@ -358,8 +358,8 @@ public:
       ierr = MPI_Irecv( edgeRecvBufS_host.data() , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(0,1) , 0 , MPI_COMM_WORLD , &rReq[0] );
       ierr = MPI_Irecv( edgeRecvBufN_host.data() , nPack*dom.nz*dom.nx , MPI_FLOAT , par.neigh(2,1) , 1 , MPI_COMM_WORLD , &rReq[1] );
 
-      edgeSendBufS.deep_copy(edgeSendBufS_host);
-      edgeSendBufN.deep_copy(edgeSendBufN_host);
+      edgeSendBufS.deep_copy_to(edgeSendBufS_host);
+      edgeSendBufN.deep_copy_to(edgeSendBufN_host);
       yakl::fence();
 
       //Send the data
@@ -370,8 +370,8 @@ public:
       ierr = MPI_Waitall(2, sReq, sStat);
       ierr = MPI_Waitall(2, rReq, rStat);
 
-      edgeRecvBufS_host.deep_copy(edgeRecvBufS);
-      edgeRecvBufN_host.deep_copy(edgeRecvBufN);
+      edgeRecvBufS_host.deep_copy_to(edgeRecvBufS);
+      edgeRecvBufN_host.deep_copy_to(edgeRecvBufN);
 
     } else {
       edgeExchange_y_loc(dom, edgeSendBufS, edgeSendBufN, edgeRecvBufS, edgeRecvBufN);
