@@ -4,6 +4,9 @@
 
 #include <cmath>
 #include "Array.h"
+#include "SArray.h"
+
+using yakl::SArray;
 
 typedef float         real;
 typedef unsigned long ulong;

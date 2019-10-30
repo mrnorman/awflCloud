@@ -6,6 +6,8 @@
 #include <iomanip>
 #include "YAKL.h"
 
+namespace yakl {
+
 /*
   This is intended to be a simple, low-overhead class to do multi-dimensional arrays
   without pointer dereferencing. It supports indexing and cout only up to 3-D.
@@ -203,5 +205,7 @@ public :
   }
 
 };
+
+}
 
 #endif
