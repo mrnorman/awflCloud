@@ -2,8 +2,8 @@ include mach.inc
 
 main: $(EXE)
 
-$(EXE): $(OBJ)
-	$(LINK) $(OBJ) $(LIB) -o $(EXE) $(LDFLAGS)
+$(EXE): $(OBJ) YAKL.o
+	$(LINK) $(OBJ) $(LIB) -o $(EXE) $(LDFLAGS) YAKL.o
 
 %.o:%.cpp *.h
 	$(CXX) $(CXXFLAGS) -I./cub -c $< -o $(notdir $@)

@@ -22,12 +22,16 @@
 
 namespace yakl {
 
+  typedef unsigned int  uint;
 
-  int const memDevice = 1;
-  int const memHost   = 2;
+  int constexpr memDevice = 1;
+  int constexpr memHost   = 2;
+  int constexpr functorBufSize = 1024*128;
+  extern void *functorBuffer;
+  extern int vectorSize;
 
 
-  void fence() {
+  inline void fence() {
     #ifdef __USE_CUDA__
       cudaDeviceSynchronize();
     #endif
@@ -37,16 +41,9 @@ namespace yakl {
   }
 
 
-  typedef unsigned long ulong;
-  typedef unsigned int  uint;
-
-  
-  int const functorBufSize = 1024*128;
-  void *functorBuffer;
-  int vectorSize = 128;
 
 
-  void init(int vectorSize_in=128) {
+  inline void init(int vectorSize_in=128) {
     vectorSize = vectorSize_in;
     #if defined(__USE_CUDA__)
       cudaMalloc(&functorBuffer,functorBufSize);
@@ -61,7 +58,7 @@ namespace yakl {
   }
 
 
-  void finalize() {
+  inline void finalize() {
     #if defined(__USE_CUDA__)
       cudaFree(functorBuffer);
     #endif
@@ -139,22 +136,22 @@ namespace yakl {
 
 
   #ifdef __USE_CUDA__
-    template <class F> __global__ void cudaKernelVal(ulong const nIter, F f) {
-      ulong i = blockIdx.x*blockDim.x + threadIdx.x;
+    template <class F> __global__ void cudaKernelVal(size_t const nIter, F f) {
+      size_t i = blockIdx.x*blockDim.x + threadIdx.x;
       if (i < nIter) {
         f( i );
       }
     }
-    template <class F> __global__ void cudaKernelRef(ulong const nIter, F const &f) {
-      ulong i = blockIdx.x*blockDim.x + threadIdx.x;
+    template <class F> __global__ void cudaKernelRef(size_t const nIter, F const &f) {
+      size_t i = blockIdx.x*blockDim.x + threadIdx.x;
       if (i < nIter) {
         f( i );
       }
     }
-    template<class F , typename std::enable_if< sizeof(F) <= 4000 , int >::type = 0> void parallel_for_cuda( int const nIter , F const &f ) {
+    template<class F , typename std::enable_if< sizeof(F) <= 4000 , int >::type = 0> inline void parallel_for_cuda( int const nIter , F const &f ) {
       cudaKernelVal <<< (uint) (nIter-1)/vectorSize+1 , vectorSize >>> ( nIter , f );
     }
-    template<class F , typename std::enable_if< sizeof(F) >= 4001 , int >::type = 0> void parallel_for_cuda( int const nIter , F const &f ) {
+    template<class F , typename std::enable_if< sizeof(F) >= 4001 , int >::type = 0> inline void parallel_for_cuda( int const nIter , F const &f ) {
       F *fp = (F *) functorBuffer;
       cudaMemcpyAsync(fp,&f,sizeof(F),cudaMemcpyHostToDevice);
       cudaKernelRef <<< (uint) (nIter-1)/vectorSize+1 , vectorSize >>> ( nIter , *fp );
@@ -163,25 +160,25 @@ namespace yakl {
 
 
   #ifdef __USE_HIP__
-    template <class F> __global__ void cudaKernelVal(ulong const nIter, F f) {
-      ulong i = hipBlockIdx_x*hipBlockDim_x + hipThreadIdx_x;
+    template <class F> __global__ void cudaKernelVal(size_t const nIter, F f) {
+      size_t i = hipBlockIdx_x*hipBlockDim_x + hipThreadIdx_x;
       if (i < nIter) {
         f( i );
       }
     }
-    template<class F> void parallel_for_hip( int const nIter , F const &f ) {
+    template<class F> inline void parallel_for_hip( int const nIter , F const &f ) {
       hipLaunchKernelGGL( cudaKernelVal , dim3((nIter-1)/vectorSize+1) , dim3(vectorSize) , (std::uint32_t) 0 , (hipStream_t) 0 , nIter , f );
     }
   #endif
 
-  template <class F> void parallel_for_cpu_serial( int const nIter , F const &f ) {
+  template <class F> inline void parallel_for_cpu_serial( int const nIter , F const &f ) {
     for (int i=0; i<nIter; i++) {
       f(i);
     }
   }
 
 
-  template <class F> void parallel_for( int const nIter , F const &f ) {
+  template <class F> inline void parallel_for( int const nIter , F const &f ) {
     #ifdef __USE_CUDA__
       parallel_for_cuda( nIter , f );
     #elif defined(__USE_HIP__)
@@ -192,7 +189,7 @@ namespace yakl {
   }
 
 
-  template <class F> void parallel_for( char const * str , int const nIter , F const &f ) {
+  template <class F> inline void parallel_for( char const * str , int const nIter , F const &f ) {
     parallel_for( nIter , f );
   }
 
