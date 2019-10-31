@@ -6,7 +6,7 @@ $(EXE): $(OBJ)
 	$(LINK) $(OBJ) $(LIB) -o $(EXE) $(LDFLAGS)
 
 %.o:%.cpp *.h
-	$(CXX) $(CXXFLAGS) -c $< -o $(notdir $@)
+	$(CXX) $(CXXFLAGS) -I./cub -c $< -o $(notdir $@)
 
 clean:
 	rm -f *.gch *.o *.dat cloudFV

@@ -21,6 +21,7 @@ public:
   ulong j_end;
   int masterproc;
   SArray<int,3,3> neigh;
+
 };
 
 #endif

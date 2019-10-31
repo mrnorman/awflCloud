@@ -22,12 +22,15 @@ protected:
 
   typedef unsigned long ulong;
 
-  T data[D0*D1*D2];
+  T mutable data[D0*D1*D2];
 
 public :
 
   YAKL_INLINE SArray() { }
   YAKL_INLINE SArray(SArray &&in) {
+    for (int i=0; i < D0*D1*D2*D3; i++) { data[i] = in.data[i]; }
+  }
+  YAKL_INLINE SArray(SArray const &in) {
     for (int i=0; i < D0*D1*D2*D3; i++) { data[i] = in.data[i]; }
   }
   YAKL_INLINE SArray &operator=(SArray &&in) {
@@ -36,20 +39,20 @@ public :
   }
   YAKL_INLINE ~SArray() { }
 
-  YAKL_INLINE T &operator()(ulong const i0)       {
+  YAKL_INLINE T &operator()(ulong const i0) const {
     #ifdef ARRAY_DEBUG
       if (i0>D0-1) { printf("i0 > D0-1"); exit(-1); }
     #endif
     return data[i0];
   }
-  YAKL_INLINE T &operator()(ulong const i0, ulong const i1)       {
+  YAKL_INLINE T &operator()(ulong const i0, ulong const i1) const {
     #ifdef ARRAY_DEBUG
       if (i0>D0-1) { printf("i0 > D0-1"); exit(-1); }
       if (i1>D1-1) { printf("i1 > D1-1"); exit(-1); }
     #endif
     return data[i0*D1 + i1];
   }
-  YAKL_INLINE T &operator()(ulong const i0, ulong const i1, ulong const i2)       {
+  YAKL_INLINE T &operator()(ulong const i0, ulong const i1, ulong const i2) const {
     #ifdef ARRAY_DEBUG
       if (i0>D0-1) { printf("i0 > D0-1"); exit(-1); }
       if (i1>D1-1) { printf("i1 > D1-1"); exit(-1); }
@@ -57,38 +60,7 @@ public :
     #endif
     return data[i0*D1*D2 + i1*D2 + i2];
   }
-  YAKL_INLINE T &operator()(ulong const i0, ulong const i1, ulong const i2, ulong const i3)       {
-    #ifdef ARRAY_DEBUG
-      if (i0>D0-1) { printf("i0 > D0-1"); exit(-1); }
-      if (i1>D1-1) { printf("i1 > D1-1"); exit(-1); }
-      if (i2>D2-1) { printf("i2 > D2-1"); exit(-1); }
-      if (i3>D3-1) { printf("i3 > D3-1"); exit(-1); }
-    #endif
-    return data[i0*D1*D2*D3 + i1*D2*D3 + i2*D3 + i3];
-  }
-
-  YAKL_INLINE T  operator()(ulong const i0) const {
-    #ifdef ARRAY_DEBUG
-      if (i0>D0-1) { printf("i0 > D0-1"); exit(-1); }
-    #endif
-    return data[i0];
-  }
-  YAKL_INLINE T  operator()(ulong const i0, ulong const i1) const {
-    #ifdef ARRAY_DEBUG
-      if (i0>D0-1) { printf("i0 > D0-1"); exit(-1); }
-      if (i1>D1-1) { printf("i1 > D1-1"); exit(-1); }
-    #endif
-    return data[i0*D1 + i1];
-  }
-  YAKL_INLINE T  operator()(ulong const i0, ulong const i1, ulong const i2) const {
-    #ifdef ARRAY_DEBUG
-      if (i0>D0-1) { printf("i0 > D0-1"); exit(-1); }
-      if (i1>D1-1) { printf("i1 > D1-1"); exit(-1); }
-      if (i2>D2-1) { printf("i2 > D2-1"); exit(-1); }
-    #endif
-    return data[i0*D1*D2 + i1*D2 + i2];
-  }
-  YAKL_INLINE T  operator()(ulong const i0, ulong const i1, ulong const i2, ulong const i3) const {
+  YAKL_INLINE T &operator()(ulong const i0, ulong const i1, ulong const i2, ulong const i3) const {
     #ifdef ARRAY_DEBUG
       if (i0>D0-1) { printf("i0 > D0-1"); exit(-1); }
       if (i1>D1-1) { printf("i1 > D1-1"); exit(-1); }
