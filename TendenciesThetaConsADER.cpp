@@ -55,10 +55,7 @@ void TendenciesThetaConsADER::compEulerTend_X(realArr &state, Domain const &dom,
   // for (int k=0; k<dom.nz; k++) {
   //   for (int j=0; j<dom.ny; j++) {
   //     for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
-    int k, j, i;
-    yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
-
+  yakl::parallel_for( dom.nz,dom.ny,dom.nx , YAKL_LAMBDA (int k, int j, int i) {
     // Compute tord GLL points of the state vector
     for (int l=0; l<numState; l++) {
       SArray<real,ord> stencil;
@@ -72,9 +69,7 @@ void TendenciesThetaConsADER::compEulerTend_X(realArr &state, Domain const &dom,
   // for (int k=0; k<dom.nz; k++) {
   //   for (int j=0; j<dom.ny; j++) {
   //     for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
-    int k, j, i;
-    yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+  yakl::parallel_for( dom.nz,dom.ny,dom.nx , YAKL_LAMBDA (int k, int j, int i) {
     SArray<real,numState,tord,tord> stateDTs;  // GLL state values
     SArray<real,numState,tord,tord> fluxDTs;   // GLL flux values
 
@@ -116,9 +111,7 @@ void TendenciesThetaConsADER::compEulerTend_X(realArr &state, Domain const &dom,
   // for (int k=0; k<dom.nz; k++) {
   //   for (int j=0; j<dom.ny; j++) {
   //     for (int i=0; i<dom.nx+1; i++) {
-  yakl::parallel_for( dom.nz*dom.ny*(dom.nx+1) , YAKL_LAMBDA (int const iGlob) {
-    int k, j, i;
-    yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx+1,k,j,i);
+  yakl::parallel_for( dom.nz,dom.ny,(dom.nx+1) , YAKL_LAMBDA (int k, int j, int i) {
     SArray<real,numState> s1, s2, f1, f2, upw;
     for (int l=0; l<numState; l++) {
       s1(l) = stateLimits(l,0,k,j,i);
@@ -138,9 +131,7 @@ void TendenciesThetaConsADER::compEulerTend_X(realArr &state, Domain const &dom,
   //   for (int k=0; k<dom.nz; k++) {
   //     for (int j=0; j<dom.ny; j++) {
   //       for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( numState*dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
-    int l, k, j, i;
-    yakl::unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
+  yakl::parallel_for( numState,dom.nz,dom.ny,dom.nx , YAKL_LAMBDA (int l, int k, int j , int i) {
     tend(l,k,j,i) = - ( flux(l,k,j,i+1) - flux(l,k,j,i) ) / dom.dx;
   });
 }
@@ -167,10 +158,7 @@ void TendenciesThetaConsADER::compEulerTend_Y(realArr &state, Domain const &dom,
   // for (int k=0; k<dom.nz; k++) {
   //   for (int j=0; j<dom.ny; j++) {
   //     for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
-    int k, j, i;
-    yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
-
+  yakl::parallel_for( dom.nz,dom.ny,dom.nx , YAKL_LAMBDA (int k, int j, int i) {
     // Compute GLL points from cell averages
     for (int l=0; l<numState; l++) {
       SArray<real,ord> stencil;
@@ -184,9 +172,7 @@ void TendenciesThetaConsADER::compEulerTend_Y(realArr &state, Domain const &dom,
   // for (int k=0; k<dom.nz; k++) {
   //   for (int j=0; j<dom.ny; j++) {
   //     for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
-    int k, j, i;
-    yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+  yakl::parallel_for( dom.nz,dom.ny,dom.nx , YAKL_LAMBDA (int k, int j, int i) {
     SArray<real,numState,tord,tord> stateDTs;  // GLL state values
     SArray<real,numState,tord,tord> fluxDTs;   // GLL flux values
 
@@ -228,9 +214,7 @@ void TendenciesThetaConsADER::compEulerTend_Y(realArr &state, Domain const &dom,
   // for (int k=0; k<dom.nz; k++) {
   //   for (int j=0; j<dom.ny+1; j++) {
   //     for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( dom.nz*(dom.ny+1)*dom.nx , YAKL_LAMBDA (int const iGlob) {
-    int k, j, i;
-    yakl::unpackIndices(iGlob,dom.nz,dom.ny+1,dom.nx,k,j,i);
+  yakl::parallel_for( dom.nz,(dom.ny+1),dom.nx , YAKL_LAMBDA (int k, int j, int i) {
     SArray<real,numState> s1, s2, f1, f2, upw;
     for (int l=0; l<numState; l++) {
       s1(l) = stateLimits(l,0,k,j,i);
@@ -250,9 +234,7 @@ void TendenciesThetaConsADER::compEulerTend_Y(realArr &state, Domain const &dom,
   //   for (int k=0; k<dom.nz; k++) {
   //     for (int j=0; j<dom.ny; j++) {
   //       for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( numState*dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
-    int l, k, j, i;
-    yakl::unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
+  yakl::parallel_for( numState,dom.nz,dom.ny,dom.nx , YAKL_LAMBDA (int l, int k, int j, int i) {
     tend(l,k,j,i) = - ( flux(l,k,j+1,i) - flux(l,k,j,i) ) / dom.dy;
   });
 }
@@ -278,10 +260,7 @@ void TendenciesThetaConsADER::compEulerTend_Z(realArr &state, Domain const &dom,
   // for (int k=0; k<dom.nz; k++) {
   //   for (int j=0; j<dom.ny; j++) {
   //     for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
-    int k, j, i;
-    yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
-
+  yakl::parallel_for( dom.nz,dom.ny,dom.nx , YAKL_LAMBDA (int k, int j, int i) {
     // Compute GLL points from cell averages
     for (int l=0; l<numState; l++) {
       SArray<real,ord> stencil;
@@ -295,9 +274,7 @@ void TendenciesThetaConsADER::compEulerTend_Z(realArr &state, Domain const &dom,
   // for (int k=0; k<dom.nz; k++) {
   //   for (int j=0; j<dom.ny; j++) {
   //     for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
-    int k, j, i;
-    yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+  yakl::parallel_for( dom.nz,dom.ny,dom.nx , YAKL_LAMBDA (int k, int j, int i) {
     SArray<real,numState,tord,tord> stateDTs;  // GLL state values
     SArray<real,numState,tord,tord> fluxDTs;   // GLL flux values
     SArray<real,tord,tord> sourceDTs;   // GLL source values
@@ -352,9 +329,7 @@ void TendenciesThetaConsADER::compEulerTend_Z(realArr &state, Domain const &dom,
   // for (int k=0; k<dom.nz+1; k++) {
   //   for (int j=0; j<dom.ny; j++) {
   //     for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( (dom.nz+1)*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
-    int k, j, i;
-    yakl::unpackIndices(iGlob,dom.nz+1,dom.ny,dom.nx,k,j,i);
+  yakl::parallel_for( (dom.nz+1),dom.ny,dom.nx , YAKL_LAMBDA (int k, int j, int i) {
     SArray<real,numState> s1, s2, f1, f2, upw;
     for (int l=0; l<numState; l++) {
       s1(l) = stateLimits(l,0,k,j,i);
@@ -374,9 +349,7 @@ void TendenciesThetaConsADER::compEulerTend_Z(realArr &state, Domain const &dom,
   //   for (int k=0; k<dom.nz; k++) {
   //     for (int j=0; j<dom.ny; j++) {
   //       for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( numState*dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
-    int l, k, j, i;
-    yakl::unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
+  yakl::parallel_for( numState,dom.nz,dom.ny,dom.nx , YAKL_LAMBDA (int l, int k, int j, int i) {
     tend(l,k,j,i) = - ( flux(l,k+1,j,i) - flux(l,k,j,i) ) / dom.dz;
     if (l==idRW) {
       tend(l,k,j,i) += src(k,j,i);
@@ -390,9 +363,7 @@ void TendenciesThetaConsADER::compEulerTend_S(realArr &state, Domain const &dom,
   //   for (int k=0; k<dom.nz; k++) {
   //     for (int j=0; j<dom.ny; j++) {
   //       for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( numState*dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
-    int l, k, j, i;
-    yakl::unpackIndices(iGlob,numState,dom.nz,dom.ny,dom.nx,l,k,j,i);
+  yakl::parallel_for( numState,dom.nz,dom.ny,dom.nx , YAKL_LAMBDA (int l, int k, int j, int i) {
     tend(l,k,j,i) = 0;
   });
 }
@@ -402,9 +373,7 @@ void TendenciesThetaConsADER::stateBoundariesZ(realArr &state, Domain const &dom
   // for (int j=0; j<dom.ny; j++) {
   //   for (int i=0; i<dom.nx; i++) {
   //     for (int ii=0; ii<hs; ii++) {
-  yakl::parallel_for( dom.ny*dom.nx*hs , YAKL_LAMBDA (int const iGlob) {
-    int j, i, ii;
-    yakl::unpackIndices(iGlob,dom.ny,dom.nx,hs,j,i,ii);
+  yakl::parallel_for( dom.ny,dom.nx,hs , YAKL_LAMBDA (int j, int i, int ii) {
     state(idR ,ii,hs+j,hs+i) = state(idR ,hs,hs+j,hs+i);
     state(idRU,ii,hs+j,hs+i) = state(idRU,hs,hs+j,hs+i);
     state(idRV,ii,hs+j,hs+i) = state(idRV,hs,hs+j,hs+i);
@@ -423,9 +392,7 @@ void TendenciesThetaConsADER::stateBoundariesZ(realArr &state, Domain const &dom
 void TendenciesThetaConsADER::edgeBoundariesZ(realArr &stateLimits, realArr &fluxLimits, Domain const &dom) {
   // for (int j=0; j<dom.ny; j++) {
   //   for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
-    int j, i;
-    yakl::unpackIndices(iGlob,dom.ny,dom.nx,j,i);
+  yakl::parallel_for( dom.ny,dom.nx , YAKL_LAMBDA (int j, int i) {
     stateLimits(idR ,0,0     ,j,i) = stateLimits(idR ,1,0     ,j,i);
     stateLimits(idRU,0,0     ,j,i) = stateLimits(idRU,1,0     ,j,i);
     stateLimits(idRV,0,0     ,j,i) = stateLimits(idRV,1,0     ,j,i);
@@ -474,9 +441,7 @@ void TendenciesThetaConsADER::compStrakaTend(realArr &state, Domain const &dom, 
   // for (int k=0; k<dom.nz; k++) {
   //   for (int j=0; j<dom.ny; j++) {
   //     for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( dom.nz*dom.ny*dom.nx , YAKL_LAMBDA (int const iGlob) {
-    int k, j, i;
-    yakl::unpackIndices(iGlob,dom.nz,dom.ny,dom.nx,k,j,i);
+  yakl::parallel_for( dom.nz,dom.ny,dom.nx , YAKL_LAMBDA (int k, int j, int i) {
     real r = ( state(idR,hs+k,hs+j,hs+i) + dom.hyDensCells(hs+k) );
     SArray<real,numState,3> sten;
 
