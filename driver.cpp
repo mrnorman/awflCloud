@@ -21,7 +21,6 @@ int main(int argc, char** argv) {
     Domain         dom;
     Parallel       par;
     Parser         parser;
-    Initializer    init;
     FileIO         io;
     Exchange       exch;
     TimeIntegrator tint;
@@ -29,7 +28,7 @@ int main(int argc, char** argv) {
     int nstep = 0;
 
     // Initialize MPI and read the input file
-    init.initialize_mpi( &argc , &argv , par );
+    initialize_mpi( &argc , &argv , par );
 
     // Default input file is "input.txt" unless the user passes in another file
     std::string inFile = "input.txt";
@@ -37,7 +36,7 @@ int main(int argc, char** argv) {
     parser.readParamsFile(inFile, dom, par, io);
 
     // Initialize the model
-    init.initialize(state, dom, par, exch, tint);
+    initialize(state, dom, par, exch, tint);
 
     // Output the initial model state
     io.outputInit(state, dom, par);
