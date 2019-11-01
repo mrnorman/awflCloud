@@ -20,7 +20,6 @@ int main(int argc, char** argv) {
     realArr         state;
     Domain         dom;
     Parallel       par;
-    Parser         parser;
     FileIO         io;
     Exchange       exch;
     TimeIntegrator tint;
@@ -33,7 +32,7 @@ int main(int argc, char** argv) {
     // Default input file is "input.txt" unless the user passes in another file
     std::string inFile = "input.txt";
     if (argc > 1) inFile = argv[1];
-    parser.readParamsFile(inFile, dom, par, io);
+    readParamsFile(inFile, dom, par, io);
 
     // Initialize the model
     initialize(state, dom, par, exch, tint);
