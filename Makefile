@@ -1,7 +1,7 @@
 include mach.inc
 
 EXE = cloudFV
-SOURCES = driver.cpp FileIO.cpp params.cpp YAKL.cpp
+SOURCES = driver.cpp FileIO.cpp params.cpp YAKL.cpp Exchange.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 
 $(info $(OBJECTS))

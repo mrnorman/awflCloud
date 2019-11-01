@@ -20,13 +20,8 @@ typedef yakl::Array<real,yakl::memHost> realArr;
 
 typedef yakl::Array<real,yakl::memHost> realArrHost;
 
-#ifdef __USE_CUDA__
-#define _HOSTDEV __host__ __device__
-#elif defined(__USE_HIP__)
-#define _HOSTDEV __host__ __device__
-#include "hip/hip_runtime.h"
-#else
-#define _HOSTDEV 
+#if defined(__USE_HIP__)
+  #include "hip/hip_runtime.h"
 #endif
 
 #include "params.h"
