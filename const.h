@@ -26,36 +26,35 @@ typedef yakl::Array<real,yakl::memHost> realArrHost;
 
 #include "params.h"
 
-YAKL_INLINE real operator"" _fp( long double x ) {
+YAKL_INLINE real constexpr operator"" _fp( long double x ) {
   return static_cast<real>(x);
 }
 
-#define ord  9
-#define tord 3
-#define hs (ord-1)/2
+int constexpr ord      = 9;
+int constexpr tord     = 3;
+int constexpr hs       = (ord-1)/2;
+int constexpr numState = 5;
 
-#define numState 5
+int constexpr idR      = 0;
+int constexpr idRU     = 1;
+int constexpr idRV     = 2;
+int constexpr idRW     = 3;
+int constexpr idRT     = 4;
 
-#define idR  0
-#define idRU 1
-#define idRV 2
-#define idRW 3
-#define idRT 4
-
-#define idU 1
-#define idV 2
-#define idW 3
-#define idT 4
+int constexpr idU      = 1;
+int constexpr idV      = 2;
+int constexpr idW      = 3;
+int constexpr idT      = 4;
 
 // Some physical constants
-real const PI    = 3.1415926535897932384626433832795028842;
-real const GRAV  = 9.8;
-real const CP    = 1004.;
-real const CV    = 717.;
-real const RD    = 287.;
-real const P0    = 1.0e5;
-real const C0    = 27.5629410929725921310572974482;
-real const GAMMA  = 1.40027894002789400278940027894;
+real constexpr PI    = 3.1415926535897932384626433832795028842;
+real constexpr GRAV  = 9.8;
+real constexpr CP    = 1004.;
+real constexpr CV    = 717.;
+real constexpr RD    = 287.;
+real constexpr P0    = 1.0e5;
+real constexpr C0    = 27.5629410929725921310572974482;
+real constexpr GAMMA  = 1.40027894002789400278940027894;
 
 template <class T> YAKL_INLINE T mymin( T const v1 , T const v2 ) {
   if (v1 < v2) { return v1; }
