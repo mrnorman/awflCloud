@@ -1,7 +1,7 @@
 include mach.inc
 
 EXE = cloudFV
-SOURCES = driver.cpp FileIO.cpp params.cpp YAKL.cpp Exchange.cpp Initializer.cpp Parser.cpp Tendencies.cpp \
+SOURCES = driver.cpp FileIO.cpp params.cpp YAKL.cpp Exchange.cpp Initializer.cpp Parser.cpp Tendencies.cpp TimeIntegrator.cpp\
            TendenciesThetaConsADER.cpp TendenciesThetaConsSD.cpp TendenciesThetaPrimADER.cpp TendenciesThetaPrimSD.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 
