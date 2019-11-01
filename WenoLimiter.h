@@ -8,7 +8,7 @@
 
 
 
-inline _HOSTDEV void map_weights( SArray<real,hs+2> const &idl , SArray<real,hs+2> &wts ) {
+YAKL_INLINE void map_weights( SArray<real,hs+2> const &idl , SArray<real,hs+2> &wts ) {
   // Map the weights for quicker convergence. WARNING: Ideal weights must be (0,1) before mapping
   for (int i=0; i<hs+2; i++) {
     wts(i) = wts(i) * ( idl(i) + idl(i)*idl(i) - 3._fp*idl(i)*wts(i) + wts(i)*wts(i) ) / ( idl(i)*idl(i) + wts(i) * ( 1._fp - 2._fp * idl(i) ) );
@@ -16,7 +16,7 @@ inline _HOSTDEV void map_weights( SArray<real,hs+2> const &idl , SArray<real,hs+
 }
 
 
-inline _HOSTDEV void convexify( SArray<real,hs+2> &wts ) {
+YAKL_INLINE void convexify( SArray<real,hs+2> &wts ) {
   real sum = 0._fp;
   real const eps = 1.0e-20;
   for (int i=0; i<hs+2; i++) { sum += wts(i); }
@@ -24,7 +24,7 @@ inline _HOSTDEV void convexify( SArray<real,hs+2> &wts ) {
 }
 
 
-inline _HOSTDEV void wenoSetIdealSigma(SArray<real,hs+2> &idl, real &sigma) {
+YAKL_INLINE void wenoSetIdealSigma(SArray<real,hs+2> &idl, real &sigma) {
   if        (ord == 3) {
     sigma = 0.1_fp;
     idl(0) = 1._fp;
@@ -89,7 +89,7 @@ inline _HOSTDEV void wenoSetIdealSigma(SArray<real,hs+2> &idl, real &sigma) {
 }
 
 
-inline _HOSTDEV void compute_weno_coefs( SArray<real,ord,ord,ord> const &recon , SArray<real,ord> const &u , SArray<real,ord> &aw , SArray<real,hs+2> const &idl , real const sigma ) {
+YAKL_INLINE void compute_weno_coefs( SArray<real,ord,ord,ord> const &recon , SArray<real,ord> const &u , SArray<real,ord> &aw , SArray<real,hs+2> const &idl , real const sigma ) {
   SArray<real,hs+2> tv;
   SArray<real,hs+2> wts;
   SArray<real,hs+2,ord> a;

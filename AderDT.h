@@ -6,7 +6,7 @@
 #include "SArray.h"
 
 
-inline _HOSTDEV void diffTransformEulerConsX( SArray<real,numState,tord,tord> &state, SArray<real,numState,tord,tord> &flux, SArray<real,tord,tord> const &deriv ) {
+YAKL_INLINE void diffTransformEulerConsX( SArray<real,numState,tord,tord> &state, SArray<real,numState,tord,tord> &flux, SArray<real,tord,tord> const &deriv ) {
   SArray<real,tord,tord> ruu, ruv, ruw, rut, rtgamma;
   real tot_ruu, tot_ruv, tot_ruw, tot_rut, tot_rtgamma;
 
@@ -86,7 +86,7 @@ inline _HOSTDEV void diffTransformEulerConsX( SArray<real,numState,tord,tord> &s
 }
 
 
-inline _HOSTDEV void diffTransformEulerConsY( SArray<real,numState,tord,tord> &state, SArray<real,numState,tord,tord> &flux, SArray<real,tord,tord> const &deriv ) {
+YAKL_INLINE void diffTransformEulerConsY( SArray<real,numState,tord,tord> &state, SArray<real,numState,tord,tord> &flux, SArray<real,tord,tord> const &deriv ) {
   SArray<real,tord,tord> rvu, rvv, rvw, rvt, rtgamma;
   real tot_rvu, tot_rvv, tot_rvw, tot_rvt, tot_rtgamma;
 
@@ -166,7 +166,7 @@ inline _HOSTDEV void diffTransformEulerConsY( SArray<real,numState,tord,tord> &s
 }
 
 
-inline _HOSTDEV void diffTransformEulerConsZ( SArray<real,numState,tord,tord> &state, SArray<real,numState,tord,tord> &flux,
+YAKL_INLINE void diffTransformEulerConsZ( SArray<real,numState,tord,tord> &state, SArray<real,numState,tord,tord> &flux,
                                  SArray<real,tord,tord> &source, SArray<real,tord,tord> const &deriv, SArray<real,tord> const &hyRHOT, SArray<real,tord> const &hyRHO ) {
   SArray<real,tord,tord> rwu, rwv, rww, rwt, rtgamma;
   real tot_rwu, tot_rwv, tot_rww, tot_rwt, tot_rtgamma;
@@ -253,7 +253,7 @@ inline _HOSTDEV void diffTransformEulerConsZ( SArray<real,numState,tord,tord> &s
 }
 
 
-inline _HOSTDEV void timeAvg( SArray<real,numState,tord,tord> &dts , Domain const &dom ) {
+YAKL_INLINE void timeAvg( SArray<real,numState,tord,tord> &dts , Domain const &dom ) {
   real dtmult = dom.dt;
   for (int kt=1; kt<tord; kt++) {
     for (int l=0; l<numState; l++) {
@@ -266,7 +266,7 @@ inline _HOSTDEV void timeAvg( SArray<real,numState,tord,tord> &dts , Domain cons
 }
 
 
-inline _HOSTDEV void timeAvg( SArray<real,tord,tord> &dts , Domain const &dom ) {
+YAKL_INLINE void timeAvg( SArray<real,tord,tord> &dts , Domain const &dom ) {
   real dtmult = dom.dt;
   for (int kt=1; kt<tord; kt++) {
     for (int ii=0; ii<tord; ii++) {

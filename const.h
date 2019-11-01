@@ -31,7 +31,7 @@ typedef yakl::Array<real,yakl::memHost> realArrHost;
 
 #include "params.h"
 
-inline _HOSTDEV real operator"" _fp( long double x ) {
+YAKL_INLINE real operator"" _fp( long double x ) {
   return static_cast<real>(x);
 }
 
@@ -62,11 +62,11 @@ real const P0    = 1.0e5;
 real const C0    = 27.5629410929725921310572974482;
 real const GAMMA  = 1.40027894002789400278940027894;
 
-template <class T> inline _HOSTDEV T mymin( T const v1 , T const v2 ) {
+template <class T> YAKL_INLINE T mymin( T const v1 , T const v2 ) {
   if (v1 < v2) { return v1; }
   else         { return v2; }
 }
-template <class T> inline _HOSTDEV T mymax( T const v1 , T const v2 ) {
+template <class T> YAKL_INLINE T mymax( T const v1 , T const v2 ) {
   if (v1 > v2) { return v1; }
   else         { return v2; }
 }

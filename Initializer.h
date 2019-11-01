@@ -288,9 +288,9 @@ public:
   }
 
 
-  inline _HOSTDEV real ellipsoid_linear(real const x   , real const y   , real const z ,
-                                        real const x0  , real const y0  , real const z0,
-                                        real const xrad, real const yrad, real const zrad, real const amp) {
+  YAKL_INLINE real ellipsoid_linear(real const x   , real const y   , real const z ,
+                                    real const x0  , real const y0  , real const z0,
+                                    real const xrad, real const yrad, real const zrad, real const amp) {
     real xn = (x-x0)/xrad;
     real yn = (y-y0)/yrad;
     real zn = (z-z0)/zrad;
@@ -299,9 +299,9 @@ public:
   }
 
 
-  inline _HOSTDEV real ellipsoid_cosine(real const x   , real const y   , real const z ,
-                                        real const x0  , real const y0  , real const z0,
-                                        real const xrad, real const yrad, real const zrad, real const amp, real const pwr) {
+  YAKL_INLINE real ellipsoid_cosine(real const x   , real const y   , real const z ,
+                                    real const x0  , real const y0  , real const z0,
+                                    real const xrad, real const yrad, real const zrad, real const amp, real const pwr) {
     real val = 0;
     real xn = (x-x0)/xrad;
     real yn = (y-y0)/yrad;
