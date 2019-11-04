@@ -5,8 +5,6 @@ SOURCES = driver.cpp FileIO.cpp params.cpp YAKL.cpp Exchange.cpp Initializer.cpp
            TendenciesThetaConsADER.cpp TendenciesThetaConsSD.cpp TendenciesThetaPrimADER.cpp TendenciesThetaPrimSD.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 
-$(info $(OBJECTS))
-
 default: main
 
 main: $(EXE)
