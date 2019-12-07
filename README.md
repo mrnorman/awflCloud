@@ -5,7 +5,7 @@
 A stratified, non-hydrostatic, fully compressible 3-D Cartesian grid cloud model dynamical core using [A]DER [W]ENO [F]inite-Vo[L]ume (AWFL) Numerics. The numerical scheme is designed to perform well on accelerators by performing significant amounts of local work in between DRAM memory accesses. It is written in C++ using the [YAKL](github.com/mrnorman/YAKL) portability library to accelerate the computations on a variety of hardware backends.
 
 Some attributes of the numerical scheme:
-* __ADER__: ADER time stepping using Differential Transforms for single-step, single-stage high-order time stepping with a maximum stable CFL value of one.
+* __ADER__: ADER time stepping using Differential Transforms for single-step, single-stage high-order time stepping with a maximum stable CFL value of one. https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2017MS001247
 * __WENO__: A new function-based Weighted Essentially Non-Oscillatory (WENO) limiting for crisp resolution of discontinuities without oscillations. https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2017MS001247
 * __Finite-Volume__: Flux-vector Finite-Volume spatial integration for local conservation to machine precision
 * __Upwind__ fluxes using the upwind Godunov linear state via a characteristics-based flux-vector splitting that gives enough dissipation to render stability for any spatial order of accuracy even on unstaggered grids.
