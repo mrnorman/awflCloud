@@ -2,7 +2,7 @@
 
 ## Note that this is a work in progress
 
-A stratified, non-hydrostatic, fully compressible 3-D Cartesian grid cloud model dynamical core using [A]DER [W]ENO [F]inite-Vo[L]ume (AWFL) Numerics. The numerical scheme is designed to perform well on accelerators by performing significant amounts of local work in between DRAM memory accesses. It is written in C++ using the Kokkos library to accelerate the computations on a variety of hardware backends.
+A stratified, non-hydrostatic, fully compressible 3-D Cartesian grid cloud model dynamical core using [A]DER [W]ENO [F]inite-Vo[L]ume (AWFL) Numerics. The numerical scheme is designed to perform well on accelerators by performing significant amounts of local work in between DRAM memory accesses. It is written in C++ using the [YAKL](github.com/mrnorman/YAKL) portability library to accelerate the computations on a variety of hardware backends.
 
 Some attributes of the numerical scheme:
 * __ADER__: ADER time stepping using Differential Transforms for single-step, single-stage high-order time stepping
@@ -16,7 +16,7 @@ Some attributes of the numerical scheme:
 * Uses __Perturbed__ quantities with the hydrostatic background state removed for better resolution of hydrostatic balance
 * Includes a __2-D__ option to simulate the traditional NH atmospheric test cases
 * Uses __MPI__ (nearest neighbor communication) for off-node parallelism
-* Uses __Kokkos__ for on-node parallelism
+* Uses __C++ Portability__ for on-node parallelism
 
 ## Future Work
 The most pressing developments needed are:
@@ -37,6 +37,5 @@ ln -s build/[whatever_machine].inc mach.inc
 make
 ```
 
-* Note that you'll need to have the kokkos repo (https://github.com/kokkos/kokkos) cloned somewhere and pointed to by your mach.inc file. See the existing files for examples.
 * Requires an MPI library (that provides mpic++) as well as parallel-netcdf (https://trac.mcs.anl.gov/projects/parallel-netcdf)
 
