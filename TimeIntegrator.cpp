@@ -4,16 +4,16 @@
 
 void TimeIntegrator::initialize(Domain &dom) {
   if (timeMethod == TIME_SSPRK3) {
-    stateTmp = realArr("stateTmp",numState,dom.nz+2*hs,dom.ny+2*hs,dom.nx+2*hs);
-    tendTmp  = realArr("tendTmp" ,numState,dom.nz,dom.ny,dom.nx);
+    stateTmp = real4d("stateTmp",numState,dom.nz+2*hs,dom.ny+2*hs,dom.nx+2*hs);
+    tendTmp  = real4d("tendTmp" ,numState,dom.nz,dom.ny,dom.nx);
   }
-  tend = realArr("tend",numState,dom.nz,dom.ny,dom.nx);
+  tend = real4d("tend",numState,dom.nz,dom.ny,dom.nx);
   tendencies.initialize(dom);
   dsSwitch = 1;
 }
 
 
-void TimeIntegrator::stepForward(realArr &state, Domain &dom, Exchange &exch, Parallel const &par) {
+void TimeIntegrator::stepForward(real4d &state, Domain &dom, Exchange &exch, Parallel const &par) {
   if (timeMethod == TIME_SSPRK3) {
     stepForwardSSPRK3(state, dom, exch, par);
   } else if (timeMethod == TIME_ADER) {
@@ -29,7 +29,7 @@ void TimeIntegrator::stepForward(realArr &state, Domain &dom, Exchange &exch, Pa
 }
 
 
-void TimeIntegrator::stepForwardADER(realArr &state, Domain &dom, Exchange &exch, Parallel const &par) {
+void TimeIntegrator::stepForwardADER(real4d &state, Domain &dom, Exchange &exch, Parallel const &par) {
   if (dsSwitch) {
     dsSwitch = 0;
     tendencies.compEulerTend_X(state, dom, exch, par, tend);
@@ -63,7 +63,7 @@ void TimeIntegrator::stepForwardADER(realArr &state, Domain &dom, Exchange &exch
 }
 
 
-void TimeIntegrator::stepForwardSSPRK3(realArr &state, Domain const &dom, Exchange &exch, Parallel const &par) {
+void TimeIntegrator::stepForwardSSPRK3(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par) {
   // Stage 1
   tendencies.compEulerTend_X(state, dom, exch, par, tend   );
   if (!dom.run2d) {
@@ -93,34 +93,34 @@ void TimeIntegrator::stepForwardSSPRK3(realArr &state, Domain const &dom, Exchan
 }
 
 
-void TimeIntegrator::applyTendencies(realArr &state2, real const c0, realArr const &state0,
-                                            real const c1, realArr const &state1,
-                                            real const ct, realArr const &tend, Domain const &dom) {
+void TimeIntegrator::applyTendencies(real4d &state2, real const c0, real4d const &state0,
+                                            real const c1, real4d const &state1,
+                                            real const ct, real4d const &tend, Domain const &dom) {
   // for (int l=0; l<numState; l++) {
   //   for (int k=0; k<dom.nz; k++) {
   //     for (int j=0; j<dom.ny; j++) {
   //       for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( numState,dom.nz,dom.ny,dom.nx , YAKL_LAMBDA (int l, int k, int j, int i) {
+  parallel_for( Bounds<4>(numState,dom.nz,dom.ny,dom.nx) , YAKL_LAMBDA (int l, int k, int j, int i) {
     state2(l,hs+k,hs+j,hs+i) = c0 * state0(l,hs+k,hs+j,hs+i) + c1 * state1(l,hs+k,hs+j,hs+i) + ct * dom.dt * tend(l,k,j,i);
   });
 }
 
 
-void TimeIntegrator::appendTendencies(realArr &tend, realArr const &tendTmp, Domain const &dom) {
+void TimeIntegrator::appendTendencies(real4d &tend, real4d const &tendTmp, Domain const &dom) {
   // for (int l=0; l<numState; l++) {
   //   for (int k=0; k<dom.nz; k++) {
   //     for (int j=0; j<dom.ny; j++) {
   //       for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( numState,dom.nz,dom.ny,dom.nx , YAKL_LAMBDA (int l, int k, int j, int i) {
+  parallel_for( Bounds<4>(numState,dom.nz,dom.ny,dom.nx) , YAKL_LAMBDA (int l, int k, int j, int i) {
     tend(l,k,j,i) += tendTmp(l,k,j,i);
   });
 }
 
 
-void TimeIntegrator::applyHeatingCooling(realArr &state, Parallel const &par, Domain const &dom) {
+void TimeIntegrator::applyHeatingCooling(real4d &state, Parallel const &par, Domain const &dom) {
   // for (int j=0; j<dom.ny; j++) {
   //   for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( dom.ny,dom.nx , YAKL_LAMBDA (int j, int i) {
+  parallel_for( Bounds<2>(dom.ny,dom.nx) , YAKL_LAMBDA (int j, int i) {
     real xloc = (par.i_beg + i + 0.5_fp) * dom.dx;
     real yloc = (par.j_beg + j + 0.5_fp) * dom.dy;
     if (dom.run2d) {yloc = dom.ylen/2;}

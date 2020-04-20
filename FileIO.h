@@ -20,15 +20,15 @@ protected:
 
 public:
 
-  void outputInit(realArr &state, Domain const &dom, Parallel const &par);
+  void outputInit(real4d &state, Domain const &dom, Parallel const &par);
 
-  void output(realArr &state, Domain const &dom, Parallel const &par);
+  void output(real4d &state, Domain const &dom, Parallel const &par);
 
-  void writeState(realArr &state, Domain const &dom, Parallel const &par);
+  void writeState(real4d &state, Domain const &dom, Parallel const &par);
 
-  void writeStateThetaPrim(realArr &state, Domain const &dom, Parallel const &par);
+  void writeStateThetaPrim(real4d &state, Domain const &dom, Parallel const &par);
 
-  void writeStateThetaCons(realArr &state, Domain const &dom, Parallel const &par);
+  void writeStateThetaCons(real4d &state, Domain const &dom, Parallel const &par);
 
   //Error reporting routine for the PNetCDF I/O
   void ncwrap( int ierr , int line );

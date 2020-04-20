@@ -9,9 +9,9 @@
 
 class TimeIntegrator {
 
-  realArr stateTmp;
-  realArr tend;
-  realArr tendTmp;
+  real4d stateTmp;
+  real4d tend;
+  real4d tendTmp;
   Tendencies tendencies;
   int dsSwitch;
 
@@ -21,24 +21,24 @@ public :
   void initialize(Domain &dom);
 
 
-  void stepForward(realArr &state, Domain &dom, Exchange &exch, Parallel const &par);
+  void stepForward(real4d &state, Domain &dom, Exchange &exch, Parallel const &par);
 
 
-  void stepForwardADER(realArr &state, Domain &dom, Exchange &exch, Parallel const &par);
+  void stepForwardADER(real4d &state, Domain &dom, Exchange &exch, Parallel const &par);
 
 
-  void stepForwardSSPRK3(realArr &state, Domain const &dom, Exchange &exch, Parallel const &par);
+  void stepForwardSSPRK3(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par);
 
 
-  void applyTendencies(realArr &state2, real const c0, realArr const &state0,
-                                              real const c1, realArr const &state1,
-                                              real const ct, realArr const &tend, Domain const &dom);
+  void applyTendencies(real4d &state2, real const c0, real4d const &state0,
+                                              real const c1, real4d const &state1,
+                                              real const ct, real4d const &tend, Domain const &dom);
 
 
-  void appendTendencies(realArr &tend, realArr const &tendTmp, Domain const &dom);
+  void appendTendencies(real4d &tend, real4d const &tendTmp, Domain const &dom);
 
 
-  void applyHeatingCooling(realArr &state, Parallel const &par, Domain const &dom);
+  void applyHeatingCooling(real4d &state, Parallel const &par, Domain const &dom);
 
 };
 

@@ -3,11 +3,10 @@
 #define _ADERDT_H_
 
 #include "const.h"
-#include "SArray.h"
 
 
-YAKL_INLINE void diffTransformEulerConsX( SArray<real,numState,tord,tord> &state, SArray<real,numState,tord,tord> &flux, SArray<real,tord,tord> const &deriv ) {
-  SArray<real,tord,tord> ruu, ruv, ruw, rut, rtgamma;
+YAKL_INLINE void diffTransformEulerConsX( SArray<real,3,numState,tord,tord> &state, SArray<real,3,numState,tord,tord> &flux, SArray<real,2,tord,tord> const &deriv ) {
+  SArray<real,2,tord,tord> ruu, ruv, ruw, rut, rtgamma;
   real tot_ruu, tot_ruv, tot_ruw, tot_rut, tot_rtgamma;
 
   // Zero out intermediate arrays
@@ -86,8 +85,8 @@ YAKL_INLINE void diffTransformEulerConsX( SArray<real,numState,tord,tord> &state
 }
 
 
-YAKL_INLINE void diffTransformEulerConsY( SArray<real,numState,tord,tord> &state, SArray<real,numState,tord,tord> &flux, SArray<real,tord,tord> const &deriv ) {
-  SArray<real,tord,tord> rvu, rvv, rvw, rvt, rtgamma;
+YAKL_INLINE void diffTransformEulerConsY( SArray<real,3,numState,tord,tord> &state, SArray<real,3,numState,tord,tord> &flux, SArray<real,2,tord,tord> const &deriv ) {
+  SArray<real,2,tord,tord> rvu, rvv, rvw, rvt, rtgamma;
   real tot_rvu, tot_rvv, tot_rvw, tot_rvt, tot_rtgamma;
 
   // Zero out intermediate arrays
@@ -166,9 +165,9 @@ YAKL_INLINE void diffTransformEulerConsY( SArray<real,numState,tord,tord> &state
 }
 
 
-YAKL_INLINE void diffTransformEulerConsZ( SArray<real,numState,tord,tord> &state, SArray<real,numState,tord,tord> &flux,
-                                 SArray<real,tord,tord> &source, SArray<real,tord,tord> const &deriv, SArray<real,tord> const &hyRHOT, SArray<real,tord> const &hyRHO ) {
-  SArray<real,tord,tord> rwu, rwv, rww, rwt, rtgamma;
+YAKL_INLINE void diffTransformEulerConsZ( SArray<real,3,numState,tord,tord> &state, SArray<real,3,numState,tord,tord> &flux,
+                                 SArray<real,2,tord,tord> &source, SArray<real,2,tord,tord> const &deriv, SArray<real,1,tord> const &hyRHOT, SArray<real,1,tord> const &hyRHO ) {
+  SArray<real,2,tord,tord> rwu, rwv, rww, rwt, rtgamma;
   real tot_rwu, tot_rwv, tot_rww, tot_rwt, tot_rtgamma;
 
   // Zero out intermediate arrays
@@ -253,7 +252,7 @@ YAKL_INLINE void diffTransformEulerConsZ( SArray<real,numState,tord,tord> &state
 }
 
 
-YAKL_INLINE void timeAvg( SArray<real,numState,tord,tord> &dts , Domain const &dom ) {
+YAKL_INLINE void timeAvg( SArray<real,3,numState,tord,tord> &dts , Domain const &dom ) {
   real dtmult = dom.dt;
   for (int kt=1; kt<tord; kt++) {
     for (int l=0; l<numState; l++) {
@@ -266,7 +265,7 @@ YAKL_INLINE void timeAvg( SArray<real,numState,tord,tord> &dts , Domain const &d
 }
 
 
-YAKL_INLINE void timeAvg( SArray<real,tord,tord> &dts , Domain const &dom ) {
+YAKL_INLINE void timeAvg( SArray<real,2,tord,tord> &dts , Domain const &dom ) {
   real dtmult = dom.dt;
   for (int kt=1; kt<tord; kt++) {
     for (int ii=0; ii<tord; ii++) {

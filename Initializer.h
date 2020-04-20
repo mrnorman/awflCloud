@@ -14,7 +14,7 @@
 
 void initialize_mpi( int *argc , char ***argv , Parallel &par );
 
-void initialize(realArr &state, Domain &dom, Parallel &par, Exchange &exch, TimeIntegrator &tint);
+void initialize(real4d &state, Domain &dom, Parallel &par, Exchange &exch, TimeIntegrator &tint);
 
 YAKL_INLINE real ellipsoid_linear(real const x   , real const y   , real const z ,
                                   real const x0  , real const y0  , real const z0,

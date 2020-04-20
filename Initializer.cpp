@@ -15,12 +15,12 @@ void initialize_mpi( int *argc , char ***argv , Parallel &par ) {
   }
 }
 
-void initialize(realArr &state, Domain &dom, Parallel &par, Exchange &exch, TimeIntegrator &tint) {
+void initialize(real4d &state, Domain &dom, Parallel &par, Exchange &exch, TimeIntegrator &tint) {
   int ierr;
-  SArray<real,ord> gllOrdPoints;
-  SArray<real,ord> gllOrdWeights;
-  SArray<real,tord> gllTordPoints;
-  SArray<real,tord> gllTordWeights;
+  SArray<real,1,ord> gllOrdPoints;
+  SArray<real,1,ord> gllOrdWeights;
+  SArray<real,1,tord> gllTordPoints;
+  SArray<real,1,tord> gllTordWeights;
 
   if (dom.ny_glob == 1) { dom.run2d = 1; } else { dom.run2d = 0; }
 
@@ -98,21 +98,21 @@ void initialize(realArr &state, Domain &dom, Parallel &par, Exchange &exch, Time
   exch.allocate(dom);
 
   // Allocate the fluid state variable
-  state = realArr( "state" , numState , dom.nz+2*hs , dom.ny+2*hs , dom.nx+2*hs );
+  state = real4d( "state" , numState , dom.nz+2*hs , dom.ny+2*hs , dom.nx+2*hs );
 
-  dom.hyDensCells      = realArr( "hyCellsR"  , dom.nz+2*hs );
-  dom.hyDensThetaCells = realArr( "hyCellsRT" , dom.nz+2*hs );
-  dom.hyThetaCells     = realArr( "hyCellsT"  , dom.nz+2*hs );
-  dom.hyPressureCells  = realArr( "hyCellsp"  , dom.nz+2*hs );
+  dom.hyDensCells      = real1d( "hyCellsR"  , dom.nz+2*hs );
+  dom.hyDensThetaCells = real1d( "hyCellsRT" , dom.nz+2*hs );
+  dom.hyThetaCells     = real1d( "hyCellsT"  , dom.nz+2*hs );
+  dom.hyPressureCells  = real1d( "hyCellsp"  , dom.nz+2*hs );
 
-  dom.hyDensGLL      = realArr( "hyGLLR"  , dom.nz , tord );
-  dom.hyDensThetaGLL = realArr( "hyGLLRT" , dom.nz , tord );
-  dom.hyThetaGLL     = realArr( "hyGLLT"  , dom.nz , tord );
-  dom.hyPressureGLL  = realArr( "hyGLLp"  , dom.nz , tord );
+  dom.hyDensGLL      = real2d( "hyGLLR"  , dom.nz , tord );
+  dom.hyDensThetaGLL = real2d( "hyGLLRT" , dom.nz , tord );
+  dom.hyThetaGLL     = real2d( "hyGLLT"  , dom.nz , tord );
+  dom.hyPressureGLL  = real2d( "hyGLLp"  , dom.nz , tord );
 
   // Initialize the hydrostatic background state for cell averages
   // for (int k=0; k<dom.nz; k++) {
-  yakl::parallel_for( "initHydroCells" , dom.nz , YAKL_LAMBDA (int const k) {
+  parallel_for( dom.nz , YAKL_LAMBDA (int const k) {
     dom.hyDensCells     (hs+k) = 0;
     dom.hyDensThetaCells(hs+k) = 0;
     dom.hyThetaCells    (hs+k) = 0;
@@ -136,7 +136,7 @@ void initialize(realArr &state, Domain &dom, Parallel &par, Exchange &exch, Time
 
   // Enforce vertical boundaries
   // for (int ii=0; ii<hs; ii++) {
-  yakl::parallel_for( "boundariesHydroCells" , hs , YAKL_LAMBDA (int const ii) {
+  parallel_for( hs , YAKL_LAMBDA (int const ii) {
     dom.hyDensCells     (ii) = dom.hyDensCells     (hs);
     dom.hyDensThetaCells(ii) = dom.hyDensThetaCells(hs);
     dom.hyThetaCells    (ii) = dom.hyThetaCells    (hs);
@@ -151,7 +151,7 @@ void initialize(realArr &state, Domain &dom, Parallel &par, Exchange &exch, Time
   // Perform ord-point GLL quadrature for the cell averages
   // for (int k=0; k<dom.nz; k++) {
   //   for (int kk=0; kk<tord; kk++) {
-  yakl::parallel_for( "initHydroGLL" , dom.nz,tord , YAKL_LAMBDA (int k, int kk) {
+  parallel_for( Bounds<2>(dom.nz,tord) , YAKL_LAMBDA (int k, int kk) {
     real zloc = (k + 0.5_fp)*dom.dz + gllTordPoints(kk)*dom.dz;
     real r0, t0;
 
@@ -170,7 +170,7 @@ void initialize(realArr &state, Domain &dom, Parallel &par, Exchange &exch, Time
   // for (int k=0; k<dom.nz; k++) {
   //   for (int j=0; j<dom.ny; j++) {
   //     for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( "InitFluidState" , dom.nz,dom.ny,dom.nx , YAKL_LAMBDA (int k, int j, int i) {
+  parallel_for( Bounds<3>(dom.nz,dom.ny,dom.nx) , YAKL_LAMBDA (int k, int j, int i) {
     // Initialize the state to zero
     for (int l=0; l<numState; l++) {
       state(l,hs+k,hs+j,hs+i) = 0;
@@ -218,12 +218,12 @@ void initialize(realArr &state, Domain &dom, Parallel &par, Exchange &exch, Time
     }
   });
 
-  realArr dt3d("dt3d",dom.nz,dom.ny,dom.nx);
+  real3d dt3d("dt3d",dom.nz,dom.ny,dom.nx);
   // Compute the time step based on the CFL value
   // for (int k=0; k<dom.nz; k++) {
   //   for (int j=0; j<dom.ny; j++) {
   //     for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( "Compute_dt3d" , dom.nz,dom.ny,dom.nx , YAKL_LAMBDA (int k, int j, int i) {
+  parallel_for( Bounds<3>(dom.nz,dom.ny,dom.nx) , YAKL_LAMBDA (int k, int j, int i) {
     // Grab state variables
     real r, u, v, w, t, p, cs;
     if (dom.eqnSet == EQN_THETA_CONS) {

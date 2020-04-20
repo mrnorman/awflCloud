@@ -24,7 +24,7 @@ void Tendencies::initialize(Domain const &dom) {
 }
 
 
-void Tendencies::compEulerTend_X(realArr &state, Domain const &dom, Exchange &exch, Parallel const &par, realArr &tend) {
+void Tendencies::compEulerTend_X(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
   if        (useTend == useTendThetaConsADER) {
     tendenciesThetaConsADER.compEulerTend_X(state, dom, exch, par, tend);
   } else if (useTend == useTendThetaConsSD  ) {
@@ -37,7 +37,7 @@ void Tendencies::compEulerTend_X(realArr &state, Domain const &dom, Exchange &ex
 }
 
 
-void Tendencies::compEulerTend_Y(realArr &state, Domain const &dom, Exchange &exch, Parallel const &par, realArr &tend) {
+void Tendencies::compEulerTend_Y(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
   if        (useTend == useTendThetaConsADER) {
     tendenciesThetaConsADER.compEulerTend_Y(state, dom, exch, par, tend);
   } else if (useTend == useTendThetaConsSD  ) {
@@ -50,7 +50,7 @@ void Tendencies::compEulerTend_Y(realArr &state, Domain const &dom, Exchange &ex
 }
 
 
-void Tendencies::compEulerTend_Z(realArr &state, Domain const &dom, Exchange &exch, Parallel const &par, realArr &tend) {
+void Tendencies::compEulerTend_Z(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
   if        (useTend == useTendThetaConsADER) {
     tendenciesThetaConsADER.compEulerTend_Z(state, dom, exch, par, tend);
   } else if (useTend == useTendThetaConsSD  ) {
@@ -63,7 +63,7 @@ void Tendencies::compEulerTend_Z(realArr &state, Domain const &dom, Exchange &ex
 }
 
 
-void Tendencies::compEulerTend_S(realArr &state, Domain const &dom, Exchange &exch, Parallel const &par, realArr &tend) {
+void Tendencies::compEulerTend_S(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
   if        (useTend == useTendThetaConsADER) {
     tendenciesThetaConsADER.compEulerTend_S(state, dom, exch, par, tend);
   } else if (useTend == useTendThetaConsSD  ) {
@@ -76,7 +76,7 @@ void Tendencies::compEulerTend_S(realArr &state, Domain const &dom, Exchange &ex
 }
 
 
-void Tendencies::compStrakaTend(realArr &state, Domain const &dom, Exchange &exch, Parallel const &par, realArr &tend) {
+void Tendencies::compStrakaTend(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend) {
   if        (useTend == useTendThetaConsADER) {
     tendenciesThetaConsADER.compStrakaTend(state, dom, exch, par, tend);
   } else if (useTend == useTendThetaConsSD  ) {

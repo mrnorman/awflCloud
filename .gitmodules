@@ -1,3 +1,6 @@
 [submodule "cub"]
 	path = cub
 	url = git@github.com:NVlabs/cub.git
+[submodule "YAKL"]
+	path = YAKL
+	url = git@github.com:mrnorman/YAKL.git

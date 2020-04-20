@@ -2,12 +2,12 @@
 #include "FileIO.h"
 
 
-void FileIO::outputInit(realArr &state, Domain const &dom, Parallel const &par) {
+void FileIO::outputInit(real4d &state, Domain const &dom, Parallel const &par) {
   int dimids[4];
   MPI_Offset st[1], ct[1];
-  realArr xCoord("xCoord",dom.nx);
-  realArr yCoord("yCoord",dom.ny);
-  realArr zCoord("zCoord",dom.nz);
+  real1d xCoord("xCoord",dom.nx);
+  real1d yCoord("yCoord",dom.ny);
+  real1d zCoord("zCoord",dom.nz);
 
   numOut = 0;
 
@@ -55,15 +55,15 @@ void FileIO::outputInit(realArr &state, Domain const &dom, Parallel const &par) 
 
   // Compute x, y, and z coordinates
   // for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( dom.nx , YAKL_LAMBDA (int const i) {
+  parallel_for( dom.nx , YAKL_LAMBDA (int const i) {
     xCoord(i) = ( par.i_beg + i + 0.5_fp ) * dom.dx;
   });
   // for (int j=0; j<dom.ny; j++) {
-  yakl::parallel_for( dom.ny , YAKL_LAMBDA (int const j) {
+  parallel_for( dom.ny , YAKL_LAMBDA (int const j) {
     yCoord(j) = ( par.j_beg + j + 0.5_fp ) * dom.dy;
   });
   // for (int k=0; k<dom.nz; k++) {
-  yakl::parallel_for( dom.nz , YAKL_LAMBDA (int const k) {
+  parallel_for( dom.nz , YAKL_LAMBDA (int const k) {
     zCoord(k) = (             k + 0.5_fp ) * dom.dz;
   });
 
@@ -82,19 +82,19 @@ void FileIO::outputInit(realArr &state, Domain const &dom, Parallel const &par) 
   ncwrap( ncmpi_put_vara_float( ncid , zVar    , st , ct , zCoord.createHostCopy().data() ) , __LINE__ );
 
   // for (int k=0; k<dom.nz; k++) {
-  yakl::parallel_for( dom.nz , YAKL_LAMBDA (int const k) {
+  parallel_for( dom.nz , YAKL_LAMBDA (int const k) {
     zCoord(k) = dom.hyDensCells     (hs+k);
   });
   ncwrap( ncmpi_put_vara_float( ncid , hyrVar  , st , ct , zCoord.createHostCopy().data() ) , __LINE__ );
 
   // for (int k=0; k<dom.nz; k++) {
-  yakl::parallel_for( dom.nz , YAKL_LAMBDA (int const k) {
+  parallel_for( dom.nz , YAKL_LAMBDA (int const k) {
     zCoord(k) = dom.hyDensThetaCells(hs+k);
   });
   ncwrap( ncmpi_put_vara_float( ncid , hyrtVar , st , ct , zCoord.createHostCopy().data() ) , __LINE__ );
 
   // for (int k=0; k<dom.nz; k++) {
-  yakl::parallel_for( dom.nz , YAKL_LAMBDA (int const k) {
+  parallel_for( dom.nz , YAKL_LAMBDA (int const k) {
     zCoord(k) = dom.hyPressureCells(hs+k);
   });
   ncwrap( ncmpi_put_vara_float( ncid , hypVar , st , ct , zCoord.createHostCopy().data() ) , __LINE__ );
@@ -109,7 +109,7 @@ void FileIO::outputInit(realArr &state, Domain const &dom, Parallel const &par) 
 }
 
 
-void FileIO::output(realArr &state, Domain const &dom, Parallel const &par) {
+void FileIO::output(real4d &state, Domain const &dom, Parallel const &par) {
   int dimids[4];
   MPI_Offset st[1], ct[1];
 
@@ -137,7 +137,7 @@ void FileIO::output(realArr &state, Domain const &dom, Parallel const &par) {
 }
 
 
-void FileIO::writeState(realArr &state, Domain const &dom, Parallel const &par) {
+void FileIO::writeState(real4d &state, Domain const &dom, Parallel const &par) {
   if        (dom.eqnSet == EQN_THETA_CONS) {
     writeStateThetaCons(state, dom, par);
   } else if (dom.eqnSet == EQN_THETA_PRIM) {
@@ -146,9 +146,9 @@ void FileIO::writeState(realArr &state, Domain const &dom, Parallel const &par) 
 }
 
 
-void FileIO::writeStateThetaPrim(realArr &state, Domain const &dom, Parallel const &par) {
+void FileIO::writeStateThetaPrim(real4d &state, Domain const &dom, Parallel const &par) {
   MPI_Offset st[4], ct[4];
-  realArr data("data",dom.nz,dom.ny,dom.nx);
+  real3d data("data",dom.nz,dom.ny,dom.nx);
 
   st[0] = numOut; st[1] = 0     ; st[2] = par.j_beg; st[3] = par.i_beg;
   ct[0] = 1     ; ct[1] = dom.nz; ct[2] = dom.ny   ; ct[3] = dom.nx   ;
@@ -157,7 +157,7 @@ void FileIO::writeStateThetaPrim(realArr &state, Domain const &dom, Parallel con
   // for (int k=0; k<dom.nz; k++) {
   //   for (int j=0; j<dom.ny; j++) {
   //     for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( dom.nz,dom.ny,dom.nx , YAKL_LAMBDA (int k, int j, int i) {
+  parallel_for( Bounds<3>(dom.nz,dom.ny,dom.nx) , YAKL_LAMBDA (int k, int j, int i) {
     data(k,j,i) = state(idR,hs+k,hs+j,hs+i);
   });
   ncwrap( ncmpi_put_vara_float_all( ncid , rVar , st , ct , data.createHostCopy().data() ) , __LINE__ );
@@ -166,7 +166,7 @@ void FileIO::writeStateThetaPrim(realArr &state, Domain const &dom, Parallel con
   // for (int k=0; k<dom.nz; k++) {
   //   for (int j=0; j<dom.ny; j++) {
   //     for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( dom.nz,dom.ny,dom.nx , YAKL_LAMBDA (int k, int j, int i) {
+  parallel_for( Bounds<3>(dom.nz,dom.ny,dom.nx) , YAKL_LAMBDA (int k, int j, int i) {
     data(k,j,i) = state(idU,hs+k,hs+j,hs+i);
   });
   ncwrap( ncmpi_put_vara_float_all( ncid , uVar , st , ct , data.createHostCopy().data() ) , __LINE__ );
@@ -175,7 +175,7 @@ void FileIO::writeStateThetaPrim(realArr &state, Domain const &dom, Parallel con
   // for (int k=0; k<dom.nz; k++) {
   //   for (int j=0; j<dom.ny; j++) {
   //     for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( dom.nz,dom.ny,dom.nx , YAKL_LAMBDA (int k, int j, int i) {
+  parallel_for( Bounds<3>(dom.nz,dom.ny,dom.nx) , YAKL_LAMBDA (int k, int j, int i) {
     data(k,j,i) = state(idV,hs+k,hs+j,hs+i);
   });
   ncwrap( ncmpi_put_vara_float_all( ncid , vVar , st , ct , data.createHostCopy().data() ) , __LINE__ );
@@ -184,7 +184,7 @@ void FileIO::writeStateThetaPrim(realArr &state, Domain const &dom, Parallel con
   // for (int k=0; k<dom.nz; k++) {
   //   for (int j=0; j<dom.ny; j++) {
   //     for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( dom.nz,dom.ny,dom.nx , YAKL_LAMBDA (int k, int j, int i) {
+  parallel_for( Bounds<3>(dom.nz,dom.ny,dom.nx) , YAKL_LAMBDA (int k, int j, int i) {
     data(k,j,i) = state(idW,hs+k,hs+j,hs+i);
   });
   ncwrap( ncmpi_put_vara_float_all( ncid , wVar , st , ct , data.createHostCopy().data() ) , __LINE__ );
@@ -193,7 +193,7 @@ void FileIO::writeStateThetaPrim(realArr &state, Domain const &dom, Parallel con
   // for (int k=0; k<dom.nz; k++) {
   //   for (int j=0; j<dom.ny; j++) {
   //     for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( dom.nz,dom.ny,dom.nx , YAKL_LAMBDA (int k, int j, int i) {
+  parallel_for( Bounds<3>(dom.nz,dom.ny,dom.nx) , YAKL_LAMBDA (int k, int j, int i) {
     data(k,j,i) = state(idT,hs+k,hs+j,hs+i);
   });
   ncwrap( ncmpi_put_vara_float_all( ncid , thVar , st , ct , data.createHostCopy().data() ) , __LINE__ );
@@ -202,7 +202,7 @@ void FileIO::writeStateThetaPrim(realArr &state, Domain const &dom, Parallel con
   // for (int k=0; k<dom.nz; k++) {
   //   for (int j=0; j<dom.ny; j++) {
   //     for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( dom.nz,dom.ny,dom.nx , YAKL_LAMBDA (int k, int j, int i) {
+  parallel_for( Bounds<3>(dom.nz,dom.ny,dom.nx) , YAKL_LAMBDA (int k, int j, int i) {
     data(k,j,i) = C0*pow( ( state(idR,hs+k,hs+j,hs+i)+dom.hyDensCells (hs+k) ) *
                           ( state(idT,hs+k,hs+j,hs+i)+dom.hyThetaCells(hs+k) ) , GAMMA ) -
                   dom.hyPressureCells(hs+k);
@@ -216,9 +216,9 @@ void FileIO::writeStateThetaPrim(realArr &state, Domain const &dom, Parallel con
 }
 
 
-void FileIO::writeStateThetaCons(realArr &state, Domain const &dom, Parallel const &par) {
+void FileIO::writeStateThetaCons(real4d &state, Domain const &dom, Parallel const &par) {
   MPI_Offset st[4], ct[4];
-  realArr data("data",dom.nz,dom.ny,dom.nx);
+  real3d data("data",dom.nz,dom.ny,dom.nx);
 
   st[0] = numOut; st[1] = 0     ; st[2] = par.j_beg; st[3] = par.i_beg;
   ct[0] = 1     ; ct[1] = dom.nz; ct[2] = dom.ny   ; ct[3] = dom.nx   ;
@@ -227,7 +227,7 @@ void FileIO::writeStateThetaCons(realArr &state, Domain const &dom, Parallel con
   // for (int k=0; k<dom.nz; k++) {
   //   for (int j=0; j<dom.ny; j++) {
   //     for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( dom.nz,dom.ny,dom.nx , YAKL_LAMBDA (int k, int j, int i) {
+  parallel_for( Bounds<3>(dom.nz,dom.ny,dom.nx) , YAKL_LAMBDA (int k, int j, int i) {
     data(k,j,i) = state(idR,hs+k,hs+j,hs+i);
   });
   ncwrap( ncmpi_put_vara_float_all( ncid , rVar , st , ct , data.createHostCopy().data() ) , __LINE__ );
@@ -236,7 +236,7 @@ void FileIO::writeStateThetaCons(realArr &state, Domain const &dom, Parallel con
   // for (int k=0; k<dom.nz; k++) {
   //   for (int j=0; j<dom.ny; j++) {
   //     for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( dom.nz,dom.ny,dom.nx , YAKL_LAMBDA (int k, int j, int i) {
+  parallel_for( Bounds<3>(dom.nz,dom.ny,dom.nx) , YAKL_LAMBDA (int k, int j, int i) {
     data(k,j,i) = state(idRU,hs+k,hs+j,hs+i) / ( state(idR,hs+k,hs+j,hs+i) + dom.hyDensCells(hs+k) );
   });
   ncwrap( ncmpi_put_vara_float_all( ncid , uVar , st , ct , data.createHostCopy().data() ) , __LINE__ );
@@ -245,7 +245,7 @@ void FileIO::writeStateThetaCons(realArr &state, Domain const &dom, Parallel con
   // for (int k=0; k<dom.nz; k++) {
   //   for (int j=0; j<dom.ny; j++) {
   //     for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( dom.nz,dom.ny,dom.nx , YAKL_LAMBDA (int k, int j, int i) {
+  parallel_for( Bounds<3>(dom.nz,dom.ny,dom.nx) , YAKL_LAMBDA (int k, int j, int i) {
     data(k,j,i) = state(idRV,hs+k,hs+j,hs+i) / ( state(idR,hs+k,hs+j,hs+i) + dom.hyDensCells(hs+k) );
   });
   ncwrap( ncmpi_put_vara_float_all( ncid , vVar , st , ct , data.createHostCopy().data() ) , __LINE__ );
@@ -254,7 +254,7 @@ void FileIO::writeStateThetaCons(realArr &state, Domain const &dom, Parallel con
   // for (int k=0; k<dom.nz; k++) {
   //   for (int j=0; j<dom.ny; j++) {
   //     for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( dom.nz,dom.ny,dom.nx , YAKL_LAMBDA (int k, int j, int i) {
+  parallel_for( Bounds<3>(dom.nz,dom.ny,dom.nx) , YAKL_LAMBDA (int k, int j, int i) {
     data(k,j,i) = state(idRW,hs+k,hs+j,hs+i) / ( state(idR,hs+k,hs+j,hs+i) + dom.hyDensCells(hs+k) );
   });
   ncwrap( ncmpi_put_vara_float_all( ncid , wVar , st , ct , data.createHostCopy().data() ) , __LINE__ );
@@ -263,7 +263,7 @@ void FileIO::writeStateThetaCons(realArr &state, Domain const &dom, Parallel con
   // for (int k=0; k<dom.nz; k++) {
   //   for (int j=0; j<dom.ny; j++) {
   //     for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( dom.nz,dom.ny,dom.nx , YAKL_LAMBDA (int k, int j, int i) {
+  parallel_for( Bounds<3>(dom.nz,dom.ny,dom.nx) , YAKL_LAMBDA (int k, int j, int i) {
     data(k,j,i) = ( state(idRT,hs+k,hs+j,hs+i) + dom.hyDensThetaCells(hs+k) ) /
                   ( state(idR ,hs+k,hs+j,hs+i) + dom.hyDensCells     (hs+k) ) -
                   dom.hyDensThetaCells(hs+k) / dom.hyDensCells(hs+k);
@@ -274,7 +274,7 @@ void FileIO::writeStateThetaCons(realArr &state, Domain const &dom, Parallel con
   // for (int k=0; k<dom.nz; k++) {
   //   for (int j=0; j<dom.ny; j++) {
   //     for (int i=0; i<dom.nx; i++) {
-  yakl::parallel_for( dom.nz,dom.ny,dom.nx , YAKL_LAMBDA (int k, int j, int i) {
+  parallel_for( Bounds<3>(dom.nz,dom.ny,dom.nx) , YAKL_LAMBDA (int k, int j, int i) {
     data(k,j,i) = C0*pow(state(idRT,hs+k,hs+j,hs+i)+dom.hyDensThetaCells(hs+k),GAMMA) -
                   C0*pow(dom.hyDensThetaCells(hs+k),GAMMA);
   });

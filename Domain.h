@@ -1,6 +1,5 @@
 
-#ifndef _DOMAIN_H_
-#define _DOMAIN_H_
+#pragma once
 
 #include "const.h"
 
@@ -39,16 +38,15 @@ public:
   real dt;
 
   // Hydrostatic background state cell averages (no halos)
-  realArr hyDensCells;
-  realArr hyDensThetaCells;
-  realArr hyThetaCells;
-  realArr hyPressureCells;
+  real1d hyDensCells;
+  real1d hyDensThetaCells;
+  real1d hyThetaCells;
+  real1d hyPressureCells;
 
   // Hydrostatic background state at tord GLL points within cells (no halos)
-  realArr hyDensGLL;
-  realArr hyDensThetaGLL;
-  realArr hyThetaGLL;
-  realArr hyPressureGLL;
+  real2d hyDensGLL;
+  real2d hyDensThetaGLL;
+  real2d hyThetaGLL;
+  real2d hyPressureGLL;
 };
 
-#endif

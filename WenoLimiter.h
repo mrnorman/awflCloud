@@ -3,12 +3,11 @@
 #define _WENO_LIMITER_H_
 
 #include "const.h"
-#include "SArray.h"
 #include "TransformMatrices.h"
 
 
 
-YAKL_INLINE void map_weights( SArray<real,hs+2> const &idl , SArray<real,hs+2> &wts ) {
+YAKL_INLINE void map_weights( SArray<real,1,hs+2> const &idl , SArray<real,1,hs+2> &wts ) {
   // Map the weights for quicker convergence. WARNING: Ideal weights must be (0,1) before mapping
   for (int i=0; i<hs+2; i++) {
     wts(i) = wts(i) * ( idl(i) + idl(i)*idl(i) - 3._fp*idl(i)*wts(i) + wts(i)*wts(i) ) / ( idl(i)*idl(i) + wts(i) * ( 1._fp - 2._fp * idl(i) ) );
@@ -16,7 +15,7 @@ YAKL_INLINE void map_weights( SArray<real,hs+2> const &idl , SArray<real,hs+2> &
 }
 
 
-YAKL_INLINE void convexify( SArray<real,hs+2> &wts ) {
+YAKL_INLINE void convexify( SArray<real,1,hs+2> &wts ) {
   real sum = 0._fp;
   real const eps = 1.0e-20;
   for (int i=0; i<hs+2; i++) { sum += wts(i); }
@@ -24,7 +23,7 @@ YAKL_INLINE void convexify( SArray<real,hs+2> &wts ) {
 }
 
 
-YAKL_INLINE void wenoSetIdealSigma(SArray<real,hs+2> &idl, real &sigma) {
+YAKL_INLINE void wenoSetIdealSigma(SArray<real,1,hs+2> &idl, real &sigma) {
   if        (ord == 3) {
     sigma = 0.1_fp;
     idl(0) = 1._fp;
@@ -89,13 +88,12 @@ YAKL_INLINE void wenoSetIdealSigma(SArray<real,hs+2> &idl, real &sigma) {
 }
 
 
-YAKL_INLINE void compute_weno_coefs( SArray<real,ord,ord,ord> const &recon , SArray<real,ord> const &u , SArray<real,ord> &aw , SArray<real,hs+2> const &idl , real const sigma ) {
-  SArray<real,hs+2> tv;
-  SArray<real,hs+2> wts;
-  SArray<real,hs+2,ord> a;
-  SArray<real,hs+1> lotmp;
-  SArray<real,ord > hitmp;
-  TransformMatrices<real> transform;
+YAKL_INLINE void compute_weno_coefs( SArray<real,3,ord,ord,ord> const &recon , SArray<real,1,ord> const &u , SArray<real,1,ord> &aw , SArray<real,1,hs+2> const &idl , real const sigma ) {
+  SArray<real,1,hs+2> tv;
+  SArray<real,1,hs+2> wts;
+  SArray<real,2,hs+2,ord> a;
+  SArray<real,1,hs+1> lotmp;
+  SArray<real,1,ord > hitmp;
   real lo_avg;
   real const eps = 1.0e-20;
 
@@ -130,6 +128,8 @@ YAKL_INLINE void compute_weno_coefs( SArray<real,ord,ord,ord> const &recon , SAr
     a(hs+1,ii) /= idl(hs+1);
   }
 
+  TransformMatrices<real> transform;
+
   // Compute total variation of all candidate polynomials
   for (int i=0; i<hs+1; i++) {
     for (int ii=0; ii<hs+1; ii++) {
@@ -137,9 +137,9 @@ YAKL_INLINE void compute_weno_coefs( SArray<real,ord,ord,ord> const &recon , SAr
     }
     tv(i) = transform.coefs_to_tv(lotmp);
   }
-    for (int ii=0; ii<ord; ii++) {
-      hitmp(ii) = a(hs+1,ii);
-    }
+  for (int ii=0; ii<ord; ii++) {
+    hitmp(ii) = a(hs+1,ii);
+  }
   tv(hs+1) = transform.coefs_to_tv(hitmp);
 
   // Reduce the bridge polynomial TV to something closer to the other TV values

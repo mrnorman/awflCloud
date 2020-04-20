@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
 
   {
     // Create the model objects
-    realArr         state;
+    real4d         state;
     Domain         dom;
     Parallel       par;
     FileIO         io;

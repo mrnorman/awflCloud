@@ -3,13 +3,12 @@
 #define _RIEMANN_H_
 
 #include "const.h"
-#include "SArray.h"
 
 
-YAKL_INLINE void godunovLinearX(SArray<real,numState> &s1, SArray<real,numState> &s2,
-                                SArray<real,numState> &f1, SArray<real,numState> &f2,
-                                SArray<real,numState> &upw ) {
-  SArray<real,numState> ch1, ch2, chu, ev;
+YAKL_INLINE void godunovLinearX(SArray<real,1,numState> &s1, SArray<real,1,numState> &s2,
+                                SArray<real,1,numState> &f1, SArray<real,1,numState> &f2,
+                                SArray<real,1,numState> &upw ) {
+  SArray<real,1,numState> ch1, ch2, chu, ev;
   real const windTol = 0; // 1.0e-6;
 
   // Compute interface values
@@ -60,10 +59,10 @@ YAKL_INLINE void godunovLinearX(SArray<real,numState> &s1, SArray<real,numState>
 }
 
 
-YAKL_INLINE void godunovLinearY(SArray<real,numState> &s1, SArray<real,numState> &s2,
-                                SArray<real,numState> &f1, SArray<real,numState> &f2,
-                                SArray<real,numState> &upw ) {
-  SArray<real,numState> ch1, ch2, chu, ev;
+YAKL_INLINE void godunovLinearY(SArray<real,1,numState> &s1, SArray<real,1,numState> &s2,
+                                SArray<real,1,numState> &f1, SArray<real,1,numState> &f2,
+                                SArray<real,1,numState> &upw ) {
+  SArray<real,1,numState> ch1, ch2, chu, ev;
   real const windTol = 0; // 1.0e-6;
 
   // Compute interface values
@@ -114,10 +113,10 @@ YAKL_INLINE void godunovLinearY(SArray<real,numState> &s1, SArray<real,numState>
 }
 
 
-YAKL_INLINE void godunovLinearZ(SArray<real,numState> &s1, SArray<real,numState> &s2,
-                                SArray<real,numState> &f1, SArray<real,numState> &f2,
-                                SArray<real,numState> &upw ) {
-  SArray<real,numState> ch1, ch2, chu, ev;
+YAKL_INLINE void godunovLinearZ(SArray<real,1,numState> &s1, SArray<real,1,numState> &s2,
+                                SArray<real,1,numState> &f1, SArray<real,1,numState> &f2,
+                                SArray<real,1,numState> &upw ) {
+  SArray<real,1,numState> ch1, ch2, chu, ev;
   real const windTol = 0; // 1.0e-6;
 
   // Compute interface values
@@ -168,23 +167,23 @@ YAKL_INLINE void godunovLinearZ(SArray<real,numState> &s1, SArray<real,numState>
 }
 
 
-YAKL_INLINE void riemannX(SArray<real,numState> &s1, SArray<real,numState> &s2,
-                          SArray<real,numState> &f1, SArray<real,numState> &f2,
-                          SArray<real,numState> &upw) {
+YAKL_INLINE void riemannX(SArray<real,1,numState> &s1, SArray<real,1,numState> &s2,
+                          SArray<real,1,numState> &f1, SArray<real,1,numState> &f2,
+                          SArray<real,1,numState> &upw) {
   godunovLinearX(s1, s2, f1, f2, upw);
 }
 
 
-YAKL_INLINE void riemannY(SArray<real,numState> &s1, SArray<real,numState> &s2,
-                          SArray<real,numState> &f1, SArray<real,numState> &f2,
-                          SArray<real,numState> &upw) {
+YAKL_INLINE void riemannY(SArray<real,1,numState> &s1, SArray<real,1,numState> &s2,
+                          SArray<real,1,numState> &f1, SArray<real,1,numState> &f2,
+                          SArray<real,1,numState> &upw) {
   godunovLinearY(s1, s2, f1, f2, upw);
 }
 
 
-YAKL_INLINE void riemannZ(SArray<real,numState> &s1, SArray<real,numState> &s2,
-                          SArray<real,numState> &f1, SArray<real,numState> &f2,
-                          SArray<real,numState> &upw) {
+YAKL_INLINE void riemannZ(SArray<real,1,numState> &s1, SArray<real,1,numState> &s2,
+                          SArray<real,1,numState> &f1, SArray<real,1,numState> &f2,
+                          SArray<real,1,numState> &upw) {
   godunovLinearZ(s1, s2, f1, f2, upw);
 }
 

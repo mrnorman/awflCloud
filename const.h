@@ -3,26 +3,37 @@
 #define _CONST_H_
 
 #include <cmath>
-#include "Array.h"
-#include "SArray.h"
+#include "YAKL.h"
 
 using yakl::SArray;
+using yakl::Array;
+using yakl::styleC;
+using yakl::memHost;
+using yakl::memDevice;
+using yakl::c::Bounds;
+using yakl::c::parallel_for;
 
 typedef float         real;
 typedef unsigned long ulong;
 typedef unsigned int  uint;
 
-#if defined(__USE_CUDA__) || defined(__USE_HIP__)
-typedef yakl::Array<real,yakl::memDevice> realArr;
-#else
-typedef yakl::Array<real,yakl::memHost> realArr;
-#endif
+typedef Array<real,1,memDevice,styleC> real1d;
+typedef Array<real,2,memDevice,styleC> real2d;
+typedef Array<real,3,memDevice,styleC> real3d;
+typedef Array<real,4,memDevice,styleC> real4d;
+typedef Array<real,5,memDevice,styleC> real5d;
+typedef Array<real,6,memDevice,styleC> real6d;
+typedef Array<real,7,memDevice,styleC> real7d;
+typedef Array<real,8,memDevice,styleC> real8d;
 
-typedef yakl::Array<real,yakl::memHost> realArrHost;
-
-#if defined(__USE_HIP__)
-  #include "hip/hip_runtime.h"
-#endif
+typedef Array<real,1,memHost,styleC> realHost1d;
+typedef Array<real,2,memHost,styleC> realHost2d;
+typedef Array<real,3,memHost,styleC> realHost3d;
+typedef Array<real,4,memHost,styleC> realHost4d;
+typedef Array<real,5,memHost,styleC> realHost5d;
+typedef Array<real,6,memHost,styleC> realHost6d;
+typedef Array<real,7,memHost,styleC> realHost7d;
+typedef Array<real,8,memHost,styleC> realHost8d;
 
 #include "params.h"
 

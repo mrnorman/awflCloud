@@ -4,7 +4,6 @@
 
 #include "const.h"
 #include "Parallel.h"
-#include "SArray.h"
 #include "Riemann.h"
 #include "Domain.h"
 #include "Exchange.h"
@@ -14,20 +13,20 @@
 
 class TendenciesThetaPrimADER {
 
-  realArr stateLimits;
-  realArr fwaves;
-  realArr src;
-  realArr stateGLL;
-  SArray<real,tord> gllWts;
-  SArray<real,ord,tord> to_gll;
-  SArray<real,ord,tord> to_derivX_gll;
-  SArray<real,ord,tord> to_derivY_gll;
-  SArray<real,ord,tord> to_derivZ_gll;
-  SArray<real,tord,tord> aderDerivX;
-  SArray<real,tord,tord> aderDerivY;
-  SArray<real,tord,tord> aderDerivZ;
-  SArray<real,ord,ord,ord> wenoRecon;
-  SArray<real,hs+2> wenoIdl;
+  real5d stateLimits;
+  real5d fwaves;
+  real3d src;
+  real5d stateGLL;
+  SArray<real,1,tord> gllWts;
+  SArray<real,2,ord,tord> to_gll;
+  SArray<real,2,ord,tord> to_derivX_gll;
+  SArray<real,2,ord,tord> to_derivY_gll;
+  SArray<real,2,ord,tord> to_derivZ_gll;
+  SArray<real,2,tord,tord> aderDerivX;
+  SArray<real,2,tord,tord> aderDerivY;
+  SArray<real,2,tord,tord> aderDerivZ;
+  SArray<real,3,ord,ord,ord> wenoRecon;
+  SArray<real,1,hs+2> wenoIdl;
   real wenoSigma;
 
 public :
@@ -36,10 +35,10 @@ public :
   void initialize(Domain const &dom);
 
   // Transform ord stencil cell averages into tord GLL point values
-  YAKL_INLINE void reconStencil(SArray<real,ord> const &stencil, SArray<real,tord> &gll, int const doWeno,
-                                SArray<real,ord,ord,ord> const &wenoRecon, SArray<real,ord,tord> const &to_gll,
-                                SArray<real,hs+2> const &wenoIdl, real wenoSigma) {
-    SArray<real,ord> coefs;
+  YAKL_INLINE void reconStencil(SArray<real,1,ord> const &stencil, SArray<real,1,tord> &gll, int const doWeno,
+                                SArray<real,3,ord,ord,ord> const &wenoRecon, SArray<real,2,ord,tord> const &to_gll,
+                                SArray<real,1,hs+2> const &wenoIdl, real wenoSigma) {
+    SArray<real,1,ord> coefs;
     if (doWeno) {
       compute_weno_coefs(wenoRecon,stencil,coefs,wenoIdl,wenoSigma);
     } else {
@@ -57,19 +56,19 @@ public :
   }
 
 
-  void compEulerTend_X(realArr &state, Domain const &dom, Exchange &exch, Parallel const &par, realArr &tend);
+  void compEulerTend_X(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend);
 
-  void compEulerTend_Y(realArr &state, Domain const &dom, Exchange &exch, Parallel const &par, realArr &tend);
+  void compEulerTend_Y(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend);
 
-  void compEulerTend_Z(realArr &state, Domain const &dom, Exchange &exch, Parallel const &par, realArr &tend);
+  void compEulerTend_Z(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend);
 
-  void compEulerTend_S(realArr &state, Domain const &dom, Exchange &exch, Parallel const &par, realArr &tend);
+  void compEulerTend_S(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend);
 
-  void stateBoundariesZ(realArr &state, Domain const &dom);
+  void stateBoundariesZ(real4d &state, Domain const &dom);
 
-  void edgeBoundariesZ(realArr &stateLimits, realArr &fluxLimits, Domain const &dom);
+  void edgeBoundariesZ(real5d &stateLimits, real5d &fluxLimits, Domain const &dom);
 
-  void compStrakaTend(realArr &state, Domain const &dom, Exchange &exch, Parallel const &par, realArr &tend);
+  void compStrakaTend(real4d &state, Domain const &dom, Exchange &exch, Parallel const &par, real4d &tend);
 
 };
 
