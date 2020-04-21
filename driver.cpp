@@ -10,6 +10,7 @@
 #include "TimeIntegrator.h"
 #include "FileIO.h"
 #include "Exchange.h"
+#include <ctime>
 
 int main(int argc, char** argv) {
 
@@ -23,6 +24,8 @@ int main(int argc, char** argv) {
     FileIO         io;
     Exchange       exch;
     TimeIntegrator tint;
+
+    double mainTimer = 0;
 
     int nstep = 0;
 
@@ -44,8 +47,10 @@ int main(int argc, char** argv) {
       if (dom.etime + dom.dt > dom.simLength) { dom.dt = dom.simLength - dom.etime; }
 
       yakl::fence();
+      auto tm = std::clock();
       tint.stepForward(state, dom, exch, par);
       yakl::fence();
+      mainTimer += (double) (std::clock() - tm) / (double) CLOCKS_PER_SEC;
 
       dom.etime += dom.dt;
       if (par.masterproc && nstep%100 == 0) {std::cout << dom.etime << "\n";}
@@ -54,6 +59,7 @@ int main(int argc, char** argv) {
 
       nstep += 1;
     }
+    if (par.masterproc) { std::cout << "Elapsed Time: " << mainTimer << "\n"; }
   }
 
   int ierr = MPI_Finalize();
