@@ -5,7 +5,7 @@
 
 nx         : 400        // Number of cells in the x-direction
 ny         : 400        // Number of cells in the y-direction
-nz         : 200        // Number of cells in the z-direction
+nz         : 200         // Number of cells in the z-direction
 
 xlen       : 20000.     // Domain length in the x-direction (m)
 ylen       : 20000.     // Domain length in the y-direction (m)
@@ -19,7 +19,7 @@ parNy      : 2          // Number of parallel tasks in the y-direction
 
 outFreq    : 100.       // Frequency for output in seconds
 
-doWeno     : 1          // Whether to do WENO
+doWeno     : 0          // Whether to do WENO
 
 strakaVisc : 0          // Whether to apply Straka 2nd-order viscosity
 
