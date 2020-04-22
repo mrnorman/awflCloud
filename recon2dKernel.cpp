@@ -82,9 +82,9 @@ int main() {
           }
         }
         for (int jj=0; jj<ord; jj++) { avg(jj) /= tord; }
-        // Compute weno weights on y-direction average
+        // Compute weno weights on x-direction average
         weno_recon_and_weights( wenoRecon , avg , wenoIdl , wenoSigma , wenoWts );
-        // Apply WENO weights to each jj
+        // Apply WENO weights to each ii
         for (int ii=0; ii<tord; ii++) {
           SArray<real,1,ord> sten1d;
           for (int jj=0; jj<ord; jj++) { sten1d(jj) = glltmp2d(jj,ii); }
