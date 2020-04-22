@@ -3,9 +3,9 @@
 #include "TransformMatrices.h"
 #include "WenoLimiter.h"
 
-int  constexpr nx       = 50;
-int  constexpr ny       = 50;
-int  constexpr nz       = 25;
+int  constexpr nx       = 200;
+int  constexpr ny       = 200;
+int  constexpr nz       = 100;
 bool constexpr doWeno   = true;
 
 
@@ -40,26 +40,18 @@ int main() {
   parallel_for( Bounds<3>(nz,ny,nx) , YAKL_LAMBDA (int k, int j, int i) {
     for (int l=0; l<numState; l++) {
       if (doWeno) {
-        SArray<real,2,ord,ord> stencil;
         SArray<real,1,ord> avg;
         SArray<real,1,hs+2> wenoWts;
         SArray<real,1,ord> coefs;
-        SArray<real,1,tord> gll;
         SArray<real,2,ord,tord> glltmp2d;
         //////////////////////////////////////////////////////////////////////////////////////
         // X-direction
         //////////////////////////////////////////////////////////////////////////////////////
-        // Load stencil
-        for (int jj=0; jj<ord; jj++) {
-          for (int ii=0; ii<ord; ii++) {
-            stencil(jj,ii) = state(l,hs+k,j+jj,i+ii);
-          }
-        }
         // Compute y-direction average
         for (int ii=0; ii<ord; ii++) { avg(ii) = 0; }
         for (int jj=0; jj<ord; jj++) {
           for (int ii=0; ii<ord; ii++) {
-            avg(ii) += stencil(jj,ii);
+            avg(ii) += state(l,hs+k,j+jj,i+ii);
           }
         }
         for (int ii=0; ii<ord; ii++) { avg(ii) /= ord; }
@@ -68,10 +60,15 @@ int main() {
         // Apply WENO weights to each jj
         for (int jj=0; jj<ord; jj++) {
           SArray<real,1,ord> sten1d;
-          for (int ii=0; ii<ord; ii++) { sten1d(ii) /= stencil(jj,ii); }
+          for (int ii=0; ii<ord; ii++) { sten1d(ii) = state(l,hs+k,j+jj,i+ii); }
           weno_recon_and_apply( wenoRecon , sten1d , wenoIdl , wenoWts , coefs );
-          gll = to_gll * coefs;
-          for (int ii=0; ii<tord; ii++) { glltmp2d(jj,ii) = gll(ii); }
+          for (int ii=0; ii < ord; ii++) {
+            real tmp = 0;
+            for (int s=0; s < ord; s++) {
+              tmp += to_gll(s,ii) * coefs(s);
+            }
+            glltmp2d(jj,ii) = tmp;
+          }
         }
 
         //////////////////////////////////////////////////////////////////////////////////////
@@ -81,7 +78,7 @@ int main() {
         for (int jj=0; jj<ord; jj++) { avg(jj) = 0; }
         for (int jj=0; jj<ord; jj++) {
           for (int ii=0; ii<tord; ii++) {
-            avg(jj) += stencil(jj,ii);
+            avg(jj) += glltmp2d(jj,ii);
           }
         }
         for (int jj=0; jj<ord; jj++) { avg(jj) /= tord; }
@@ -90,10 +87,15 @@ int main() {
         // Apply WENO weights to each jj
         for (int ii=0; ii<tord; ii++) {
           SArray<real,1,ord> sten1d;
-          for (int jj=0; jj<ord; jj++) { sten1d(jj) /= stencil(jj,ii); }
+          for (int jj=0; jj<ord; jj++) { sten1d(jj) = glltmp2d(jj,ii); }
           weno_recon_and_apply( wenoRecon , sten1d , wenoIdl , wenoWts , coefs );
-          gll = to_gll * coefs;
-          for (int jj=0; jj<tord; jj++) { stateGLL(l,k,j,i,jj,ii) = gll(jj); }
+          for (int jj=0; jj < tord; jj++) {
+            real tmp = 0;
+            for (int s=0; s < ord; s++) {
+              tmp += to_gll(s,jj) * coefs(s);
+            }
+            stateGLL(l,k,j,i,jj,ii) = tmp;
+          }
         }
       } else {
       }
