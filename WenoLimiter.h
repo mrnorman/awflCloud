@@ -15,12 +15,14 @@ YAKL_INLINE void map_weights( SArray<real,1,hs+2> const &idl , SArray<real,1,hs+
 }
 
 
+
 YAKL_INLINE void convexify( SArray<real,1,hs+2> &wts ) {
   real sum = 0._fp;
   real const eps = 1.0e-20;
   for (int i=0; i<hs+2; i++) { sum += wts(i); }
   for (int i=0; i<hs+2; i++) { wts(i) /= (sum + eps); }
 }
+
 
 
 YAKL_INLINE void wenoSetIdealSigma(SArray<real,1,hs+2> &idl, real &sigma) {
@@ -88,15 +90,8 @@ YAKL_INLINE void wenoSetIdealSigma(SArray<real,1,hs+2> &idl, real &sigma) {
 }
 
 
-YAKL_INLINE void compute_weno_coefs( SArray<real,3,ord,ord,ord> const &recon , SArray<real,1,ord> const &u , SArray<real,1,ord> &aw , SArray<real,1,hs+2> const &idl , real const sigma ) {
-  SArray<real,1,hs+2> tv;
-  SArray<real,1,hs+2> wts;
-  SArray<real,2,hs+2,ord> a;
-  SArray<real,1,hs+1> lotmp;
-  SArray<real,1,ord > hitmp;
-  real lo_avg;
-  real const eps = 1.0e-20;
 
+YAKL_INLINE void perform_weno_recon( SArray<real,3,ord,ord,ord> const &recon , SArray<real,1,ord> const &u , SArray<real,1,hs+2> const &idl , SArray<real,2,hs+2,ord> &a ) {
   // Init to zero
   for (int j=0; j<hs+2; j++) {
     for (int i=0; i<ord; i++) {
@@ -127,6 +122,16 @@ YAKL_INLINE void compute_weno_coefs( SArray<real,3,ord,ord,ord> const &recon , S
   for (int ii=0; ii<ord; ii++) {
     a(hs+1,ii) /= idl(hs+1);
   }
+}
+
+
+
+YAKL_INLINE void compute_weno_weights( SArray<real,2,hs+2,ord> const &a , SArray<real,1,hs+2> const &idl , real const sigma , SArray<real,1,hs+2> &wts ) {
+  SArray<real,1,hs+2> tv;
+  SArray<real,1,hs+1> lotmp;
+  SArray<real,1,ord > hitmp;
+  real lo_avg;
+  real const eps = 1.0e-20;
 
   TransformMatrices<real> transform;
 
@@ -159,7 +164,11 @@ YAKL_INLINE void compute_weno_coefs( SArray<real,3,ord,ord,ord> const &recon , S
   // Map WENO weights for sharper fronts and less sensitivity to "eps"
   map_weights(idl,wts);
   convexify(wts);
+}
 
+
+
+YAKL_INLINE void apply_weno_weights( SArray<real,2,hs+2,ord> const &a , SArray<real,1,hs+2> const &wts , SArray<real,1,ord> &aw ) {
   // WENO polynomial is the weighted sum of candidate polynomials using WENO weights instead of ideal weights
   for (int i=0; i<ord; i++) {
     aw(i) = 0._fp;
@@ -170,6 +179,33 @@ YAKL_INLINE void compute_weno_coefs( SArray<real,3,ord,ord,ord> const &recon , S
     }
   }
 }
+
+
+
+YAKL_INLINE void compute_weno_coefs( SArray<real,3,ord,ord,ord> const &recon , SArray<real,1,ord> const &u , SArray<real,1,ord> &aw , SArray<real,1,hs+2> const &idl , real const sigma ) {
+  SArray<real,2,hs+2,ord> a;
+  SArray<real,1,hs+2> wts;
+  perform_weno_recon( recon , u , idl , a );
+  compute_weno_weights( a , idl , sigma , wts );
+  apply_weno_weights( a , wts , aw );
+}
+
+
+
+YAKL_INLINE void weno_recon_and_weights( SArray<real,3,ord,ord,ord> const &recon , SArray<real,1,ord> const &u , SArray<real,1,hs+2> const &idl , real const sigma , SArray<real,1,hs+2> &wts ) {
+  SArray<real,2,hs+2,ord> a;
+  perform_weno_recon( recon , u , idl , a );
+  compute_weno_weights( a , idl , sigma , wts );
+}
+
+
+
+YAKL_INLINE void weno_recon_and_apply( SArray<real,3,ord,ord,ord> const &recon , SArray<real,1,ord> const &u , SArray<real,1,hs+2> const &idl , SArray<real,1,hs+2> const &wts , SArray<real,1,ord> &aw ) {
+  SArray<real,2,hs+2,ord> a;
+  perform_weno_recon( recon , u , idl , a );
+  apply_weno_weights( a , wts , aw );
+}
+
 
 
 #endif
