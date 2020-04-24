@@ -3,20 +3,26 @@
 #include "TransformMatrices.h"
 #include "WenoLimiter.h"
 
+#ifndef WENO
+  #define WENO true;
+#endif
+
 int  constexpr nx       = 200;
 int  constexpr ny       = 200;
 int  constexpr nz       = 100;
-bool constexpr doWeno   = true;
+bool constexpr doWeno   = WENO;
 
 
 
 int main() {
   yakl::init();
 
+  std::cout << "ord:  " << ord    << "\n";
+  std::cout << "tord: " << tord   << "\n";
+  std::cout << "weno: " << doWeno << "\n";
+
   TransformMatrices<real> trans;
-  real dx = 20000/nx;
-  real dy = 20000/ny;
-  real dz = 20000/nz;
+
   SArray<real,2,ord,tord> to_gll;
   SArray<real,3,ord,ord,ord> wenoRecon;
   SArray<real,1,hs+2> wenoIdl;
@@ -37,9 +43,10 @@ int main() {
     state(v,k,j,i) = 1;
   });
 
-  parallel_for( Bounds<3>(nz,ny,nx) , YAKL_LAMBDA (int k, int j, int i) {
-    for (int l=0; l<numState; l++) {
-      if (doWeno) {
+  if (doWeno) {
+
+    parallel_for( Bounds<3>(nz,ny,nx) , YAKL_LAMBDA (int k, int j, int i) {
+      for (int l=0; l<numState; l++) {
         SArray<real,1,ord> avg;
         SArray<real,1,hs+2> wenoWts;
         SArray<real,1,ord> coefs;
@@ -62,7 +69,7 @@ int main() {
           SArray<real,1,ord> sten1d;
           for (int ii=0; ii<ord; ii++) { sten1d(ii) = state(l,hs+k,j+jj,i+ii); }
           weno_recon_and_apply( wenoRecon , sten1d , wenoIdl , wenoWts , coefs );
-          for (int ii=0; ii < ord; ii++) {
+          for (int ii=0; ii < tord; ii++) {
             real tmp = 0;
             for (int s=0; s < ord; s++) {
               tmp += to_gll(s,ii) * coefs(s);
@@ -97,10 +104,43 @@ int main() {
             stateGLL(l,k,j,i,jj,ii) = tmp;
           }
         }
-      } else {
       }
-    }
-  });
+    });
+
+  } else {
+
+    parallel_for( Bounds<3>(nz,ny,nx) , YAKL_LAMBDA (int k, int j, int i) {
+      for (int l=0; l<numState; l++) {
+        SArray<real,2,ord,tord> glltmp2d;
+        //////////////////////////////////////////////////////////////////////////////////////
+        // X-direction
+        //////////////////////////////////////////////////////////////////////////////////////
+        for (int jj=0; jj<ord; jj++) {
+          for (int ii=0; ii < tord; ii++) {
+            real tmp = 0;
+            for (int s=0; s < ord; s++) {
+              tmp += to_gll(s,ii) * state(l,hs+k,j+jj,i+s);
+            }
+            glltmp2d(jj,ii) = tmp;
+          }
+        }
+
+        //////////////////////////////////////////////////////////////////////////////////////
+        // Y-direction
+        //////////////////////////////////////////////////////////////////////////////////////
+        for (int ii=0; ii<tord; ii++) {
+          for (int jj=0; jj < tord; jj++) {
+            real tmp = 0;
+            for (int s=0; s < ord; s++) {
+              tmp += to_gll(s,jj) * glltmp2d(s,ii);
+            }
+            stateGLL(l,k,j,i,jj,ii) = tmp;
+          }
+        }
+      }
+    });
+
+  }
 
   yakl::finalize();
 }
