@@ -264,6 +264,8 @@ void initialize(real4d &state, Domain &dom, Parallel &par, Exchange &exch, TimeI
     std::cout << "dy: " << dom.dy << "\n";
     std::cout << "dz: " << dom.dz << "\n";
     std::cout << "dt: " << dom.dt << "\n";
+    std::cout << "ord: " << ord << "\n";
+    std::cout << "tord: " << tord << "\n";
   }
 
 }
