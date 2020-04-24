@@ -37,5 +37,19 @@ ln -s build/[whatever_machine].inc mach.inc
 make
 ```
 
+## How to build on Summit
+```bash
+git clone https://github.com/mrnorman/awflCloud.git
+cd awfulCloud
+git submodule update --init
+module load parallel-netcdf gcc cuda
+ln -s build/summit_gpu.inc mach.inc
+## edit const.h and change "ord" to 3,5,7, or 9
+## edit input.txt and change doWeno to true or false
+make clean
+make -j
+jsrun -n 1 -a 1 -c 1 -g 1 ./cloudFV
+```
+
 * Requires an MPI library (that provides mpic++) as well as parallel-netcdf (https://trac.mcs.anl.gov/projects/parallel-netcdf)
 
