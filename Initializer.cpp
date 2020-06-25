@@ -122,7 +122,7 @@ void initialize(real4d &state, Domain &dom, Parallel &par, Exchange &exch, TimeI
       real zloc = (k + 0.5_fp)*dom.dz + gllOrdPoints(kk)*dom.dz;
       real r0, t0;
 
-      if (dom.dataInit == DATA_INIT_THERMAL || dom.dataInit == DATA_INIT_COLLISION || dom.dataInit == DATA_INIT_STRAKA) {
+      if (dom.dataInit == DATA_INIT_THERMAL || dom.dataInit == DATA_INIT_COLLISION || dom.dataInit == DATA_INIT_STRAKA || DATA_INIT_CONVECTION) {
         t0 = 300._fp;
         hydro::hydroConstTheta( t0 , zloc , r0 );
       }
@@ -155,7 +155,7 @@ void initialize(real4d &state, Domain &dom, Parallel &par, Exchange &exch, TimeI
     real zloc = (k + 0.5_fp)*dom.dz + gllTordPoints(kk)*dom.dz;
     real r0, t0;
 
-    if (dom.dataInit == DATA_INIT_THERMAL || dom.dataInit == DATA_INIT_COLLISION || dom.dataInit == DATA_INIT_STRAKA) {
+    if (dom.dataInit == DATA_INIT_THERMAL || dom.dataInit == DATA_INIT_COLLISION || dom.dataInit == DATA_INIT_STRAKA || DATA_INIT_CONVECTION) {
       t0 = 300._fp;
       hydro::hydroConstTheta( t0 , zloc , r0 );
     }
@@ -186,7 +186,7 @@ void initialize(real4d &state, Domain &dom, Parallel &par, Exchange &exch, TimeI
 
           if (dom.run2d) yloc = dom.ylen/2;
 
-          if (dom.dataInit == DATA_INIT_THERMAL || dom.dataInit == DATA_INIT_COLLISION || dom.dataInit == DATA_INIT_STRAKA) {
+          if (dom.dataInit == DATA_INIT_THERMAL || dom.dataInit == DATA_INIT_COLLISION || dom.dataInit == DATA_INIT_STRAKA || DATA_INIT_CONVECTION) {
             t0 = 300._fp;
             hydro::hydroConstTheta( t0 , zloc , r0 );
           }
@@ -198,11 +198,15 @@ void initialize(real4d &state, Domain &dom, Parallel &par, Exchange &exch, TimeI
             t  = ellipsoid_linear(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, 2000, 2000, 2000, 2000, 2  );
           } else if (dom.dataInit == DATA_INIT_STRAKA   ) {
             t  = ellipsoid_cosine(xloc, yloc, zloc, dom.xlen/2, dom.ylen/2, 3000, 4000, 4000, 2000, -15 , 1 );
+          } else if (dom.dataInit == DATA_INIT_CONVECTION) {
+            Random myrand((uint64_t) xloc*yloc*zloc);
+            myrand.warmup(20);
+            t  = myrand.genFP(-3,3);
           }
 
           // Set the initial density such that pressure is constant (to get rid of distracting acoustic waves)
-          // r = r0*(t0/(t0+t)-1._fp);
-          r = 0;
+          r = r0*(t0/(t0+t)-1._fp);
+          // r = 0;
 
           real wt = gllOrdWeights(ii)*gllOrdWeights(jj)*gllOrdWeights(kk);
 

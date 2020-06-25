@@ -42,7 +42,7 @@ YAKL_INLINE real constexpr operator"" _fp( long double x ) {
 }
 
 int constexpr ord      = 9;
-int constexpr tord     = 3;
+int constexpr tord     = 5;
 int constexpr hs       = (ord-1)/2;
 int constexpr numState = 5;
 

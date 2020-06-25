@@ -27,7 +27,7 @@ strakaVisc : 0          // Whether to apply Straka 2nd-order viscosity
 //   thermal  : Rising thermal (neutral atmosphere)
 //   collision: Colliding cold and warm bubbles (neutral atmosphere)
 //   straka   : Falling cold bubble
-dataInit : thermal
+dataInit : convection
 
 // Temporal discretization to use:
 //   ADER: ADER with Differential Transforms  (max cfl = 1)

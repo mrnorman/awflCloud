@@ -59,7 +59,9 @@ void TimeIntegrator::stepForwardADER(real4d &state, Domain &dom, Exchange &exch,
     tendencies.compEulerTend_X(state, dom, exch, par, tend);
     applyTendencies( state , 1._fp , state , 0._fp , state , 1._fp , tend, dom);
   }
-  // applyHeatingCooling(state,par,dom);
+  if (dom.dataInit == DATA_INIT_CONVECTION) {
+    applyHeatingCooling(state,par,dom);
+  }
 }
 
 

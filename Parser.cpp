@@ -144,9 +144,10 @@ void handleDataInit(std::string &str, std::string &fNameIn, Domain &dom) {
   } else {
     strloc = str;
   }
-  if      ( !strcmp(strloc.c_str(),"thermal"  ) ) { dom.dataInit = DATA_INIT_THERMAL  ; }
-  else if ( !strcmp(strloc.c_str(),"collision") ) { dom.dataInit = DATA_INIT_COLLISION; }
-  else if ( !strcmp(strloc.c_str(),"straka"   ) ) { dom.dataInit = DATA_INIT_STRAKA   ; }
+  if      ( !strcmp(strloc.c_str(),"thermal"   ) ) { dom.dataInit = DATA_INIT_THERMAL   ; }
+  else if ( !strcmp(strloc.c_str(),"collision" ) ) { dom.dataInit = DATA_INIT_COLLISION ; }
+  else if ( !strcmp(strloc.c_str(),"straka"    ) ) { dom.dataInit = DATA_INIT_STRAKA    ; }
+  else if ( !strcmp(strloc.c_str(),"convection") ) { dom.dataInit = DATA_INIT_CONVECTION; }
   else  {
     std::cout << "Error: unrecognized dataInit " << str << " in file " << fNameIn << "\n";
     exit(-1);
