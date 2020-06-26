@@ -27,31 +27,31 @@ YAKL_INLINE void convexify( SArray<real,1,hs+2> &wts ) {
 
 YAKL_INLINE void wenoSetIdealSigma(SArray<real,1,hs+2> &idl, real &sigma) {
   if        (ord == 3) {
-    sigma = 0.1_fp;
+    sigma = 0.0343557947899881_fp;
     idl(0) = 1._fp;
     idl(1) = 1._fp;
-    idl(2) = 100._fp;
+    idl(2) = 1224.61619926508_fp;
   } else if (ord == 5) {
-    sigma = 0.1_fp;
+    sigma = 0.73564225445964_fp;
     idl(0) = 1._fp;
-    idl(1) = 100._fp;
+    idl(1) = 73.564225445964_fp;
     idl(2) = 1._fp;
-    idl(3) = 1000._fp;
+    idl(3) = 1584.89319246111_fp;
   } else if (ord == 7) {
-    sigma = 0.01_fp;
+    sigma = 0.125594321575479_fp;
     idl(0) = 1._fp;
-    idl(1) = 20._fp;
-    idl(2) = 20._fp;
+    idl(1) = 7.35642254459641_fp;
+    idl(2) = 7.35642254459641_fp;
     idl(3) = 1._fp;
-    idl(4) = 400._fp;
+    idl(4) = 794.328234724281_fp;
   } else if (ord == 9) {
-    sigma = 0.1_fp;
+    sigma = 0.0288539981181442_fp;
     idl(0) = 1._fp;
-    idl(1) = 18._fp;
-    idl(2) = 76._fp;
-    idl(3) = 18._fp;
+    idl(1) = 2.15766927997459_fp;
+    idl(2) = 2.40224886796286_fp;
+    idl(3) = 2.15766927997459_fp;
     idl(4) = 1._fp;
-    idl(5) = 5832._fp;
+    idl(5) = 1136.12697719888_fp;
   } else if (ord == 11) {
     // These aren't tuned!!!
     sigma = 0.1_fp;
