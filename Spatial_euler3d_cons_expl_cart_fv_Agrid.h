@@ -126,7 +126,10 @@ public:
   int static constexpr BC_PERIODIC = 0;
   int static constexpr BC_WALL     = 1;
 
-  int static constexpr DATA_SPEC_THERMAL = 1;
+  int static constexpr DATA_SPEC_THERMAL   = 1;
+  int static constexpr DATA_SPEC_COLLISION = 2;
+  int static constexpr DATA_SPEC_STRAKA    = 3;
+  int static constexpr DATA_SPEC_IGW       = 4;
 
   bool sim2d;
 
@@ -296,6 +299,12 @@ public:
     std::string dataStr = config["initData"].as<std::string>();
     if        (dataStr == "thermal") {
       dataSpec = DATA_SPEC_THERMAL;
+    } else if (dataStr == "collision") {
+      dataSpec = DATA_SPEC_COLLISION;
+    } else if (dataStr == "straka") {
+      dataSpec = DATA_SPEC_STRAKA;
+    } else if (dataStr == "igw") {
+      dataSpec = DATA_SPEC_IGW;
     } else {
       endrun("ERROR: Invalid dataSpec");
     }
@@ -425,6 +434,8 @@ public:
     auto &sim2d             = this->sim2d            ;
     auto &xlen              = this->xlen             ;
     auto &ylen              = this->ylen             ;
+    auto &zlen              = this->zlen             ;
+
     // Setup hydrostatic background state
     parallel_for( Bounds<1>(nz+2*hs) , YAKL_LAMBDA (int k) {
       // Compute cell averages
@@ -434,33 +445,51 @@ public:
       hyDensThetaCells(k) = 0;
       for (int kk=0; kk<ord; kk++) {
         real zloc = (k-hs+0.5_fp)*dz + gllPts_ord(kk)*dz;
-        if        (dataSpec == DATA_SPEC_THERMAL) {
+        real th, rh, ph;
+        if        (dataSpec == DATA_SPEC_THERMAL || dataSpec == DATA_SPEC_COLLISION ||
+                   dataSpec == DATA_SPEC_STRAKA) {
           // Compute constant theta hydrostatic background state
-          real th  = 300;
-          real rh = profiles::initConstTheta_density (th,zloc);
-          real ph = profiles::initConstTheta_pressure(th,zloc);
-          real wt = gllWts_ord(kk);
-          hyDensCells     (k) += rh    * wt;
-          hyThetaCells    (k) += th    * wt;
-          hyDensThetaCells(k) += rh*th * wt;
-          hyPressureCells (k) += ph    * wt;
+          th  = 300;
+          rh = profiles::initConstTheta_density (th,zloc);
+          ph = profiles::initConstTheta_pressure(th,zloc);
+        } else if (dataSpec == DATA_SPEC_IGW) {
+          // Compute constant theta hydrostatic background state
+          real constexpr bvf = 0.01;
+          real constexpr t0  = 300;
+          th = profiles::initConstBVF_pot_temp(t0,bvf,zloc);
+          rh = profiles::initConstBVF_density (t0,bvf,zloc);
+          ph = profiles::initConstBVF_pressure(t0,bvf,zloc);
         }
+        real wt = gllWts_ord(kk);
+        hyDensCells     (k) += rh    * wt;
+        hyThetaCells    (k) += th    * wt;
+        hyDensThetaCells(k) += rh*th * wt;
+        hyPressureCells (k) += ph    * wt;
       }
     });
     parallel_for( Bounds<1>(nz) , YAKL_LAMBDA (int k) {
       // Compute ngll GLL points
       for (int kk=0; kk<ngll; kk++) {
         real zloc = (k+0.5_fp)*dz + gllPts_ngll(kk)*dz;
-        if        (dataSpec == DATA_SPEC_THERMAL) {
+        real th, rh, ph;
+        if        (dataSpec == DATA_SPEC_THERMAL || dataSpec == DATA_SPEC_COLLISION ||
+                   dataSpec == DATA_SPEC_STRAKA) {
           // Compute constant theta hydrostatic background state
-          real th = 300;
-          real rh = profiles::initConstTheta_density (th,zloc);
-          real ph = profiles::initConstTheta_pressure(th,zloc);
-          hyDensGLL     (k,kk) = rh;
-          hyThetaGLL    (k,kk) = th;
-          hyDensThetaGLL(k,kk) = rh*th;
-          hyPressureGLL (k,kk) = ph;
+          th  = 300;
+          rh = profiles::initConstTheta_density (th,zloc);
+          ph = profiles::initConstTheta_pressure(th,zloc);
+        } else if (dataSpec == DATA_SPEC_IGW) {
+          // Compute constant theta hydrostatic background state
+          real constexpr bvf = 0.01;
+          real constexpr t0  = 300;
+          th = profiles::initConstBVF_pot_temp(t0,bvf,zloc);
+          rh = profiles::initConstBVF_density (t0,bvf,zloc);
+          ph = profiles::initConstBVF_pressure(t0,bvf,zloc);
         }
+        hyDensGLL     (k,kk) = rh;
+        hyThetaGLL    (k,kk) = th;
+        hyDensThetaGLL(k,kk) = rh*th;
+        hyPressureGLL (k,kk) = ph;
       }
     });
 
@@ -488,6 +517,36 @@ public:
               real tp = profiles::ellipsoid_linear(xloc, yloc, zloc, xlen/2, ylen/2, 2000, 2000, 2000, 2000, 2 );
               real t = th + tp;
               state(idT,hs+k,hs+j,hs+i) += (rh*t - rh*th) * wt;
+            } else if (dataSpec == DATA_SPEC_COLLISION) {
+              // Compute constant theta hydrostatic background state
+              real th = 300;
+              real rh = profiles::initConstTheta_density(th,zloc);
+              real tp;
+              tp  = profiles::ellipsoid_linear(xloc, yloc, zloc, xlen/2, ylen/2, 2000, 2000, 2000, 2000,  20 );
+              tp += profiles::ellipsoid_linear(xloc, yloc, zloc, xlen/2, ylen/2, 8000, 2000, 2000, 2000, -20 );
+              real t = th + tp;
+              state(idT,hs+k,hs+j,hs+i) += (rh*t - rh*th) * wt;
+            } else if (dataSpec == DATA_SPEC_STRAKA) {
+              // Compute constant theta hydrostatic background state
+              real th = 300;
+              real rh = profiles::initConstTheta_density(th,zloc);
+              real tp;
+              tp  = profiles::ellipsoid_cosine(xloc, yloc, zloc, xlen/2, ylen/2, 3000, 4000, 2000, 2000, -15 , 1 );
+              real t = th + tp;
+              state(idT,hs+k,hs+j,hs+i) += (rh*t - rh*th) * wt;
+            } else if (dataSpec == DATA_SPEC_IGW) {
+              if (sim2d) yloc = ylen / 3;
+              // Compute constant theta hydrostatic background state
+              real constexpr t0  = 300;
+              real constexpr bvf = 0.01;
+              real rh = profiles::initConstBVF_density (t0,bvf,zloc);
+              real th = profiles::initConstBVF_pot_temp(t0,bvf,zloc);
+              real tp;
+              tp  = profiles::igw(xloc, yloc, zloc, xlen/3, ylen/3, 5000, zlen, 0.01);
+              real t = th + tp;
+              state(idT,hs+k,hs+j,hs+i) += (rh*t - rh*th) * wt;
+              state(idU,hs+k,hs+j,hs+i) += 20*rh * wt;
+              if (! sim2d) state(idV,hs+k,hs+j,hs+i) += 20*rh * wt;
             }
           }
         }
@@ -901,14 +960,15 @@ public:
       stateFluxLimits(idU,0,k,j,i) = u*w1 + (u-cs)*w5 + (u+cs)*w6;
       stateFluxLimits(idV,0,k,j,i) = w2 + v*w5 + v*w6;
       stateFluxLimits(idW,0,k,j,i) = w3 + w*w5 + w*w6;
+      stateFluxLimits(idT,0,k,j,i) =      t*w5 + t*w6;
 
       real massFlux = stateFluxLimits(idR,0,k,j,i);
 
-      if (u > 0) {
-        stateFluxLimits(idT,0,k,j,i) = massFlux * stateLimits(idT,0,k,j,i) / r_L;
-      } else {
-        stateFluxLimits(idT,0,k,j,i) = massFlux * stateLimits(idT,1,k,j,i) / r_R;
-      }
+      // if (u > 0) {
+      //   stateFluxLimits(idT,0,k,j,i) = massFlux * stateLimits(idT,0,k,j,i) / r_L;
+      // } else {
+      //   stateFluxLimits(idT,0,k,j,i) = massFlux * stateLimits(idT,1,k,j,i) / r_R;
+      // }
 
       // COMPUTE UPWIND TRACER FLUXES
       // Handle it one tracer at a time
@@ -1276,14 +1336,15 @@ public:
       stateFluxLimits(idU,0,k,j,i) = w2 + u*w5 + u*w6;
       stateFluxLimits(idV,0,k,j,i) = v*w1 + (v-cs)*w5 + (v+cs)*w6;
       stateFluxLimits(idW,0,k,j,i) = w3 + w*w5 + w*w6;
+      stateFluxLimits(idT,0,k,j,i) =      t*w5 + t*w6;
 
       real massFlux = stateFluxLimits(idR,0,k,j,i);
 
-      if (v > 0) {
-        stateFluxLimits(idT,0,k,j,i) = massFlux * stateLimits(idT,0,k,j,i) / r_L;
-      } else {
-        stateFluxLimits(idT,0,k,j,i) = massFlux * stateLimits(idT,1,k,j,i) / r_R;
-      }
+      // if (v > 0) {
+      //   stateFluxLimits(idT,0,k,j,i) = massFlux * stateLimits(idT,0,k,j,i) / r_L;
+      // } else {
+      //   stateFluxLimits(idT,0,k,j,i) = massFlux * stateLimits(idT,1,k,j,i) / r_R;
+      // }
 
       // COMPUTE UPWIND TRACER FLUXES
       // Handle it one tracer at a time
@@ -1451,7 +1512,7 @@ public:
         ///////////////////////////////////////////////////////////////
         // Compute other values needed for centered tendencies and DTs
         ///////////////////////////////////////////////////////////////
-        SArray<real,2,nAder,ngll> rwu_DTs , rwv_DTs , rww_DTs , rwt_DTs , rt_gamma_DTs;
+        SArray<real,2,nAder,ngll> rwu_DTs , rwv_DTs , rww_DTs , rwt_DTs , rt_gamma_DTs, source_DTs;
         for (int kk=0; kk < ngll; kk++) {
           real r = r_DTs (0,kk);
           real u = ru_DTs(0,kk) / r;
@@ -1463,6 +1524,7 @@ public:
           rww_DTs    (0,kk) = r*w*w;
           rwt_DTs    (0,kk) = r*w*t;
           rt_gamma_DTs(0,kk) = pow(r*t,GAMMA);
+          source_DTs = -(r_DTs(0,kk) - hyDensGLL(k,kk))*GRAV;
         }
 
         //////////////////////////////////////////
@@ -1470,7 +1532,8 @@ public:
         //////////////////////////////////////////
         if (nAder > 1) {
           diffTransformEulerConsZ( r_DTs , ru_DTs , rv_DTs , rw_DTs , rt_DTs , rwu_DTs , rwv_DTs , rww_DTs ,
-                                   rwt_DTs , rt_gamma_DTs , derivMatrix , hyPressureGLL , k , dz , bc_z , nz );
+                                   rwt_DTs , rt_gamma_DTs , source_DTs , derivMatrix , hyPressureGLL ,
+                                   k , dz , bc_z , nz );
         }
 
         //////////////////////////////////////////
@@ -1489,6 +1552,7 @@ public:
           compute_timeAvg( rww_DTs          , dt );
           compute_timeAvg( rwt_DTs          , dt );
           compute_timeAvg( rt_gamma_DTs     , dt );
+          compute_timeAvg( source_DTs       , dt );
         } else {
           for (int ii=0; ii < ngll; ii++) {
             r_tavg (ii) = r_DTs (0,ii);
@@ -1531,14 +1595,14 @@ public:
         ////////////////////////////////////////////
         // Assign gravity source term
         ////////////////////////////////////////////
-        real ravg = 0;
+        real src_avg = 0;
         for (int kk=0; kk < ngll; kk++) {
-          ravg += (r_tavg(kk) - hyDensGLL(k,kk)) * gllWts_ngll(kk);
+          src_avg += source_DTs(0,kk) * gllWts_ngll(kk);
         }
         stateTend(idR,k,j,i) = 0;
         stateTend(idU,k,j,i) = 0;
         stateTend(idV,k,j,i) = 0;
-        stateTend(idW,k,j,i) = -GRAV*ravg;
+        stateTend(idW,k,j,i) = src_avg;
         stateTend(idT,k,j,i) = 0;
       } // END: reconstruct, time-avg, and store state & state fluxes
 
@@ -1673,11 +1737,11 @@ public:
 
       real massFlux = stateFluxLimits(idR,0,k,j,i);
 
-      if (w > 0) {
-        stateFluxLimits(idT,0,k,j,i) = massFlux * stateLimits(idT,0,k,j,i) / r_L;
-      } else {
-        stateFluxLimits(idT,0,k,j,i) = massFlux * stateLimits(idT,1,k,j,i) / r_R;
-      }
+      // if (w > 0) {
+      //   stateFluxLimits(idT,0,k,j,i) = massFlux * stateLimits(idT,0,k,j,i) / r_L;
+      // } else {
+      //   stateFluxLimits(idT,0,k,j,i) = massFlux * stateLimits(idT,1,k,j,i) / r_R;
+      // }
 
       // COMPUTE UPWIND TRACER FLUXES
       // Handle it one tracer at a time
@@ -1807,19 +1871,25 @@ public:
     parallel_for( Bounds<3>(nz,ny,nx) , YAKL_LAMBDA (int k, int j, int i) { data(k,j,i) = state(idR,hs+k,hs+j,hs+i); });
     nc.write1(data.createHostCopy(),"dens_pert",{"z","y","x"},ulIndex,"t");
     // u
-    parallel_for( Bounds<3>(nz,ny,nx) , YAKL_LAMBDA (int k, int j, int i) { data(k,j,i) = state(idU,hs+k,hs+j,hs+i); });
+    parallel_for( Bounds<3>(nz,ny,nx) , YAKL_LAMBDA (int k, int j, int i) {
+      data(k,j,i) = state(idU,hs+k,hs+j,hs+i) / (state(idR,hs+k,hs+j,hs+i) + hyDensCells(hs+k));
+    });
     nc.write1(data.createHostCopy(),"u",{"z","y","x"},ulIndex,"t");
     // v
-    parallel_for( Bounds<3>(nz,ny,nx) , YAKL_LAMBDA (int k, int j, int i) { data(k,j,i) = state(idV,hs+k,hs+j,hs+i); });
+    parallel_for( Bounds<3>(nz,ny,nx) , YAKL_LAMBDA (int k, int j, int i) {
+      data(k,j,i) = state(idV,hs+k,hs+j,hs+i) / (state(idR,hs+k,hs+j,hs+i) + hyDensCells(hs+k));
+    });
     nc.write1(data.createHostCopy(),"v",{"z","y","x"},ulIndex,"t");
     // w
-    parallel_for( Bounds<3>(nz,ny,nx) , YAKL_LAMBDA (int k, int j, int i) { data(k,j,i) = state(idW,hs+k,hs+j,hs+i); });
+    parallel_for( Bounds<3>(nz,ny,nx) , YAKL_LAMBDA (int k, int j, int i) {
+      data(k,j,i) = state(idW,hs+k,hs+j,hs+i) / (state(idR,hs+k,hs+j,hs+i) + hyDensCells(hs+k));
+    });
     nc.write1(data.createHostCopy(),"w",{"z","y","x"},ulIndex,"t");
     // theta'
     parallel_for( Bounds<3>(nz,ny,nx) , YAKL_LAMBDA (int k, int j, int i) {
       real r =   state(idR,hs+k,hs+j,hs+i) + hyDensCells     (hs+k);
       real t = ( state(idT,hs+k,hs+j,hs+i) + hyDensThetaCells(hs+k) ) / r;
-      data(k,j,i) = t - hyThetaCells(hs+k);
+      data(k,j,i) = t - hyDensThetaCells(hs+k) / hyDensCells(hs+k);
     });
     nc.write1(data.createHostCopy(),"pot_temp_pert",{"z","y","x"},ulIndex,"t");
     // pressure'
@@ -2064,6 +2134,7 @@ public:
                                             SArray<real,2,nAder,ngll> &rww ,
                                             SArray<real,2,nAder,ngll> &rwt ,
                                             SArray<real,2,nAder,ngll> &rt_gamma ,
+                                            SArray<real,2,nAder,ngll> &source ,
                                             SArray<real,2,ngll,ngll> const &deriv , 
                                             real2d const &hyPressureGLL , 
                                             int k , real dz , int bc_z , int nz ) {
@@ -2098,12 +2169,13 @@ public:
         r (kt+1,ii) = -drw_dz   /dz/(kt+1);
         ru(kt+1,ii) = -drwu_dz  /dz/(kt+1);
         rv(kt+1,ii) = -drwv_dz  /dz/(kt+1);
-        rw(kt+1,ii) = -drww_p_dz/dz/(kt+1);
+        rw(kt+1,ii) = -drww_p_dz/dz/(kt+1) + source(kt,ii)/(kt+1);
         rt(kt+1,ii) = -drwt_dz  /dz/(kt+1);
         if (bc_z == BC_WALL) {
           if (k == nz-1) rw(kt+1,ngll-1) = 0;
           if (k == 0   ) rw(kt+1,0     ) = 0;
         }
+        source(kt+1,ii) = -r(kt+1,ii)*GRAV;
       }
 
       // Compute ru* at the next time level

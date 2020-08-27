@@ -11,7 +11,6 @@ endif()
 
 set(DRIVER_SRC driver.cpp)
 
-set(YAKL_HOME ${CMAKE_CURRENT_BINARY_DIR}/../../../externals/YAKL)
 add_subdirectory(${YAKL_HOME} ./yakl)
 
 # Main driver

@@ -25,9 +25,27 @@ namespace profiles {
   }
 
 
-  /*
-    Gives a linear ellipsiod centered at (x0,y0,z0) with radius (xrad,yrad,zrad) and amplitude amp
-  */
+  YAKL_INLINE real initConstBVF_pot_temp(real const t0, real const bvf, real const z) {
+    return t0 * exp(bvf*bvf*z/GRAV);
+  }
+
+
+  YAKL_INLINE real initConstBVF_density(real const t0, real const bvf, real const z) {
+    real t = initConstBVF_pot_temp(t0,bvf,z);
+    real exner = 1._fp - GRAV*GRAV/(CP*bvf*bvf) * (t-t0)/(t*t0);
+    real p = pow( exner , CP/RD ) * P0;
+    real rt = pow( p/C0 , 1._fp/GAMMA );
+    return rt / t;
+  }
+
+
+  YAKL_INLINE real initConstBVF_pressure(real const t0, real const bvf, real const z) {
+    real t = initConstBVF_pot_temp(t0,bvf,z);
+    real r = initConstBVF_density (t0,bvf,z);
+    return C0*pow(r*t,GAMMA);
+  }
+
+
   YAKL_INLINE real ellipsoid_linear(real const x   , real const y   , real const z ,
                                     real const x0  , real const y0  , real const z0,
                                     real const xrad, real const yrad, real const zrad, real const amp) {
@@ -39,9 +57,6 @@ namespace profiles {
   }
 
 
-  /*
-    Gives a cosine ellipsiod centered at (x0,y0,z0) with radius (xrad,yrad,zrad) and amplitude amp
-  */
   YAKL_INLINE real ellipsoid_cosine(real const x   , real const y   , real const z ,
                                     real const x0  , real const y0  , real const z0,
                                     real const xrad, real const yrad, real const zrad, real const amp, real const pwr) {
@@ -54,6 +69,15 @@ namespace profiles {
       val = amp * pow( (cos(M_PI*dist)+1)/2 , pwr );
     }
     return val;
+  }
+
+
+  YAKL_INLINE real igw(real const x   , real const y   , real const z ,
+                       real const x0  , real const y0  , real const hr,
+                       real const zlen, real const amp) {
+    real xn = (x-x0)/hr;
+    real yn = (y-y0)/hr;
+    return amp * sin(M_PI*z/zlen) / sqrt( 1 + xn*xn + yn*yn );
   }
 
 }
