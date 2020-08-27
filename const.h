@@ -1,79 +1,77 @@
 
-#ifndef _CONST_H_
-#define _CONST_H_
+#pragma once
 
-#include <cmath>
 #include "YAKL.h"
+#include "yaml-cpp/yaml.h"
+#include "YAKL_netcdf.h"
 
-using yakl::SArray;
-using yakl::Array;
-using yakl::styleC;
-using yakl::memHost;
-using yakl::memDevice;
-using yakl::c::Bounds;
 using yakl::c::parallel_for;
+using yakl::c::Bounds;
+using yakl::fence;
+using yakl::min;
+using yakl::max;
+using yakl::SArray;
+using yakl::memDevice;
+using yakl::memHost;
+using yakl::memset;
 
-typedef float         real;
-typedef unsigned long ulong;
-typedef unsigned int  uint;
+#ifndef ORD
+  #define ORD 5
+#endif
 
-typedef Array<real,1,memDevice,styleC> real1d;
-typedef Array<real,2,memDevice,styleC> real2d;
-typedef Array<real,3,memDevice,styleC> real3d;
-typedef Array<real,4,memDevice,styleC> real4d;
-typedef Array<real,5,memDevice,styleC> real5d;
-typedef Array<real,6,memDevice,styleC> real6d;
-typedef Array<real,7,memDevice,styleC> real7d;
-typedef Array<real,8,memDevice,styleC> real8d;
+#ifndef NGLL
+  #define NGLL 3
+#endif
 
-typedef Array<real,1,memHost,styleC> realHost1d;
-typedef Array<real,2,memHost,styleC> realHost2d;
-typedef Array<real,3,memHost,styleC> realHost3d;
-typedef Array<real,4,memHost,styleC> realHost4d;
-typedef Array<real,5,memHost,styleC> realHost5d;
-typedef Array<real,6,memHost,styleC> realHost6d;
-typedef Array<real,7,memHost,styleC> realHost7d;
-typedef Array<real,8,memHost,styleC> realHost8d;
-
-#include "params.h"
+typedef float real;
 
 YAKL_INLINE real constexpr operator"" _fp( long double x ) {
   return static_cast<real>(x);
 }
 
-int constexpr ord      = 5;
-int constexpr tord     = 3;
-int constexpr hs       = (ord-1)/2;
-int constexpr numState = 5;
+typedef yakl::Array<real,1,yakl::memDevice,yakl::styleC> real1d;
+typedef yakl::Array<real,2,yakl::memDevice,yakl::styleC> real2d;
+typedef yakl::Array<real,3,yakl::memDevice,yakl::styleC> real3d;
+typedef yakl::Array<real,4,yakl::memDevice,yakl::styleC> real4d;
+typedef yakl::Array<real,5,yakl::memDevice,yakl::styleC> real5d;
+typedef yakl::Array<real,6,yakl::memDevice,yakl::styleC> real6d;
+typedef yakl::Array<real,7,yakl::memDevice,yakl::styleC> real7d;
+typedef yakl::Array<real,8,yakl::memDevice,yakl::styleC> real8d;
 
-int constexpr idR      = 0;
-int constexpr idRU     = 1;
-int constexpr idRV     = 2;
-int constexpr idRW     = 3;
-int constexpr idRT     = 4;
+typedef yakl::Array<bool,1,yakl::memDevice,yakl::styleC> bool1d;
+typedef yakl::Array<bool,2,yakl::memDevice,yakl::styleC> bool2d;
+typedef yakl::Array<bool,3,yakl::memDevice,yakl::styleC> bool3d;
+typedef yakl::Array<bool,4,yakl::memDevice,yakl::styleC> bool4d;
+typedef yakl::Array<bool,5,yakl::memDevice,yakl::styleC> bool5d;
+typedef yakl::Array<bool,6,yakl::memDevice,yakl::styleC> bool6d;
+typedef yakl::Array<bool,7,yakl::memDevice,yakl::styleC> bool7d;
+typedef yakl::Array<bool,8,yakl::memDevice,yakl::styleC> bool8d;
 
-int constexpr idU      = 1;
-int constexpr idV      = 2;
-int constexpr idW      = 3;
-int constexpr idT      = 4;
+typedef yakl::Array<real,1,yakl::memHost,yakl::styleC> realHost1d;
+typedef yakl::Array<real,2,yakl::memHost,yakl::styleC> realHost2d;
+typedef yakl::Array<real,3,yakl::memHost,yakl::styleC> realHost3d;
+typedef yakl::Array<real,4,yakl::memHost,yakl::styleC> realHost4d;
+typedef yakl::Array<real,5,yakl::memHost,yakl::styleC> realHost5d;
+typedef yakl::Array<real,6,yakl::memHost,yakl::styleC> realHost6d;
+typedef yakl::Array<real,7,yakl::memHost,yakl::styleC> realHost7d;
+typedef yakl::Array<real,8,yakl::memHost,yakl::styleC> realHost8d;
 
-// Some physical constants
-real constexpr PI    = 3.1415926535897932384626433832795028842;
-real constexpr GRAV  = 9.8;
-real constexpr CP    = 1004.;
-real constexpr CV    = 717.;
-real constexpr RD    = 287.;
-real constexpr P0    = 1.0e5;
-real constexpr C0    = 27.5629410929725921310572974482;
-real constexpr GAMMA  = 1.40027894002789400278940027894;
+typedef yakl::Array<bool,1,yakl::memHost,yakl::styleC> boolHost1d;
+typedef yakl::Array<bool,2,yakl::memHost,yakl::styleC> boolHost2d;
+typedef yakl::Array<bool,3,yakl::memHost,yakl::styleC> boolHost3d;
+typedef yakl::Array<bool,4,yakl::memHost,yakl::styleC> boolHost4d;
+typedef yakl::Array<bool,5,yakl::memHost,yakl::styleC> boolHost5d;
+typedef yakl::Array<bool,6,yakl::memHost,yakl::styleC> boolHost6d;
+typedef yakl::Array<bool,7,yakl::memHost,yakl::styleC> boolHost7d;
+typedef yakl::Array<bool,8,yakl::memHost,yakl::styleC> boolHost8d;
 
-template <class T> YAKL_INLINE T mymin( T const v1 , T const v2 ) {
-  if (v1 < v2) { return v1; }
-  else         { return v2; }
+int constexpr ord  = ORD;
+int constexpr ngll = NGLL;
+
+static_assert(ngll <= ord , "ERROR: ngll must be <= ord");
+
+template <class T> void endrun(T err) {
+  std::cerr << err << std::endl;
+  throw err;
 }
-template <class T> YAKL_INLINE T mymax( T const v1 , T const v2 ) {
-  if (v1 > v2) { return v1; }
-  else         { return v2; }
-}
 
-#endif

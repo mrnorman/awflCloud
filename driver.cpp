@@ -1,67 +1,64 @@
 
-#include "stdlib.h"
-#include <iostream>
-#include <string>
 #include "const.h"
-#include "Domain.h"
-#include "Parallel.h"
-#include "Parser.h"
-#include "Initializer.h"
-#include "TimeIntegrator.h"
-#include "FileIO.h"
-#include "Exchange.h"
-#include <ctime>
+#include "Spatial_euler3d_cons_expl_cart_fv_Agrid.h"
+#include "Temporal_ader.h"
+
+// Define the Spatial operator based on constants from the Temporal operator
+typedef Spatial_euler3d_cons_expl_cart_fv_Agrid<nTimeDerivs,timeAvg,nAder> Spatial;
+// Define the Temporal operator based on the Spatial operator
+typedef Temporal_ader<Spatial> Temporal;
 
 int main(int argc, char** argv) {
-
   yakl::init();
-
   {
-    // Create the model objects
-    real4d         state;
-    Domain         dom;
-    Parallel       par;
-    FileIO         io;
-    Exchange       exch;
-    TimeIntegrator tint;
 
-    double mainTimer = 0;
+    if (argc <= 1) { endrun("ERROR: Must pass the input YAML filename as a parameter"); }
+    std::string inFile(argv[1]);
+    YAML::Node config = YAML::LoadFile(inFile);
+    if ( !config            ) { endrun("ERROR: Invalid YAML input file"); }
+    if ( !config["simTime"] ) { endrun("ERROR: no simTime entry"); }
+    if ( !config["outFreq"] ) { endrun("ERROR: no outFreq entry"); }
+    real simTime = config["simTime"].as<real>();
+    real outFreq = config["outFreq"].as<real>();
+    int numOut = 0;
 
-    int nstep = 0;
+    Temporal model;
 
-    // Initialize MPI and read the input file
-    initialize_mpi( &argc , &argv , par );
+    model.spaceOp.addTracer("uniform",true,"constant value of 1");
+    model.spaceOp.addTracer("theta"  ,true,"replica of theta");
+    model.spaceOp.addTracer("block"  ,true,"block in domain center");
 
-    // Default input file is "input.txt" unless the user passes in another file
-    std::string inFile = "input.txt";
-    if (argc > 1) inFile = argv[1];
-    readParamsFile(inFile, dom, par, io);
+    model.init(inFile);
 
-    // Initialize the model
-    initialize(state, dom, par, exch, tint);
+    Spatial::StateArr  state   = model.spaceOp.createStateArr ();
+    Spatial::TracerArr tracers = model.spaceOp.createTracerArr();
 
-    // Output the initial model state
-    io.outputInit(state, dom, par);
+    model.spaceOp.initState  (state  );
+    model.spaceOp.initTracers(tracers);
 
-    while (dom.etime < dom.simLength) {
-      if (dom.etime + dom.dt > dom.simLength) { dom.dt = dom.simLength - dom.etime; }
+    real etime = 0;
 
-      yakl::fence();
-      auto tm = std::clock();
-      tint.stepForward(state, dom, exch, par);
-      yakl::fence();
-      mainTimer += (double) (std::clock() - tm) / (double) CLOCKS_PER_SEC;
-
-      dom.etime += dom.dt;
-      if (par.masterproc && nstep%100 == 0) {std::cout << dom.etime << "\n";}
-
-      io.output(state, dom, par);
-
-      nstep += 1;
+    model.spaceOp.output( state , tracers , etime );
+    
+    while (etime < simTime) {
+      real dt = model.spaceOp.computeTimeStep(0.8,state);
+      if (etime + dt > simTime) { dt = simTime - etime; }
+      model.timeStep( state , tracers , dt );
+      etime += dt;
+      if (etime / outFreq >= numOut+1) {
+        std::cout << "Etime , dt: " << etime << " , " << dt << "\n";
+        model.spaceOp.output( state , tracers , etime );
+        numOut++;
+      }
     }
-    if (par.masterproc) { std::cout << "Elapsed Time: " << mainTimer << "\n"; }
+
+    std::cout << "Elapsed Time: " << etime << "\n";
+
+    model.finalize( state , tracers );
+
   }
-
-  int ierr = MPI_Finalize();
-
+  yakl::finalize();
 }
+
+
+
