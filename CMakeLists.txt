@@ -15,6 +15,7 @@ add_subdirectory(${YAKL_HOME} ./yakl)
 
 # Main driver
 add_executable(driver ${DRIVER_SRC})
+target_compile_features(driver PUBLIC cxx_std_14)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/yakl)
 include_directories(${YAKL_HOME})
 target_link_libraries(driver yakl ${NCFLAGS} -lyaml-cpp)
