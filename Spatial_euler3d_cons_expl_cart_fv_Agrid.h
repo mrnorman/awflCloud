@@ -199,30 +199,6 @@ public:
 
 
 
-  YAKL_INLINE real &getState(StateArr const &state , Location const &loc , int splitIndex) {
-    return state(loc.l , hs+loc.k , hs+loc.j , hs+loc.i);
-  }
-
-
-
-  YAKL_INLINE real &getTracer(TracerArr const &tracers , Location const &loc , int splitIndex) {
-    return tracers(loc.l , hs+loc.k , hs+loc.j , hs+loc.i);
-  }
-
-
-
-  YAKL_INLINE real &getStateTend(StateTendArr const &tend , Location const &loc , int timeDeriv , int splitIndex) {
-    return tend(loc.l , loc.k , loc.j , loc.i);
-  }
-
-
-
-  YAKL_INLINE real &getTracerTend(TracerTendArr const &tend , Location const &loc , int timeDeriv , int splitIndex) {
-    return tend(loc.l , loc.k , loc.j , loc.i);
-  }
-
-
-
   int numSplit() {
     return 3;
   }

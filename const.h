@@ -7,6 +7,7 @@
 
 using yakl::c::parallel_for;
 using yakl::c::Bounds;
+using yakl::c::SimpleBounds;
 using yakl::fence;
 using yakl::min;
 using yakl::max;

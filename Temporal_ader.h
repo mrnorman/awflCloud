@@ -48,28 +48,26 @@ public:
   void timeStep( StateArr &stateArr , TracerArr &tracerArr , real dt ) {
     // Loop over different items in the spatial splitting
     for (int spl = 0 ; spl < spaceOp.numSplit() ; spl++) {
+      int constexpr hs       = Spatial::hs;
+      int constexpr numState = Spatial::numState;
+      int numTracers = spaceOp.numTracers;
+      int nz = spaceOp.nz;
+      int ny = spaceOp.ny;
+      int nx = spaceOp.nx;
+      auto &stateTendArr  = this->stateTendArr ;
+      auto &tracerTendArr = this->tracerTendArr;
+
       real dtloc = dt;
       spaceOp.computeTendencies( stateArr , stateTendArr , tracerArr , tracerTendArr , dtloc , spl );
 
-      {
-        auto &stateTendArr  = this->stateTendArr ;
-        auto applySingleTendency = YAKL_LAMBDA (Location const &loc) {
-          real &state      = spaceOp.getState     (stateArr     ,loc  ,spl);
-          real &stateTend  = spaceOp.getStateTend (stateTendArr ,loc,0,spl);
-          state  += dtloc * stateTend;
-        };
-        spaceOp.applyStateTendencies( applySingleTendency , spl );
-      }
+      parallel_for( SimpleBounds<4>(numState,nz,ny,nx) , YAKL_LAMBDA (int l, int k, int j, int i) {
+        stateArr(l,hs+k,hs+j,hs+i) += dtloc * stateTendArr(l,k,j,i);
+      });
 
-      {
-        auto &tracerTendArr  = this->tracerTendArr ;
-        auto applySingleTendency = YAKL_LAMBDA (Location const &loc) {
-          real &tracer     = spaceOp.getTracer    (tracerArr    ,loc  ,spl);
-          real &tracerTend = spaceOp.getTracerTend(tracerTendArr,loc,0,spl);
-          tracer += dtloc * tracerTend;
-        };
-        spaceOp.applyTracerTendencies( applySingleTendency , spl );
-      }
+      parallel_for( SimpleBounds<4>(numTracers,nz,ny,nx) , YAKL_LAMBDA (int l, int k, int j, int i) {
+        tracerArr(l,hs+k,hs+j,hs+i) += dtloc * tracerTendArr(l,k,j,i);
+      });
+
     }
   }
 
