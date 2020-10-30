@@ -7,59 +7,8 @@
 #include "WenoLimiter.h"
 #include "Profiles.h"
 
+#define NO_TRACERS
 
-/*********************************************
- ***** Required inside the Spatial class *****
- *********************************************
-class Location;
-    - Stores the indices of a single location on the grid
-
-class StateArr; // OR
-typedef [class] StateArr;
-    - Declare a type for the model state
-
-class TendArr; // OR
-typedef [class] TendArr;
-    - Declare a type for the model tendencies
-    - It must have room for the nTimeDerivs dimension for the time integrator
-
-StateArr createStateArr()
-    - Create and return a new StateArr object
-
-TendArr createTendArr(int nTimeDerivs)
-    - Create and return a new TendArr object
-
-YAKL_INLINE real &get(StateArr const &state , Location const &loc , int splitIndex)
-    - Return the state value at the given location
-
-YAKL_INLINE real &get(TendArr const &tend , Location const &loc , int timeDeriv , int splitIndex)
-    - Return the tendency value at the given location
-
-int numSplit()
-    - Return the number of split components for this operator
-    - The temporal operator will iterate through the splittings
-
-real computeTimeStep(real cfl)
-    - Return the time step in seconds from the cfl value
-
-void init(int nTimeDerivs, bool timeAvg, std::string inFile)
-    - Initialize internal data structures
-
-void initState( StateArr &state )
-    - Initialize the state
-
-void computeTendencies( StateArr const &state , TendArr &tend , real dt , int splitIndex)
-    - Compute tendency and time derivatives of the tendency if they are requested
-
-template <class F> void applyTendencies( F const &applySingleTendency , int splitIndex )
-    - Loop through the domain, and apply tendencies to the state
-
-const char * getSpatialName()
-    - Return the name and info for this spatial operator
-
-void output(StateArr const &state, real etime)
-    - Output to file
-*/
 
 
 template <int nTimeDerivs, bool timeAvg, int nAder> class Spatial_euler3d_cons_expl_cart_fv_Agrid {
@@ -652,9 +601,11 @@ public:
 
     // Pre-process the tracers by dividing by density inside the domain
     // After this, we can reconstruct tracers only (not rho * tracer)
+    #ifndef NO_TRACERS
     parallel_for( SimpleBounds<4>(numTracers,nz,ny,nx) , YAKL_LAMBDA (int tr, int k, int j, int i) {
       tracers(tr,hs+k,hs+j,hs+i) /= (state(idR,hs+k,hs+j,hs+i) + hyDensCells(hs+k));
     });
+    #endif
 
     // Populate the halos
     if        (bc_x == BC_PERIODIC) {
@@ -663,10 +614,12 @@ public:
           state  (l,hs+k,hs+j,      ii) = state  (l,hs+k,hs+j,nx+ii);
           state  (l,hs+k,hs+j,hs+nx+ii) = state  (l,hs+k,hs+j,hs+ii);
         }
+        #ifndef NO_TRACERS
         for (int l=0; l < numTracers; l++) {
           tracers(l,hs+k,hs+j,      ii) = tracers(l,hs+k,hs+j,nx+ii);
           tracers(l,hs+k,hs+j,hs+nx+ii) = tracers(l,hs+k,hs+j,hs+ii);
         }
+        #endif
       });
     } else if (bc_x == BC_WALL) {
       parallel_for( SimpleBounds<3>(nz,ny,hs) , YAKL_LAMBDA(int k, int j, int ii) {
@@ -679,10 +632,12 @@ public:
             state  (l,hs+k,hs+j,hs+nx+ii) = state  (l,hs+k,hs+j,hs+nx-1);
           }
         }
+        #ifndef NO_TRACERS
         for (int l=0; l < numTracers; l++) {
           tracers(l,hs+k,hs+j,      ii) = tracers(l,hs+k,hs+j,hs     );
           tracers(l,hs+k,hs+j,hs+nx+ii) = tracers(l,hs+k,hs+j,hs+nx-1);
         }
+        #endif
       });
     }
 
@@ -787,6 +742,8 @@ public:
         stateLimits(idT,0,k,j,i+1) = rt_DTs(0,ngll-1);
       } // END: Reconstruct, time-average, and store the state and fluxes
 
+      #ifndef NO_TRACERS
+
       // r_DTs and ru_DTs still exist and are computed
       { // BEGIN: Reconstruct, time-average, and store tracer fluxes
         // Only process one tracer at a time to save on local memory / register requirements
@@ -834,6 +791,8 @@ public:
         }
       } // END: Reconstruct, time-average, and store tracer fluxes
 
+      #endif
+
     });
 
     ////////////////////////////////////////////////
@@ -849,6 +808,7 @@ public:
           stateLimits     (l,1,k,j,nx) = stateLimits     (l,0,k,j,nx);
         }
       }
+      #ifndef NO_TRACERS
       for (int l=0; l < numTracers; l++) {
         if        (bc_x == BC_PERIODIC) {
           tracerLimits    (l,0,k,j,0 ) = tracerLimits    (l,0,k,j,nx);
@@ -858,6 +818,7 @@ public:
           tracerLimits    (l,1,k,j,nx) = tracerLimits    (l,0,k,j,nx);
         }
       }
+      #endif
     });
 
     //////////////////////////////////////////////////////////
@@ -912,6 +873,7 @@ public:
 
       real massFlux = stateFlux(idR,k,j,i);
 
+      #ifndef NO_TRACERS
       // COMPUTE UPWIND TRACER FLUXES
       // Handle it one tracer at a time
       for (int tr=0; tr < numTracers; tr++) {
@@ -921,8 +883,10 @@ public:
           tracerFlux(tr,k,j,i) = massFlux * tracerLimits(tr,1,k,j,i) / q1_R;
         }
       }
+      #endif
     });
 
+    #ifndef NO_TRACERS
     //////////////////////////////////////////////////////////
     // Limit the tracer fluxes for positivity
     //////////////////////////////////////////////////////////
@@ -953,6 +917,7 @@ public:
         }
       }
     });
+    #endif
 
     //////////////////////////////////////////////////////////
     // Compute the tendencies
@@ -965,12 +930,14 @@ public:
           stateTend(l,k,j,i) = - ( stateFlux(l,k,j,i+1) - stateFlux(l,k,j,i) ) / dx;
         }
       }
+      #ifndef NO_TRACERS
       for (int l = 0; l < numTracers; l++) {
         // Compute tracer tendency
         tracerTend(l,k,j,i) = - ( tracerFlux(l,k,j,i+1) - tracerFlux(l,k,j,i  ) ) / dx;
         // Multiply density back onto tracers
         tracers(l,hs+k,hs+j,hs+i) *= (state(idR,hs+k,hs+j,hs+i) + hyDensCells(hs+k));
       }
+      #endif
     });
   }
 
@@ -1000,11 +967,13 @@ public:
     auto &numTracers              = this->numTracers             ;
     auto &bc_y                    = this->bc_y                   ;
 
+    #ifndef NO_TRACERS
     // Pre-process the tracers by dividing by density inside the domain
     // After this, we can reconstruct tracers only (not rho * tracer)
     parallel_for( SimpleBounds<4>(numTracers,nz,ny,nx) , YAKL_LAMBDA (int tr, int k, int j, int i) {
       tracers(tr,hs+k,hs+j,hs+i) /= (state(idR,hs+k,hs+j,hs+i) + hyDensCells(hs+k));
     });
+    #endif
 
     // Populate the halos
     if        (bc_y == BC_PERIODIC) {
@@ -1013,10 +982,12 @@ public:
           state(l,hs+k,      jj,hs+i) = state(l,hs+k,ny+jj,hs+i);
           state(l,hs+k,hs+ny+jj,hs+i) = state(l,hs+k,hs+jj,hs+i);
         }
+        #ifndef NO_TRACERS
         for (int l=0; l < numTracers; l++) {
           tracers(l,hs+k,      jj,hs+i) = tracers(l,hs+k,ny+jj,hs+i);
           tracers(l,hs+k,hs+ny+jj,hs+i) = tracers(l,hs+k,hs+jj,hs+i);
         }
+        #endif
       });
     } else if (bc_y == BC_WALL) {
       parallel_for( SimpleBounds<3>(nz,nx,hs) , YAKL_LAMBDA(int k, int i, int jj) {
@@ -1029,10 +1000,12 @@ public:
             state(l,hs+k,hs+ny+jj,hs+i) = state(l,hs+k,hs+ny-1,hs+i);
           }
         }
+        #ifndef NO_TRACERS
         for (int l=0; l < numTracers; l++) {
           tracers(l,hs+k,      jj,hs+i) = tracers(l,hs+k,hs     ,hs+i);
           tracers(l,hs+k,hs+ny+jj,hs+i) = tracers(l,hs+k,hs+ny-1,hs+i);
         }
+        #endif
       });
     }
 
@@ -1137,6 +1110,7 @@ public:
         stateLimits(idT,0,k,j+1,i) = rt_DTs(0,ngll-1);
       } // END: Reconstruct, time-average, and store state and sate fluxes
 
+      #ifndef NO_TRACERS
       // r_DTs and rv_DTs still exist and are computed
       { // BEGIN: Reconstruct, time-average, and store tracer fluxes
         // Only process one tracer at a time to save on local memory / register requirements
@@ -1183,6 +1157,7 @@ public:
           tracerLimits(tr,0,k,j+1,i) = rt_DTs (0,ngll-1); // Right interface
         }
       } // END: Reconstruct, time-average, and store tracer fluxes
+      #endif
 
     });
 
@@ -1199,6 +1174,7 @@ public:
           stateLimits     (l,1,k,ny,i) = stateLimits     (l,0,k,ny,i);
         }
       }
+      #ifndef NO_TRACERS
       for (int l=0; l < numTracers; l++) {
         if        (bc_y == BC_PERIODIC) {
           tracerLimits    (l,0,k,0 ,i) = tracerLimits    (l,0,k,ny,i);
@@ -1208,6 +1184,7 @@ public:
           tracerLimits    (l,1,k,ny,i) = tracerLimits    (l,0,k,ny,i);
         }
       }
+      #endif
     });
 
     //////////////////////////////////////////////////////////
@@ -1260,6 +1237,7 @@ public:
 
       real massFlux = stateFlux(idR,k,j,i);
 
+      #ifndef NO_TRACERS
       // COMPUTE UPWIND TRACER FLUXES
       // Handle it one tracer at a time
       for (int tr=0; tr < numTracers; tr++) {
@@ -1269,8 +1247,10 @@ public:
           tracerFlux(tr,k,j,i) = massFlux * tracerLimits(tr,1,k,j,i) / q1_R;
         }
       }
+      #endif
     });
 
+    #ifndef NO_TRACERS
     //////////////////////////////////////////////////////////
     // Limit the tracer fluxes for positivity
     //////////////////////////////////////////////////////////
@@ -1301,6 +1281,7 @@ public:
         }
       }
     });
+    #endif
 
     //////////////////////////////////////////////////////////
     // Compute the tendencies
@@ -1309,12 +1290,14 @@ public:
       for (int l=0; l < numState; l++) {
         stateTend(l,k,j,i) = - ( stateFlux(l,k,j+1,i) - stateFlux(l,k,j,i) ) / dy;
       }
+      #ifndef NO_TRACERS
       for (int l=0; l < numTracers; l++) {
         // Compute the tracer tendency
         tracerTend(l,k,j,i) = - ( tracerFlux(l,k,j+1,i) - tracerFlux(l,k,j,i) ) / dy;
         // Multiply density back onto the tracers
         tracers(l,hs+k,hs+j,hs+i) *= (state(idR,hs+k,hs+j,hs+i) + hyDensCells(hs+k));
       }
+      #endif
     });
   }
 
@@ -1347,11 +1330,13 @@ public:
     auto &bc_z                    = this->bc_z                   ;
     auto &gllWts_ngll             = this->gllWts_ngll            ;
 
+    #ifndef NO_TRACERS
     // Pre-process the tracers by dividing by density inside the domain
     // After this, we can reconstruct tracers only (not rho * tracer)
     parallel_for( SimpleBounds<4>(numTracers,nz,ny,nx) , YAKL_LAMBDA (int tr, int k, int j, int i) {
       tracers(tr,hs+k,hs+j,hs+i) /= (state(idR,hs+k,hs+j,hs+i) + hyDensCells(hs+k));
     });
+    #endif
 
     // Populate the halos
     if        (bc_z == BC_PERIODIC) {
@@ -1360,10 +1345,12 @@ public:
           state(l,      kk,hs+j,hs+i) = state(l,nz+kk,hs+j,hs+i);
           state(l,hs+nz+kk,hs+j,hs+i) = state(l,hs+kk,hs+j,hs+i);
         }
+        #ifndef NO_TRACERS
         for (int l=0; l < numTracers; l++) {
           tracers(l,      kk,hs+j,hs+i) = tracers(l,nz+kk,hs+j,hs+i);
           tracers(l,hs+nz+kk,hs+j,hs+i) = tracers(l,hs+kk,hs+j,hs+i);
         }
+        #endif
       });
     } else if (bc_z == BC_WALL) {
       parallel_for( SimpleBounds<3>(ny,nx,hs) , YAKL_LAMBDA(int j, int i, int kk) {
@@ -1376,10 +1363,12 @@ public:
             state(l,hs+nz+kk,hs+j,hs+i) = state(l,hs+nz-1,hs+j,hs+i);
           }
         }
+        #ifndef NO_TRACERS
         for (int l=0; l < numTracers; l++) {
           tracers(l,      kk,hs+j,hs+i) = tracers(l,hs     ,hs+j,hs+i);
           tracers(l,hs+nz+kk,hs+j,hs+i) = tracers(l,hs+nz-1,hs+j,hs+i);
         }
+        #endif
       });
     }
 
@@ -1504,6 +1493,7 @@ public:
         stateTend(idT,k,j,i) = 0;
       } // END: reconstruct, time-avg, and store state & state fluxes
 
+      #ifndef NO_TRACERS
       // r_DTs and rw_DTs still exist and are computed
       { // BEGIN: Reconstruct, time-average, and store tracer fluxes
         // Only process one tracer at a time to save on local memory / register requirements
@@ -1554,6 +1544,7 @@ public:
           tracerLimits(tr,0,k+1,j,i) = rt_DTs (0,ngll-1); // Right interface
         }
       } // END: Reconstruct, time-average, and store tracer fluxes
+      #endif
 
     });
 
@@ -1570,6 +1561,7 @@ public:
           stateLimits     (l,1,nz,j,i) = stateLimits     (l,0,nz,j,i);
         }
       }
+      #ifndef NO_TRACERS
       for (int l = 0; l < numTracers; l++) {
         if        (bc_z == BC_PERIODIC) {
           tracerLimits(l,0,0 ,j,i) = tracerLimits(l,0,nz,j,i);
@@ -1579,6 +1571,7 @@ public:
           tracerLimits(l,1,nz,j,i) = tracerLimits(l,0,nz,j,i);
         }
       }
+      #endif
     });
 
     //////////////////////////////////////////////////////////
@@ -1634,6 +1627,7 @@ public:
 
       real massFlux = stateFlux(idR,k,j,i);
 
+      #ifndef NO_TRACERS
       // COMPUTE UPWIND TRACER FLUXES
       // Handle it one tracer at a time
       for (int tr=0; tr < numTracers; tr++) {
@@ -1643,8 +1637,10 @@ public:
           tracerFlux(tr,k,j,i) = massFlux * tracerLimits(tr,1,k,j,i) / q1_R;
         }
       }
+      #endif
     });
 
+    #ifndef NO_TRACERS
     //////////////////////////////////////////////////////////
     // Limit the tracer fluxes for positivity
     //////////////////////////////////////////////////////////
@@ -1673,6 +1669,7 @@ public:
         }
       }
     });
+    #endif
 
     //////////////////////////////////////////////////////////
     // Compute the tendencies
@@ -1685,28 +1682,14 @@ public:
           stateTend(l,k,j,i) += - ( stateFlux(l,k+1,j,i) - stateFlux(l,k,j,i) ) / dz;
         }
       }
+      #ifndef NO_TRACERS
       for (int l=0; l < numTracers; l++) {
         // Compute tracer tendency
         tracerTend(l,k,j,i) = - ( tracerFlux(l,k+1,j,i) - tracerFlux(l,k,j,i) ) / dz;
         // Multiply density back onto the tracers
         tracers(l,hs+k,hs+j,hs+i) *= (state(idR,hs+k,hs+j,hs+i) + hyDensCells(hs+k));
       }
-    });
-  }
-
-
-
-  template <class F> void applyStateTendencies( F const &applySingleTendency , int splitIndex ) {
-    parallel_for( SimpleBounds<4>(numState,nz,ny,nx) , YAKL_LAMBDA (int l, int k, int j, int i) {
-      applySingleTendency({l,k,j,i});
-    });
-  }
-
-
-
-  template <class F> void applyTracerTendencies( F const &applySingleTendency , int splitIndex ) {
-    parallel_for( SimpleBounds<4>(numTracers,nz,ny,nx) , YAKL_LAMBDA (int l, int k, int j, int i) {
-      applySingleTendency({l,k,j,i});
+      #endif
     });
   }
 
