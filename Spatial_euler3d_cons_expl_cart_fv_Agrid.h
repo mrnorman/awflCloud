@@ -90,7 +90,7 @@ public:
 
   real5d stateLimits;
   real5d tracerLimits;
-  real5d stateFluxLimits;
+  real4d stateFlux;
   real4d tracerFlux;
   // Hydrostatically balanced values for density, potential temperature, and pressure
   real1d hyDensCells;
@@ -393,10 +393,10 @@ public:
     }
     tracerPosHost.deep_copy_to(tracerPos);
 
-    stateLimits     = real5d("stateLimits"    ,numState  ,2,nz+1,ny+1,nx+1);
-    tracerLimits    = real5d("tracerLimits"   ,numTracers,2,nz+1,ny+1,nx+1);
-    stateFluxLimits = real5d("stateFluxLimits",numState  ,2,nz+1,ny+1,nx+1);
-    tracerFlux      = real4d("tracerFlux"     ,numTracers  ,nz+1,ny+1,nx+1);
+    stateLimits  = real5d("stateLimits" ,numState  ,2,nz+1,ny+1,nx+1);
+    tracerLimits = real5d("tracerLimits",numTracers,2,nz+1,ny+1,nx+1);
+    stateFlux    = real4d("stateFlux"   ,numState    ,nz+1,ny+1,nx+1);
+    tracerFlux   = real4d("tracerFlux"  ,numTracers  ,nz+1,ny+1,nx+1);
 
     hyDensCells          = real1d("hyDensCells       ",nz+2*hs);
     hyPressureCells      = real1d("hyPressureCells   ",nz+2*hs);
@@ -668,7 +668,7 @@ public:
     auto &dx                      = this->dx                     ;
     auto &stateLimits             = this->stateLimits            ;
     auto &tracerLimits            = this->tracerLimits           ;
-    auto &stateFluxLimits         = this->stateFluxLimits        ;
+    auto &stateFlux               = this->stateFlux              ;
     auto &tracerFlux              = this->tracerFlux             ;
     auto &tracerPos               = this->tracerPos              ;
     auto &numTracers              = this->numTracers             ;
@@ -928,13 +928,13 @@ public:
       real q4 = w3 + w*w5 + w*w6;
       real q5 =      t*w5 + t*w6;
 
-      stateFluxLimits(idR,0,k,j,i) = q2;
-      stateFluxLimits(idU,0,k,j,i) = q2*q2/q1 + C0*pow(q5,GAMMA);
-      stateFluxLimits(idV,0,k,j,i) = q2*q3/q1;
-      stateFluxLimits(idW,0,k,j,i) = q2*q4/q1;
-      stateFluxLimits(idT,0,k,j,i) = q2*q5/q1;
+      stateFlux(idR,k,j,i) = q2;
+      stateFlux(idU,k,j,i) = q2*q2/q1 + C0*pow(q5,GAMMA);
+      stateFlux(idV,k,j,i) = q2*q3/q1;
+      stateFlux(idW,k,j,i) = q2*q4/q1;
+      stateFlux(idT,k,j,i) = q2*q5/q1;
 
-      real massFlux = stateFluxLimits(idR,0,k,j,i);
+      real massFlux = stateFlux(idR,k,j,i);
 
       // COMPUTE UPWIND TRACER FLUXES
       // Handle it one tracer at a time
@@ -986,7 +986,7 @@ public:
         if (sim2d && l == idV) {
           stateTend(l,k,j,i) = 0;
         } else {
-          stateTend(l,k,j,i) = - ( stateFluxLimits(l,0,k,j,i+1) - stateFluxLimits(l,0,k,j,i) ) / dx;
+          stateTend(l,k,j,i) = - ( stateFlux(l,k,j,i+1) - stateFlux(l,k,j,i) ) / dx;
         }
       }
       for (int l = 0; l < numTracers; l++) {
@@ -1017,7 +1017,7 @@ public:
     auto &derivMatrix             = this->derivMatrix            ;
     auto &dy                      = this->dy                     ;
     auto &stateLimits             = this->stateLimits            ;
-    auto &stateFluxLimits         = this->stateFluxLimits        ;
+    auto &stateFlux               = this->stateFlux              ;
     auto &tracerLimits            = this->tracerLimits           ;
     auto &tracerFlux              = this->tracerFlux             ;
     auto &tracerPos               = this->tracerPos              ;
@@ -1276,13 +1276,13 @@ public:
       real q4 = w3 + w*w5 + w*w6;
       real q5 =      t*w5 + t*w6;
 
-      stateFluxLimits(idR,0,k,j,i) = q3;
-      stateFluxLimits(idU,0,k,j,i) = q3*q2/q1;
-      stateFluxLimits(idV,0,k,j,i) = q3*q3/q1 + C0*pow(q5,GAMMA);
-      stateFluxLimits(idW,0,k,j,i) = q3*q4/q1;
-      stateFluxLimits(idT,0,k,j,i) = q3*q5/q1;
+      stateFlux(idR,k,j,i) = q3;
+      stateFlux(idU,k,j,i) = q3*q2/q1;
+      stateFlux(idV,k,j,i) = q3*q3/q1 + C0*pow(q5,GAMMA);
+      stateFlux(idW,k,j,i) = q3*q4/q1;
+      stateFlux(idT,k,j,i) = q3*q5/q1;
 
-      real massFlux = stateFluxLimits(idR,0,k,j,i);
+      real massFlux = stateFlux(idR,k,j,i);
 
       // COMPUTE UPWIND TRACER FLUXES
       // Handle it one tracer at a time
@@ -1331,7 +1331,7 @@ public:
     //////////////////////////////////////////////////////////
     parallel_for( Bounds<3>(nz,ny,nx) , YAKL_LAMBDA(int k, int j, int i) {
       for (int l=0; l < numState; l++) {
-        stateTend(l,k,j,i) = - ( stateFluxLimits(l,0,k,j+1,i) - stateFluxLimits(l,0,k,j,i) ) / dy;
+        stateTend(l,k,j,i) = - ( stateFlux(l,k,j+1,i) - stateFlux(l,k,j,i) ) / dy;
       }
       for (int l=0; l < numTracers; l++) {
         // Compute the tracer tendency
@@ -1363,7 +1363,7 @@ public:
     auto &derivMatrix             = this->derivMatrix            ;
     auto &dz                      = this->dz                     ;
     auto &stateLimits             = this->stateLimits            ;
-    auto &stateFluxLimits         = this->stateFluxLimits        ;
+    auto &stateFlux               = this->stateFlux              ;
     auto &tracerLimits            = this->tracerLimits           ;
     auto &tracerFlux              = this->tracerFlux             ;
     auto &tracerPos               = this->tracerPos              ;
@@ -1647,16 +1647,16 @@ public:
       real q4 = w*w1 + (w-cs)*w5 + (w+cs)*w6;
       real q5 =      t*w5 + t*w6;
 
-      stateFluxLimits(idR,0,k,j,i) = q4;
-      stateFluxLimits(idU,0,k,j,i) = q4*q2/q1;
-      stateFluxLimits(idV,0,k,j,i) = q4*q3/q1;
-      stateFluxLimits(idW,0,k,j,i) = q4*q4/q1 + C0*pow(q5,GAMMA);
-      stateFluxLimits(idT,0,k,j,i) = q4*q5/q1;
+      stateFlux(idR,k,j,i) = q4;
+      stateFlux(idU,k,j,i) = q4*q2/q1;
+      stateFlux(idV,k,j,i) = q4*q3/q1;
+      stateFlux(idW,k,j,i) = q4*q4/q1 + C0*pow(q5,GAMMA);
+      stateFlux(idT,k,j,i) = q4*q5/q1;
 
-      if (k <  nz) stateFluxLimits(idW,0,k,j,i) -= hyPressureGLL(k   ,0     );
-      if (k == nz) stateFluxLimits(idW,0,k,j,i) -= hyPressureGLL(nz-1,ngll-1);
+      if (k <  nz) stateFlux(idW,k,j,i) -= hyPressureGLL(k   ,0     );
+      if (k == nz) stateFlux(idW,k,j,i) -= hyPressureGLL(nz-1,ngll-1);
 
-      real massFlux = stateFluxLimits(idR,0,k,j,i);
+      real massFlux = stateFlux(idR,k,j,i);
 
       // COMPUTE UPWIND TRACER FLUXES
       // Handle it one tracer at a time
@@ -1706,7 +1706,7 @@ public:
         if (sim2d && l == idV) {
           stateTend(l,k,j,i) = 0;
         } else {
-          stateTend(l,k,j,i) += - ( stateFluxLimits(l,0,k+1,j,i) - stateFluxLimits(l,0,k,j,i) ) / dz;
+          stateTend(l,k,j,i) += - ( stateFlux(l,k+1,j,i) - stateFlux(l,k,j,i) ) / dz;
         }
       }
       for (int l=0; l < numTracers; l++) {
