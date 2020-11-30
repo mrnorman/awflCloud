@@ -708,21 +708,16 @@ public:
         // density and momentum can't be overwritten because they will be used for tracers
         SArray<real,1,ngll> r_tavg, ru_tavg;
         if (timeAvg) {
-          compute_timeAvg( r_DTs  , r_tavg  , dt );
-          compute_timeAvg( ru_DTs , ru_tavg , dt );
-          compute_timeAvg( rv_DTs           , dt );
-          compute_timeAvg( rw_DTs           , dt );
-          compute_timeAvg( rt_DTs           , dt );
-          compute_timeAvg( ruu_DTs          , dt );
-          compute_timeAvg( ruv_DTs          , dt );
-          compute_timeAvg( ruw_DTs          , dt );
-          compute_timeAvg( rut_DTs          , dt );
-          compute_timeAvg( rt_gamma_DTs     , dt );
+          compute_timeAvg_edges( r_DTs  , r_tavg  , dt );
+          compute_timeAvg_edges( ru_DTs , ru_tavg , dt );
+          compute_timeAvg_edges( rv_DTs           , dt );
+          compute_timeAvg_edges( rw_DTs           , dt );
+          compute_timeAvg_edges( rt_DTs           , dt );
         } else {
-          for (int ii=0; ii < ngll; ii++) {
-            r_tavg (ii) = r_DTs (0,ii);
-            ru_tavg(ii) = ru_DTs(0,ii);
-          }
+          r_tavg (0     ) = r_DTs (0,0     );
+          ru_tavg(0     ) = ru_DTs(0,0     );
+          r_tavg (ngll-1) = r_DTs (0,ngll-1);
+          ru_tavg(ngll-1) = ru_DTs(0,ngll-1);
         }
 
         //////////////////////////////////////////
@@ -776,11 +771,11 @@ public:
           // Time average if necessary
           //////////////////////////////////////////
           if (timeAvg) {
-            compute_timeAvg( rt_DTs  , dt );
-            compute_timeAvg( rut_DTs , dt );
+            compute_timeAvg_edges( rt_DTs  , dt );
           }
           if (tracerPos(tr)) {
-            for (int ii=0; ii < ngll; ii++) { rt_DTs(0,ii) = max( 0._fp , rt_DTs(0,ii) ); }
+            rt_DTs(0,0     ) = max( 0._fp , rt_DTs(0,0     ) );
+            rt_DTs(0,ngll-1) = max( 0._fp , rt_DTs(0,ngll-1) );
           }
 
           ////////////////////////////////////////////////////////////
@@ -1076,16 +1071,11 @@ public:
         // Don't overwrite r and rv because we need them for tracers
         SArray<real,1,ngll> r_tavg, rv_tavg;
         if (timeAvg) {
-          compute_timeAvg( r_DTs  , r_tavg  , dt );
-          compute_timeAvg( ru_DTs           , dt );
-          compute_timeAvg( rv_DTs , rv_tavg , dt );
-          compute_timeAvg( rw_DTs           , dt );
-          compute_timeAvg( rt_DTs           , dt );
-          compute_timeAvg( rvu_DTs          , dt );
-          compute_timeAvg( rvv_DTs          , dt );
-          compute_timeAvg( rvw_DTs          , dt );
-          compute_timeAvg( rvt_DTs          , dt );
-          compute_timeAvg( rt_gamma_DTs     , dt );
+          compute_timeAvg_edges( r_DTs  , r_tavg  , dt );
+          compute_timeAvg_edges( ru_DTs           , dt );
+          compute_timeAvg_edges( rv_DTs , rv_tavg , dt );
+          compute_timeAvg_edges( rw_DTs           , dt );
+          compute_timeAvg_edges( rt_DTs           , dt );
         } else {
           for (int jj=0; jj < ngll; jj++) {
             r_tavg (jj) = r_DTs (0,jj);
@@ -1143,8 +1133,7 @@ public:
           // Time average if necessary
           //////////////////////////////////////////
           if (timeAvg) {
-            compute_timeAvg( rt_DTs  , dt );
-            compute_timeAvg( rvt_DTs , dt );
+            compute_timeAvg_edges( rt_DTs  , dt );
           }
           if (tracerPos(tr)) {
             for (int jj=0; jj < ngll; jj++) { rt_DTs(0,jj) = max( 0._fp , rt_DTs(0,jj) ); }
@@ -1445,17 +1434,12 @@ public:
         // We can't alter density and momentum because they're needed for tracers later
         SArray<real,1,ngll> r_tavg, rw_tavg;
         if (timeAvg) {
-          compute_timeAvg( r_DTs  , r_tavg  , dt );
-          compute_timeAvg( ru_DTs           , dt );
-          compute_timeAvg( rv_DTs           , dt );
-          compute_timeAvg( rw_DTs , rw_tavg , dt );
-          compute_timeAvg( rt_DTs           , dt );
-          compute_timeAvg( rwu_DTs          , dt );
-          compute_timeAvg( rwv_DTs          , dt );
-          compute_timeAvg( rww_DTs          , dt );
-          compute_timeAvg( rwt_DTs          , dt );
-          compute_timeAvg( rt_gamma_DTs     , dt );
-          compute_timeAvg( source_DTs       , dt );
+          compute_timeAvg_edges( r_DTs  , r_tavg  , dt );
+          compute_timeAvg_edges( ru_DTs           , dt );
+          compute_timeAvg_edges( rv_DTs           , dt );
+          compute_timeAvg_edges( rw_DTs , rw_tavg , dt );
+          compute_timeAvg_edges( rt_DTs           , dt );
+          compute_timeAvg      ( source_DTs       , dt );
         } else {
           for (int ii=0; ii < ngll; ii++) {
             r_tavg (ii) = r_DTs (0,ii);
@@ -1526,8 +1510,7 @@ public:
           // Time average if necessary
           //////////////////////////////////////////
           if (timeAvg) {
-            compute_timeAvg( rt_DTs  , dt );
-            compute_timeAvg( rwt_DTs , dt );
+            compute_timeAvg_edges( rt_DTs  , dt );
           }
           if (tracerPos(tr)) {
             for (int kk=0; kk < ngll; kk++) { rt_DTs(0,kk) = max( 0._fp , rt_DTs(0,kk) ); }
@@ -2124,13 +2107,11 @@ public:
 
 
 
-  YAKL_INLINE void compute_timeAvg( SArray<real,3,numState,nAder,ngll> &dts , real dt ) {
+  YAKL_INLINE void compute_timeAvg( SArray<real,2,nAder,ngll> &dts , real dt ) {
     real dtmult = dt;
     for (int kt=1; kt<nAder; kt++) {
-      for (int l=0; l<numState; l++) {
-        for (int ii=0; ii<ngll; ii++) {
-          dts(l,0,ii) += dts(l,kt,ii) * dtmult / (kt+1._fp);
-        }
+      for (int ii=0; ii<ngll; ii++) {
+        dts(0,ii) += dts(kt,ii) * dtmult / (kt+1._fp);
       }
       dtmult *= dt;
     }
@@ -2138,12 +2119,11 @@ public:
 
 
 
-  YAKL_INLINE void compute_timeAvg( SArray<real,2,nAder,ngll> &dts , real dt ) {
+  YAKL_INLINE void compute_timeAvg_edges( SArray<real,2,nAder,ngll> &dts , real dt ) {
     real dtmult = dt;
     for (int kt=1; kt<nAder; kt++) {
-      for (int ii=0; ii<ngll; ii++) {
-        dts(0,ii) += dts(kt,ii) * dtmult / (kt+1._fp);
-      }
+      dts(0,0     ) += dts(kt,0     ) * dtmult / (kt+1._fp);
+      dts(0,ngll-1) += dts(kt,ngll-1) * dtmult / (kt+1._fp);
       dtmult *= dt;
     }
   }
@@ -2159,6 +2139,19 @@ public:
       for (int ii=0; ii<ngll; ii++) {
         tavg(ii) += dts(kt,ii) * dtmult / (kt+1._fp);
       }
+      dtmult *= dt;
+    }
+  }
+
+
+
+  YAKL_INLINE void compute_timeAvg_edges( SArray<real,2,nAder,ngll> const &dts , SArray<real,1,ngll> &tavg , real dt ) {
+    tavg(0     ) = dts(0,0     );
+    tavg(ngll-1) = dts(0,ngll-1);
+    real dtmult = dt;
+    for (int kt=1; kt<nAder; kt++) {
+      tavg(0     ) += dts(kt,0     ) * dtmult / (kt+1._fp);
+      tavg(ngll-1) += dts(kt,ngll-1) * dtmult / (kt+1._fp);
       dtmult *= dt;
     }
   }
