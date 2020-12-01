@@ -39,11 +39,19 @@ int main(int argc, char** argv) {
     real etime = 0;
 
     model.spaceOp.output( state , tracers , etime );
+
+    std::chrono::duration<double,std::milli> timer;
     
     while (etime < simTime) {
       real dt = model.spaceOp.computeTimeStep(0.8,state);
       if (etime + dt > simTime) { dt = simTime - etime; }
+      if (etime == 0) std::cout << "dt: " << dt << "\n\n";
+      yakl::fence();
+      auto t1 = std::chrono::high_resolution_clock::now();
       model.timeStep( state , tracers , dt );
+      yakl::fence();
+      auto t2 = std::chrono::high_resolution_clock::now();
+      timer = timer + std::chrono::duration<double,std::milli>(t2-t1);
       etime += dt;
       if (etime / outFreq >= numOut+1) {
         std::cout << "Etime , dt: " << etime << " , " << dt << "\n";
@@ -53,6 +61,8 @@ int main(int argc, char** argv) {
     }
 
     std::cout << "Elapsed Time: " << etime << "\n";
+
+    std::cout << "Walltime: " << timer.count()/1000 << "\n";
 
     model.finalize( state , tracers );
 

@@ -5,6 +5,8 @@
 #include "yaml-cpp/yaml.h"
 #include "YAKL_netcdf.h"
 
+#include <chrono>
+
 using yakl::c::parallel_for;
 using yakl::c::Bounds;
 using yakl::c::SimpleBounds;
@@ -17,11 +19,11 @@ using yakl::memHost;
 using yakl::memset;
 
 #ifndef ORD
-  #define ORD 5
+  #define ORD 9
 #endif
 
 #ifndef NGLL
-  #define NGLL 3
+  #define NGLL 4
 #endif
 
 typedef float real;
