@@ -1,11 +1,11 @@
 ---
 # Simulation time in seconds
-simTime  : 10
+simTime  : 2000
 
 # Number of cells to use
-nx       : 80
-ny       : 80
-nz       : 40
+nx       : 200
+ny       : 1
+nz       : 100
 
 # Lengths of the dimensions in meters
 xlen     : 20000
@@ -16,16 +16,18 @@ bc_x   : periodic
 bc_y   : periodic
 bc_z   : wall
 
-weno_scalars : false
+weno_scalars : true
 
-weno_winds   : false
+weno_winds   : true
 
 # Data to initialize: thermal, collision, straka, igw
-initData : thermal
+initData : collision
 
 # Output filename
 outFile  : test.nc
 
 # Output frequency in seconds
-outFreq  : 20.
+outFreq  : 0.
+
+perturb: true
 

@@ -82,6 +82,8 @@ public:
 
   bool sim2d;
 
+  bool perturb;
+
   real dx;
   real dy;
   real dz;
@@ -266,6 +268,8 @@ public:
     dx = xlen/nx;
     dy = ylen/ny;
     dz = zlen/nz;
+
+    perturb = config["perturb"].as<bool>();
 
     TransformMatrices::weno_sten_to_coefs(this->wenoRecon);
 
@@ -477,6 +481,20 @@ public:
         }
       }
     });
+
+    // Perturb the state
+    if (perturb) {
+      auto state_host = state.createHostCopy();
+      for (int k=0; k < nz; k++) {
+        for (int j=0; j < ny; j++) {
+          for (int i=0; i < nx; i++) {
+            real rval = (real) rand() / (real) RAND_MAX;
+            state_host(idT,hs+k,hs+j,hs+i) *= 1._fp + rval * 1.e-7;
+          }
+        }
+      }
+      state_host.deep_copy_to(state);
+    }
   }
 
 
