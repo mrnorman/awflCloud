@@ -1,4 +1,4 @@
-# PFAST (Performance-portable Framework for Arbitrary Space-Time PDE Modeling)
+# AWFL (ADER WENO Finite-voLume)
 
 * **Performance Portable**: Uses the Yet Another Kernel Launcher (YAKL) framework for C++ performance portability
 * **Flexible**: The C++ framework allows different dimensionalities, grids, splitting techniques, and PDEs. What all models must have in common is stepping a model state forward in time using spatial and temporal operators.
