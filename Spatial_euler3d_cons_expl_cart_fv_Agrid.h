@@ -275,6 +275,7 @@ public:
 
     // Store to_gll and wenoRecon
     {
+      using yakl::intrinsics::matmul_cr;
       SArray<real,2,ord,ord>  g2c;
       SArray<real,2,ord,ord>  s2c;
       SArray<real,2,ord,ngll> c2g_lower;
@@ -288,13 +289,14 @@ public:
       TransformMatrices::coefs_to_deriv    (c2d      );
 
       this->coefs_to_gll       = c2g_lower;
-      this->coefs_to_deriv_gll = c2g_lower * c2d;
-      this->sten_to_gll        = c2g_lower       * s2c;
-      this->sten_to_deriv_gll  = c2g_lower * c2d * s2c;
+      this->coefs_to_deriv_gll = matmul_cr( c2g_lower , c2d );
+      this->sten_to_gll        = matmul_cr( c2g_lower , s2c );
+      this->sten_to_deriv_gll  = matmul_cr( matmul_cr( c2g_lower , c2d ) , s2c );
 
     }
     // Store ader derivMatrix
     {
+      using yakl::intrinsics::matmul_cr;
       SArray<real,2,ngll,ngll> g2c;
       SArray<real,2,ngll,ngll> c2d;
       SArray<real,2,ngll,ngll> c2g;
@@ -303,7 +305,7 @@ public:
       TransformMatrices::coefs_to_deriv(c2d);
       TransformMatrices::coefs_to_gll  (c2g);
 
-      this->derivMatrix = c2g * c2d * g2c;
+      this->derivMatrix = matmul_cr( c2g , matmul_cr( c2d , g2c ) );
     }
     TransformMatrices::get_gll_points (this->gllPts_ord);
     TransformMatrices::get_gll_weights(this->gllWts_ord);

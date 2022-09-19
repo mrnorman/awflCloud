@@ -3,4 +3,4 @@
 	url = https://github.com/NVlabs/cub.git
 [submodule "YAKL"]
 	path = YAKL
-	url = https://github.com/mrnorman/YAKL.git
+	url = git@github.com:mrnorman/YAKL.git

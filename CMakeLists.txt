@@ -6,24 +6,15 @@ enable_language(CXX)
 enable_language(C)
 if ("${ARCH}" STREQUAL "CUDA")
   enable_language(CUDA)
-  set(YAKL_CUB_HOME ${CUB_HOME})
 endif()
 
-set(DRIVER_SRC driver.cpp)
+set(YAKL_HOME ${CMAKE_CURRENT_SOURCE_DIR}/YAKL)
+set(YAKL_BIN  ${CMAKE_CURRENT_BINARY_DIR}/yakl)
+add_subdirectory(${YAKL_HOME} ${YAKL_BIN})
 
-add_subdirectory(${YAKL_HOME} ./yakl)
+add_executable(driver driver.cpp)
+include(${YAKL_HOME}/yakl_utils.cmake)
+yakl_process_target(driver)
 
-# Main driver
-add_executable(driver ${DRIVER_SRC})
-target_compile_features(driver PUBLIC cxx_std_14)
-include_directories(${CMAKE_CURRENT_BINARY_DIR}/yakl)
-include_directories(${YAKL_HOME})
-target_link_libraries(driver yakl ${NCFLAGS} -lyaml-cpp)
-
-set_source_files_properties(${DRIVER_SRC} PROPERTIES COMPILE_FLAGS "${YAKL_CXX_FLAGS}")
-if ("${ARCH}" STREQUAL "CUDA")
-  enable_language(CUDA)
-  set_source_files_properties(${DRIVER_SRC} PROPERTIES LANGUAGE CUDA)
-  include_directories(${YAKL_CUB_HOME})
-endif()
+target_link_libraries(driver ${LINK_FLAGS})
 
